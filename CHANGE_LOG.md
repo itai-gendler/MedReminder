@@ -30,7 +30,7 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #232 — Clean up sync temporary files; lock down the help viewer
+## PR #232 — Harden the sync folder transport and the help viewer
 
 Link: [vger70/MedReminder#232](https://github.com/vger70/MedReminder/pull/232)
 Branch: `claude/compassionate-euler-em6pvu`
@@ -41,6 +41,7 @@ Branch: `claude/compassionate-euler-em6pvu`
 
 ### Security
 
+- `LocalFolderSyncTransport`: paths cannot go through a symbolic link or junction below the sync folder (checked component by component before every read, write and delete), and the listing does not follow such links. Before, the check was only lexical, so a link inside the folder could redirect file operations outside it. OneDrive Files On-Demand placeholders, which are reparse points without a link target, are unaffected.
 - Help viewer (`UI/Forms/HelpViewerForm`, `HelpGuideMarkdown`): the guide's raw HTML is limited to the section anchors `<a id="..."></a>` used by the table of contents, and every other HTML block or tag is dropped. The guide copy read from the per-user install folder is not trusted. In addition, WebView2 scripts are off, a Content-Security-Policy blocks external resources, and no navigation leaves the guide: a clicked https link opens in the default browser, and anything else is cancelled.
 
 ---

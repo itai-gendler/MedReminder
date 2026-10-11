@@ -1,3 +1,4 @@
+using System.IO.Enumeration;
 using MedReminder.Application.Abstractions;
 
 namespace MedReminder.Infrastructure.Sync;
@@ -11,6 +12,10 @@ namespace MedReminder.Infrastructure.Sync;
 // A file is written under a temporary name starting with '.' and then
 // renamed, so other devices and the sync client never see it half
 // written; List skips those names. A create never replaces a file.
+//
+// Paths stay inside the root: lexically, and not through a symbolic link
+// or junction below it, which would point reads, writes and deletes
+// elsewhere. List does not follow such links; the root itself may be one.
 public sealed class LocalFolderSyncTransport : ISyncTransport
 {
     private const string TempPrefix = ".tmp-";
@@ -27,7 +32,14 @@ public sealed class LocalFolderSyncTransport : ISyncTransport
     {
         ArgumentNullException.ThrowIfNull(prefix);
         if (!Directory.Exists(_root)) return Task.FromResult<IReadOnlyList<string>>([]);
-        IReadOnlyList<string> files = [.. Directory.EnumerateFiles(_root, "*", SearchOption.AllDirectories)
+        var entries = new FileSystemEnumerable<string>(_root,
+            (ref FileSystemEntry entry) => entry.ToFullPath(),
+            new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0, IgnoreInaccessible = false })
+        {
+            ShouldIncludePredicate = (ref FileSystemEntry entry) => !entry.IsDirectory && !IsLink(ref entry),
+            ShouldRecursePredicate = (ref FileSystemEntry entry) => !IsLink(ref entry),
+        };
+        IReadOnlyList<string> files = [.. entries
             .Where(f => !Path.GetFileName(f).StartsWith('.'))
             .Select(f => Path.GetRelativePath(_root, f).Replace('\\', '/'))
             .Where(p => p.StartsWith(prefix, StringComparison.Ordinal))
@@ -129,6 +141,37 @@ public sealed class LocalFolderSyncTransport : ISyncTransport
         var full = Path.GetFullPath(Path.Combine(_root, path.Replace('/', Path.DirectorySeparatorChar)));
         if (!full.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
             throw new ArgumentException("The path leaves the sync folder.", nameof(path));
+        EnsureNoLinkBelowRoot(full, path);
         return full;
     }
+
+    // Every existing component between the root and the file, the file
+    // included. The message names the relative path only: the full path
+    // holds the user name.
+    private void EnsureNoLinkBelowRoot(string full, string path)
+    {
+        for (var current = full; current.Length > _root.Length; current = Path.GetDirectoryName(current)!)
+        {
+            FileAttributes attributes;
+            try
+            {
+                attributes = File.GetAttributes(current);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+            {
+                continue;
+            }
+            if ((attributes & FileAttributes.ReparsePoint) == 0) continue;
+            FileSystemInfo info = (attributes & FileAttributes.Directory) != 0
+                ? new DirectoryInfo(current)
+                : new FileInfo(current);
+            if (info.LinkTarget is not null)
+                throw new IOException($"The sync folder path '{path}' goes through a symbolic link or junction.");
+        }
+    }
+
+    // Symbolic links and junctions only. The cloud placeholders of OneDrive
+    // Files On-Demand are reparse points too, but have no link target.
+    private static bool IsLink(ref FileSystemEntry entry)
+        => (entry.Attributes & FileAttributes.ReparsePoint) != 0 && entry.ToFileSystemInfo().LinkTarget is not null;
 }
