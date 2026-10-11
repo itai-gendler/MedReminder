@@ -1494,6 +1494,7 @@ i file di backup ed esportazione che posizioni tu.
 ├── backup.settings.json       impostazioni di backup
 ├── cloud-backup.protected     passphrase del backup cloud, cifrata da Windows
 ├── user.settings.json         lingua, Paese di riferimento, controllo aggiornamenti, registrazione query
+├── backups\                   copia tenuta all'aggiornamento da una versione molto vecchia
 ├── household\                 installazione condivisa (solo se usata)
 ├── logs\medreminder-AAAAMMGG.log
 └── profiles\

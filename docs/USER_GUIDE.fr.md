@@ -1560,6 +1560,7 @@ toi-même.
 ├── backup.settings.json       paramètres de sauvegarde
 ├── cloud-backup.protected     phrase de passe de la sauvegarde cloud, chiffrée par Windows
 ├── user.settings.json         langue, pays de référence, vérification des mises à jour, journal des requêtes
+├── backups\                   copie gardée lors de la mise à jour d'une très ancienne version
 ├── household\                 installation partagée (seulement si utilisée)
 ├── logs\medreminder-AAAAMMJJ.log
 └── profiles\

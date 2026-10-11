@@ -1510,6 +1510,7 @@ tú.
 ├── backup.settings.json       configuración de copia de seguridad
 ├── cloud-backup.protected     frase de la copia en la nube, cifrada por Windows
 ├── user.settings.json         idioma, país de referencia, búsqueda de actualizaciones, registro de consultas
+├── backups\                   copia guardada al actualizar desde una versión muy antigua
 ├── household\                 instalación compartida (solo si se usa)
 ├── logs\medreminder-AAAAMMDD.log
 └── profiles\
