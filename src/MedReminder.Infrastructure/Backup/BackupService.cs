@@ -21,16 +21,14 @@ namespace MedReminder.Infrastructure.Backup;
 // Multi-profile (Increment 15c, docs/ANALYSIS-MULTI-USER.md §11):
 // ExportProfileAsync targets any profile by id, ImportProfileAsync
 // replaces any profile's DB. The file name embeds the profileId so
-// backups of different profiles can coexist in the same directory;
-// PruneOldBackupsAsync applies retention per profileId so the most
-// recent backup of profile A does not shield old backups of profile
-// B.
+// backups of different profiles can coexist in the same directory.
+// PruneOldBackupsAsync deletes by age only: every backup older than the
+// retention, whatever its profile.
 internal sealed class BackupService : IBackupService
 {
     // File naming: "medreminder-<profileId>-YYYYMMDD-HHmmss.db".
     // profileId is a Guid "N" (32 lowercase hex chars) OR the literal
-    // "default" from the V1→V2 migration. The regex captures the id
-    // so retention can group files by profile.
+    // "default" from the V1→V2 migration.
     private static readonly Regex BackupFileRegex = new(
         @"^medreminder-(?<profileId>[0-9a-fA-F]{32}|default)-(?<timestamp>\d{8}-\d{6})\.db$",
         RegexOptions.Compiled);
@@ -99,22 +97,18 @@ internal sealed class BackupService : IBackupService
 
         var cutoff = _clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
 
-        // Group by profileId so retention is applied per profile: the
-        // most recent backup of profile A does not shield old backups
-        // of profile B (§11.1). Files that do not match the expected
-        // pattern (user-renamed backups, other unrelated files) are
-        // left alone.
-        var candidates = new List<(string Path, string ProfileId, DateTime LastWriteUtc)>();
+        // Age only, for every profile alike (§11.1). Files that do not
+        // match the expected pattern (user-renamed backups, other
+        // unrelated files) are left alone.
+        var candidates = new List<(string Path, DateTime LastWriteUtc)>();
         foreach (var path in Directory.EnumerateFiles(directory, "medreminder-*.db"))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var name = Path.GetFileName(path);
-            var match = BackupFileRegex.Match(name);
-            if (!match.Success) continue;
+            if (!BackupFileRegex.IsMatch(name)) continue;
             try
             {
-                candidates.Add((path, match.Groups["profileId"].Value.ToLowerInvariant(),
-                    File.GetLastWriteTimeUtc(path)));
+                candidates.Add((path, File.GetLastWriteTimeUtc(path)));
             }
             catch
             {

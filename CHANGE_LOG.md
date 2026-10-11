@@ -41,6 +41,35 @@ Branch: `claude/compassionate-euler-em6pvu`
 
 ---
 
+## PR #234 — Fix stale PIN tooltip, duplicate dictionary key and backup retention comments
+
+Link: [vger70/MedReminder#234](https://github.com/vger70/MedReminder/pull/234)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Fixed
+
+- `Ui.MedicineEditDialog.Field.InitialStock` was defined twice in the
+  en and it dictionaries; the shadowed first entry is removed.
+
+### Added
+
+- `DictionaryParityTests` rejects a key defined twice in a dictionary.
+
+### Removed
+
+- The PIN box tooltip (`Ui.PinPromptForm.Tooltip.Friction`), which
+  repeated the always-visible friction note.
+
+### Changed
+
+- `BackupService.PruneOldBackupsAsync` comments describe the age-only
+  retention it applies; the unused profile id capture is gone.
+
+### Docs
+
+- The user guides' data layout and CLAUDE.md §4 list the `backups\`
+  folder (V1 upgrade copy).
+
 ## PR #233 — Retry the SQLite online backup while the database is briefly locked
 
 Link: [vger70/MedReminder#233](https://github.com/vger70/MedReminder/pull/233)

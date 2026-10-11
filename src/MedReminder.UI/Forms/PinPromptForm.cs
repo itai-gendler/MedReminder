@@ -103,9 +103,6 @@ internal sealed class PinPromptForm : MedReminderFormBase
         buttonRow.Controls.Add(_okButton);
         buttonRow.Controls.Add(_cancelButton);
 
-        var tooltip = new ToolTip { ShowAlways = true };
-        tooltip.SetToolTip(_pinBox, _loc.Get("Ui.PinPromptForm.Tooltip.Friction"));
-
         var layout = new TableLayoutPanel
         {
             AutoSize = true,
