@@ -4,7 +4,7 @@ using FluentAssertions;
 using MedReminder.UI.Forms;
 using Xunit;
 
-namespace MedReminder.UI.Tests.Forms;
+namespace MedReminder.UI.Tests;
 
 // The guide keeps only the section anchors as raw HTML (HelpGuideMarkdown).
 public sealed class HelpGuideMarkdownTests
