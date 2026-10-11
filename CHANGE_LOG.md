@@ -48,6 +48,11 @@ Branch: `claude/m2-implementation-stepwise-8sv8t8`
   in; the desktop keeps its DPAPI store and files.
 - `HouseholdProfileInstaller` is public.
 
+### Docs
+
+- `PRIVACY*.md`: the Android camera also reads the QR code of an
+  installation join (B2-05).
+
 ## PR #236 — Describe where Android keeps the OneDrive tokens
 
 Link: [vger70/MedReminder#236](https://github.com/vger70/MedReminder/pull/236)
