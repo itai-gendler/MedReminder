@@ -48,6 +48,11 @@ Branch: `claude/m2-implementation-stepwise-8sv8t8`
 - The desktop's `SyncSetupService.RekeyAsync` delegates to it; the key
   rotation tests run it in place.
 
+### Docs
+
+- Android backlog: B2-07 recorded as implemented in the private
+  repository.
+
 ## PR #240 — Keep the newest local backup of each profile
 
 Link: [vger70/MedReminder#240](https://github.com/vger70/MedReminder/pull/240)
