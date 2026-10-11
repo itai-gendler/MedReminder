@@ -30,6 +30,19 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #236 — Describe where Android keeps the OneDrive tokens
+
+Link: [vger70/MedReminder#236](https://github.com/vger70/MedReminder/pull/236)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Docs
+
+- `PRIVACY*.md`: on Android only the backup passphrase uses the secure
+  key storage; Google Play services keep the Google Drive grant, and the
+  OneDrive sign-in (MSAL, B2-04) keeps its tokens in the app's private
+  storage, excluded from Android backup.
+- Android backlog: B2-04 implemented in the private repository.
+
 ## PR #235 — Keep the embedded guides and dictionaries in the main assembly
 
 Link: [vger70/MedReminder#235](https://github.com/vger70/MedReminder/pull/235)
