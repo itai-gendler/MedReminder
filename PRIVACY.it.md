@@ -1,24 +1,30 @@
 # MedReminder — Informativa sulla privacy
 
-Ultimo aggiornamento: 5 ottobre 2026
+Ultimo aggiornamento: 11 ottobre 2026
 
 Traduzione di [PRIVACY.md](PRIVACY.md). In caso di differenze prevale
 la versione inglese.
 
-Questa informativa descrive come l'applicazione desktop MedReminder per
-Windows tratta i dati personali. Vale per ogni distribuzione
-dell'applicazione: i pacchetti ZIP, gli installer MSI e il Microsoft
-Store.
+Questa informativa descrive come MedReminder tratta i dati personali su
+Windows desktop e Android. Si applica alle versioni e alle funzioni
+disponibili per ciascuna piattaforma; non tutte le funzioni sono
+necessariamente presenti in ogni versione. L'app desktop per Windows è
+distribuita come pacchetto ZIP, installer MSI e tramite Microsoft Store.
+Android è distribuito tramite Google Play, inclusi i relativi canali di
+test.
 
 ## 1. In sintesi
 
-- MedReminder conserva i tuoi dati sul tuo PC. Lo sviluppatore non
-  gestisce alcun server e non riceve nessuno dei tuoi dati.
-- Non esiste un account presso lo sviluppatore, né telemetria,
-  statistiche d'uso, pubblicità o tracciamento.
-- I dati escono dal PC solo tramite funzioni che attivi tu: promemoria
-  via email, backup nel cloud, sincronizzazione e controllo degli
-  aggiornamenti. Ciascuna invia dati solo al servizio che scegli.
+- MedReminder conserva i dati sul tuo dispositivo. Lo sviluppatore non
+  gestisce server e non riceve i tuoi dati.
+- Non esistono account presso lo sviluppatore, telemetria, statistiche
+  d'uso, pubblicità o tracciamento.
+- I dati lasciano il dispositivo solo tramite funzioni che usi o attivi,
+  come email, esportazione o condivisione, backup cloud, sincronizzazione
+  e download dei cataloghi. Ogni funzione invia dati solo al servizio o
+  alla destinazione descritti qui sotto. I servizi specifici della
+  piattaforma, come gli aggiornamenti tramite Google Play, sono indicati
+  separatamente.
 
 ## 2. Chi è responsabile
 
@@ -31,79 +37,112 @@ Contatti: info@medreminder26.org, oppure una segnalazione su
 https://github.com/vger70/MedReminder/issues (non inserire dati sulla
 salute in una segnalazione pubblica).
 
-## 3. Dati conservati sul tuo PC
+## 3. Dati conservati sul dispositivo
 
-MedReminder conserva tutto in `%LOCALAPPDATA%\MedReminder\`, nel tuo
-account Windows:
+### Windows desktop
+
+MedReminder conserva i dati in `%LOCALAPPDATA%\MedReminder\`, nel tuo
+account Windows. Comprendono:
 
 - profili: nome, ruolo, PIN facoltativo (salvato come hash);
 - farmaci, dosi, posologie, scorte, assunzioni, ricette, scadenze
-  amministrative e note, un database per profilo;
+  amministrative e note, con un database per profilo;
 - impostazioni email: server SMTP, nome utente e password (la password
   è cifrata con Windows DPAPI), indirizzi del mittente e dei
   destinatari, compreso un eventuale indirizzo del medico o di chi ti
   assiste;
 - token di accesso a OneDrive o Google Drive, se li colleghi;
-- impostazioni, backup che configuri e file di log.
+- impostazioni, backup configurati da te e file di log.
 
-I dati riguardano la tua salute (farmaci e terapia). I database non
-sono cifrati: chiunque possa usare il tuo account Windows può leggerli.
-Il PIN del profilo evita di aprire per errore il profilo sbagliato; non
-è una protezione. Per tenere separati i dati di altre persone, dai a
-ciascuna il proprio account Windows.
+I database dei profili su Windows non sono cifrati: chiunque possa usare
+il tuo account Windows può leggerli. Il PIN del profilo evita di aprire
+per errore il profilo sbagliato; non è una protezione. Per tenere
+separati i dati di altre persone, assegna a ciascuna il proprio account
+Windows.
 
-I file di log non contengono mai password, testi delle email o note
-mediche.
+I file di log di Windows non contengono password, testi delle email o
+note mediche. Disinstallare l'app Windows non elimina la cartella dei
+dati; per rimuoverli, elimina la cartella separatamente.
 
-La disinstallazione di MedReminder non cancella questa cartella.
-Eliminala per rimuovere tutti i dati.
+### Android
 
-## 4. Dati che escono dal tuo PC
+MedReminder conserva database, impostazioni e file di log nello spazio
+privato dell'app sul telefono. Il backup automatico dei dati dell'app di
+Android è disattivato, quindi il sistema operativo non copia questi dati
+relativi alla salute in un account di backup Android. I segreti dell'app, come i
+token di accesso al cloud e la passphrase di backup, sono conservati
+tramite l'archiviazione sicura delle chiavi di Android. I log Android
+non contengono password, testi delle email o note mediche.
 
-Solo queste funzioni inviano dati, e solo quando le usi:
+Cancellare i dati dell'app MedReminder o disinstallarla rimuove la copia
+locale. Prima di farlo, usa le funzioni di esportazione o backup cloud
+se vuoi conservarne una copia.
+
+## 4. Dati che escono dal dispositivo
+
+Queste funzioni inviano o condividono dati solo quando sono disponibili
+e vengono usate o attivate:
 
 | Funzione | Cosa viene inviato | Dove |
 |---|---|---|
-| Promemoria via email e richieste di ricetta | L'email che vedi nell'app: nomi dei farmaci, scorte, date; una richiesta di ricetta contiene anche il codice del prodotto e il tuo nome. Nessuna posologia né nota | Il server SMTP dell'account email che configuri, poi i destinatari che inserisci |
-| Backup nel cloud (facoltativo) | Una copia giornaliera dei profili, cifrata sul tuo PC con una passphrase che non lascia mai il PC | Il tuo OneDrive (cartella dell'app) o Google Drive (cartella MedReminder), oppure una cartella a tua scelta |
-| Sincronizzazione tra PC (facoltativa) | Farmaci, scorte, assunzioni, nome del profilo e destinatari, cifrati end-to-end | Il tuo OneDrive, Google Drive o una cartella condivisa |
-| Esportazione nel calendario | Un file `.ics`, con titoli generici a meno che tu scelga di includere i nomi dei farmaci | Salvato dove scegli; le email di scorta bassa lo allegano |
-| Controllo degli aggiornamenti e aggiornamento del catalogo (attivo per impostazione predefinita, disattivabile) | Una richiesta dell'ultima versione e degli elenchi pubblici dei farmaci; nessun dato personale. GitHub vede il tuo indirizzo IP e la versione dell'app | GitHub (`api.github.com`, `raw.githubusercontent.com`) |
+| Promemoria email e richieste di ricetta (se disponibili e configurati) | L'email mostrata nell'app: nomi dei farmaci, scorte e date; una richiesta di ricetta include anche il codice del prodotto e il tuo nome. Nessuna posologia né nota | Il server SMTP configurato da te, poi i destinatari inseriti |
+| Backup cloud (facoltativo) | Una copia giornaliera dei profili, cifrata sul dispositivo con la passphrase di backup. La passphrase non viene inviata al fornitore cloud | Il tuo account OneDrive o Google Drive; su Windows anche una cartella a tua scelta |
+| Sincronizzazione (facoltativa) | Farmaci, scorte, assunzioni, nome del profilo e destinatari, cifrati end-to-end | Il tuo account OneDrive o Google Drive; su Windows anche una cartella condivisa |
+| Esportazione, esportazione calendario e condivisione | Un archivio profilo `.mrz` cifrato, un file calendario `.ics` o i contenuti che scegli di condividere. I titoli del calendario sono generici, salvo tua scelta di includere i nomi dei farmaci | Il percorso del file o l'app/il destinatario scelto tramite le funzioni di file e condivisione di Windows o Android |
+| Aggiornamenti dei cataloghi e di dati pubblici | Richieste di elenchi pubblici di farmaci e altri dati pubblici correlati; nessun dato personale sulla salute | GitHub (`raw.githubusercontent.com`). GitHub riceve il tuo indirizzo IP e i dettagli della richiesta |
+| Controllo aggiornamenti dell'app Windows | Una richiesta dell'ultima versione desktop; nessun dato personale sulla salute. GitHub riceve il tuo indirizzo IP e la versione dell'app | GitHub (`api.github.com`) |
+| Aggiornamenti dell'app Android | Google Play distribuisce gli aggiornamenti e può trattare informazioni sull'account, sul dispositivo o dati diagnostici secondo la propria informativa e le tue impostazioni | Google Play |
 
-Quando colleghi OneDrive o Google Drive, MedReminder chiede accesso solo
-alla propria cartella (OneDrive `Files.ReadWrite.AppFolder`; Google
-Drive `drive.file` e `drive.appdata`), non agli altri tuoi file.
-Disattivare il backup nel cloud o la sincronizzazione ferma ogni invio;
-l'accesso concesso si revoca dalle impostazioni dell'account Microsoft
-o Google. Questi servizi trattano i dati secondo le proprie informative
-sulla privacy, come il tuo fornitore di posta.
+Quando colleghi OneDrive o Google Drive, MedReminder richiede l'accesso
+ai dati dell'app e ai file di backup, non l'accesso generale agli altri
+tuoi file. Disattivare il backup cloud o la sincronizzazione interrompe
+i futuri invii di quella funzione; puoi revocare l'accesso concesso dalle
+impostazioni del tuo account Microsoft o Google. Disattivare una
+funzione non elimina le copie già archiviate presso il fornitore. I
+servizi cloud e di posta trattano i dati secondo le proprie informative
+sulla privacy.
 
-## 5. Webcam
+Su Windows, backup cloud e sincronizzazione possono anche usare cartelle
+che selezioni. Tali cartelle potrebbero essere sincronizzate da un
+fornitore cloud o condivise con altre persone; accesso e trattamento
+dipendono dal fornitore e dalle impostazioni della cartella. Su Android,
+backup cloud e sincronizzazione usano l'account OneDrive o Google Drive
+collegato. Android o le impostazioni di risparmio energetico del
+dispositivo possono ritardare le operazioni pianificate.
 
-Il lettore di codici a barre può usare la webcam. Le immagini vengono
-decodificate sul tuo PC e non vengono mai salvate né inviate. La
-fotocamera si spegne quando un codice viene letto, quando chiudi la
-finestra di scansione o dopo 30 secondi.
+## 5. Fotocamera
+
+La scansione dei codici a barre può usare la webcam di Windows o la
+fotocamera Android, quando scegli di effettuare una scansione. Le
+immagini vengono elaborate sul dispositivo e MedReminder non le salva
+né le invia. Su Windows, la fotocamera si spegne quando viene letto un
+codice, quando chiudi la finestra di scansione o dopo 30 secondi. Su
+Android, l'accesso alla fotocamera è regolato dall'autorizzazione di
+Android e dal ciclo di vita dell'app.
 
 ## 6. Link che aprono il browser
 
-Alcuni comandi aprono una pagina web nel browser predefinito: il
-foglietto illustrativo o la scheda informativa del farmaco, la guida
-utente, la pagina del progetto e, se lo scegli, una pagina di donazione
-di Stripe o PayPal. MedReminder non invia dati a questi siti; lo fa il
-tuo browser, secondo le informative dei siti stessi. MedReminder non
-vede mai i dati di pagamento.
+Alcuni comandi aprono una pagina web nel browser, ad esempio il foglietto
+illustrativo o la scheda informativa del farmaco, la guida utente o la
+pagina del progetto. Su Windows, se lo scegli, può aprirsi anche una
+pagina per donazioni di Stripe o PayPal. MedReminder non invia dati a
+questi siti; lo fa il browser, secondo le informative dei siti stessi.
+MedReminder non vede mai i dati di pagamento.
 
 ## 7. Minori
 
-MedReminder non è rivolto ai minori e non raccoglie dati da nessuno.
+MedReminder non è rivolto ai minori. Lo sviluppatore non raccoglie
+tramite l'app dati personali di minori.
 
 ## 8. I tuoi diritti
 
-Tutti i dati sono sul tuo PC, sotto il tuo controllo: puoi consultarli,
-correggerli, esportarli (Impostazioni → Backup / Ripristino → Esporta
-tutti i dati) e cancellarli in qualsiasi momento. Per i dati nel tuo
-account email, OneDrive o Google Drive, rivolgiti a quei fornitori.
+Puoi consultare, correggere, esportare e cancellare i dati in
+MedReminder. Su Windows, usa Impostazioni → Backup / Ripristino → Esporta
+tutti i dati; su Android, usa le funzioni di esportazione e gestione dei
+dati dell'app. Puoi anche rimuovere i dati locali dell'app Android dalle
+impostazioni di Android. Le copie nelle email, nei file esportati o
+condivisi e negli account OneDrive o Google Drive vanno gestite con i
+relativi destinatari, app o fornitori.
 
 ## 9. Modifiche
 

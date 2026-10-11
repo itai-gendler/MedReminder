@@ -1,25 +1,29 @@
 # MedReminder — Privacy Policy
 
-Last updated: 5 October 2026
+Last updated: 11 October 2026
 
 Translations: [Italiano](PRIVACY.it.md) · [Français](PRIVACY.fr.md) ·
 [Español](PRIVACY.es.md) · [Deutsch](PRIVACY.de.md). The English
 version prevails.
 
-This policy describes how the MedReminder desktop application for
-Windows handles personal data. It applies to every distribution of the
-application: the ZIP packages, the MSI installers and the Microsoft
-Store.
+This policy describes how MedReminder handles personal data on Windows
+desktop and Android. It applies to the versions and features made
+available for each platform; a feature may not yet be available in every
+release. The Windows desktop app is distributed as ZIP packages, MSI
+installers and through the Microsoft Store. Android is distributed
+through Google Play, including its testing tracks.
 
 ## 1. Summary
 
-- MedReminder stores your data on your PC. The developer runs no
+- MedReminder stores your data on your device. The developer runs no
   server and receives none of your data.
 - There is no account with the developer, no telemetry, no analytics,
   no advertising and no tracking.
-- Data leaves your PC only through features you turn on: email
-  reminders, cloud backup, sync, and the update check. Each one
-  sends data only to the service you choose.
+- Data leaves your device only through features you use or turn on, such
+  as email, export or sharing, cloud backup, sync and catalogue
+  downloads. Each feature sends data only to the service or destination
+  described below. Platform-specific services, such as Google Play
+  updates, are described separately.
 
 ## 2. Who is responsible
 
@@ -32,10 +36,12 @@ Contact: info@medreminder26.org, or an issue at
 https://github.com/vger70/MedReminder/issues (do not post health data
 in a public issue).
 
-## 3. Data stored on your PC
+## 3. Data stored on your device
 
-MedReminder keeps everything in `%LOCALAPPDATA%\MedReminder\` under
-your Windows account:
+### Windows desktop
+
+MedReminder keeps its data in `%LOCALAPPDATA%\MedReminder\` under your
+Windows account. This includes:
 
 - profiles: name, role, optional PIN (stored as a hash);
 - medicines, doses, schedules, stock, intakes, prescriptions,
@@ -46,62 +52,88 @@ your Windows account:
 - sign-in tokens for OneDrive or Google Drive, if you connect them;
 - settings, backups you configure, and log files.
 
-The data concerns your health (medicines and therapy). The databases
-are not encrypted: anyone who can use your Windows account can read
-them. The profile PIN prevents opening the wrong profile by mistake; it
-is not protection. To keep data apart from other people, give each
-person their own Windows account.
+The profile databases are not encrypted on Windows: anyone who can use
+your Windows account can read them. The profile PIN prevents opening the
+wrong profile by mistake; it is not protection. To keep data apart from
+other people, give each person their own Windows account.
 
-Log files never contain passwords, email bodies or medical notes.
+Windows log files never contain passwords, email bodies or medical
+notes. Uninstalling the Windows app does not delete its data folder;
+delete it separately to remove that data.
 
-Uninstalling MedReminder does not delete this folder. Delete it to
-remove all data.
+### Android
 
-## 4. Data that leaves your PC
+MedReminder stores its databases, settings and log files in the app's
+private storage on the phone. Android's automatic app-data backup is
+disabled, so the operating system does not copy this health data to an
+Android backup account. App secrets, such as cloud access tokens and the
+backup passphrase, are kept using Android's secure key storage. Android
+log files do not contain passwords, email bodies or medical notes.
 
-Only these features send data, and only when you use them:
+Clearing MedReminder's app data or uninstalling it removes its local
+copy. Before doing so, use the app's export or cloud-backup features if
+you want to keep a copy.
+
+## 4. Data that leaves your device
+
+Only these features send or share data, and only when available and
+used or enabled:
 
 | Feature | What is sent | Where |
 |---|---|---|
-| Email reminders and prescription requests | The email you see in the app: medicine names, stock, dates; a prescription request also carries the product code and your name. No dosage or notes | The SMTP server of the email account you configure, then the recipients you enter |
-| Cloud backup (optional) | A daily copy of your profiles, encrypted on your PC with a passphrase that never leaves it | Your own OneDrive (app folder) or Google Drive (MedReminder folder), or a folder of your choice |
-| Sync between PCs (optional) | Medicines, stock, intakes, profile name and recipients, end-to-end encrypted | Your own OneDrive, Google Drive or shared folder |
-| Calendar export | An `.ics` file, with generic titles unless you choose to include medicine names | Saved where you choose; low-stock emails attach it |
-| Update check and catalogue update (on by default, can be turned off) | A request for the latest version and for public medicine lists; no personal data. GitHub sees your IP address and the app version | GitHub (`api.github.com`, `raw.githubusercontent.com`) |
+| Email reminders and prescription requests (when available and configured) | The email shown in the app: medicine names, stock and dates; a prescription request also includes the product code and your name. No dosage or notes | The SMTP server configured by you, then the recipients you enter |
+| Cloud backup (optional) | A daily copy of your profiles, encrypted on your device with your backup passphrase. The passphrase is not sent to the cloud provider | Your OneDrive or Google Drive account; on Windows, also a folder of your choice |
+| Sync (optional) | Medicines, stock, intakes, profile name and recipients, end-to-end encrypted | Your OneDrive or Google Drive account; on Windows, also a shared folder |
+| Export, calendar export and sharing | An encrypted `.mrz` profile archive, an `.ics` calendar file, or the content you choose to share. Calendar titles are generic unless you choose to include medicine names | The file location or app/recipient you select using Windows or Android file and sharing controls |
+| Catalogue and public data updates | Requests for public medicine lists and related public data; no personal health data | GitHub (`raw.githubusercontent.com`). GitHub receives your IP address and request details |
+| Windows app update check | A request for the latest desktop version; no personal health data. GitHub receives your IP address and app version | GitHub (`api.github.com`) |
+| Android app updates | Google Play delivers app updates and may process account, device or diagnostic information under its privacy policy and your settings | Google Play |
 
-When you connect OneDrive or Google Drive, MedReminder asks only for
-access to its own folder (OneDrive `Files.ReadWrite.AppFolder`; Google
-Drive `drive.file` and `drive.appdata`), not to your other files.
-Turning cloud backup or sync off stops every upload; the access granted
-can be revoked from your Microsoft or Google account settings. These
-services process the data under their own privacy policies, as does
-your email provider.
+When you connect OneDrive or Google Drive, MedReminder requests access
+for its app data and backup files, not general access to your other
+files. Turning cloud backup or sync off stops future uploads from that
+feature; you can revoke the app's access in your Microsoft or Google
+account settings. Turning a feature off does not by itself delete copies
+already stored with the provider. The cloud and email providers process
+data under their own privacy policies.
 
-## 5. Webcam
+On Windows, cloud backup and sync can also use folders you select. Those
+folders may be synchronized by a cloud provider or shared with other
+people; their access and processing are governed by that provider and
+your folder settings. Android cloud backup and sync use the connected
+OneDrive or Google Drive account. Scheduled work on Android may be
+delayed by Android or device battery-management settings.
 
-The barcode scanner can use your webcam. Images are decoded on your PC
-and are never saved or sent. The camera turns off when a code is read,
-when you close the scan window, or after 30 seconds.
+## 5. Camera
+
+The barcode scanner can use the Windows webcam or Android camera when
+you choose to scan. Images are processed on your device and are not
+saved or sent by MedReminder. On Windows, the camera turns off when a
+code is read, when you close the scan window, or after 30 seconds. On
+Android, camera access is controlled by the Android permission and app
+lifecycle.
 
 ## 6. Links that open your browser
 
-Some commands open a web page in your default browser: the medicine
-leaflet or information page, the user guide, the project page, and, if
-you choose, a donation page from Stripe or PayPal. MedReminder sends no
-data to these sites; your browser does, under the sites' own policies.
-MedReminder never sees payment details.
+Some commands open a web page in your browser, such as a medicine
+leaflet or information page, the user guide, or the project page. On
+Windows, a donation link may also open a Stripe or PayPal page if you
+choose it. MedReminder sends no data to these sites; your browser does,
+under the sites' own policies. MedReminder never sees payment details.
 
 ## 7. Children
 
-MedReminder is not directed to children and collects no data from
-anyone.
+MedReminder is not directed to children. The developer does not collect
+personal data from children through the app.
 
 ## 8. Your rights
 
-All data is on your PC, under your control: you can view, correct,
-export (Settings → Backup / Restore → Export all data) and delete it at
-any time. For data in your email, OneDrive or Google Drive account,
-contact those providers.
+You can view, correct, export and delete data in MedReminder. On
+Windows, use Settings → Backup / Restore → Export all data; on Android,
+use the app's export and data-management controls. You can also remove
+local Android app data in Android settings. Copies in email, exported or
+shared files, OneDrive or Google Drive must be managed with the relevant
+recipients, apps or providers.
 
 ## 9. Changes
 
