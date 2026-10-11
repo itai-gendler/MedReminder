@@ -1551,6 +1551,7 @@ außer den Sicherungs- und Exportdateien, die du selbst ablegst.
 ├── backup.settings.json       Sicherungseinstellungen
 ├── cloud-backup.protected     Passphrase der Cloud-Sicherung, von Windows verschlüsselt
 ├── user.settings.json         Sprache, Referenzland, Update-Prüfung, Abfrageprotokoll
+├── backups\                   Kopie beim Update von einer sehr alten Version
 ├── household\                 geteilte Installation (nur wenn genutzt)
 ├── logs\medreminder-JJJJMMTT.log
 └── profiles\
