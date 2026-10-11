@@ -97,6 +97,13 @@ public static class PortableInfrastructureServiceCollectionExtensions
             sp.GetRequiredService<MedReminder.Application.Sync.JoinSyncGroup>(), sp.GetRequiredService<ISyncSettingsStore>(),
             sp.GetRequiredService<ISyncKeyStore>(), sp.GetRequiredService<ISyncTransportFactory>(),
             sp.GetRequiredService<IDatabaseExclusiveAccess>(), sp.GetRequiredService<TimeProvider>()));
+        // The new group key after a rotation elsewhere (Phase 4c, step H5b).
+        services.TryAddScoped(sp => new ProfileSyncRekey(databasePath, sp.GetRequiredService<MedReminderDbContext>(),
+            sp.GetRequiredService<MedReminder.Application.Sync.JoinSyncGroup>(), sp.GetRequiredService<ISyncSettingsStore>(),
+            sp.GetRequiredService<ISyncKeyStore>(), sp.GetRequiredService<ISyncTransportFactory>(),
+            sp.GetRequiredService<ISyncOperationRepository>(),
+            sp.GetRequiredService<MedReminder.Application.Sync.ApplyRemoteOperations>(),
+            sp.GetRequiredService<IDatabaseExclusiveAccess>(), sp.GetRequiredService<TimeProvider>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITransactionalScope, TransactionalScope>();
         services.AddScoped<DatabaseInitializer>();
