@@ -284,7 +284,7 @@ repeatable prescription (operation schema 12).
 
 | Phase | Content | Effort `[INFERRED]` | Blocking inputs |
 |---|---|---|---|
-| 5 (Android: M0–M5 of `ANALYSIS-B1-ANDROID-PLAN.md`, approved sequence) | Standalone Android app with every applicable desktop feature: M0 portability refactor 2 and notification planner; M1 standalone core; M1b local vital tracking (D.1, separately estimated); M2 cloud backup, sync, household, profiles, roles and PIN; M3 prescriptions, planning, views; M4 desktop-parity catalogues and scan; M5 email; all M1–M5 builds for internal testing; public Play Store launch after M5 | 115–165 d for M0–M5; M1b not estimated | D11, DA2, DA5 (before M1); validate provisional D13/API 26 before claiming support; S6/S7 Android OAuth (before M2); final privacy/legal and Play release checks after M5; private app repository (spikes S1–S5 and S8 done) |
+| 5 (Android: M0–M5 of `ANALYSIS-B1-ANDROID-PLAN.md`, approved sequence) | Standalone Android app with every applicable desktop feature: M0 portability refactor 2 and notification planner; M1 standalone core; M1b local vital tracking (D.1, separately estimated); M2 cloud backup, sync, household, profiles, roles and PIN; M3 prescriptions, planning, views; M4 desktop-parity catalogues and scan; M5 email; all M1–M5 builds for internal testing; public Play Store launch after M5 | 115–165 d for M0–M5; M1b not estimated | D11, DA2, DA5 (before M1); D13/API 26 emulator check passed 2026-10-10, Keystore key and Play internal track before claiming support; S6/S7 Android OAuth (before M2); final privacy/legal and Play release checks after M5; private app repository (spikes S1–S5 and S8 done) |
 | 6 | iOS | 15–25 d | Phase 5; macOS host; Apple Developer Program; S1, S3, S5 on iOS |
 | 7 | iOS feature parity (for Android absorbed by M2–M5); the state-hash check is not implemented on any device and stays a B.1 item | not re-estimated | Phase 6; D14 |
 
@@ -309,8 +309,9 @@ Open prerequisites and debts inside B.1:
   parity including ES and US catalogues; country-based catalogue/language
   defaults with EMA/English fallback) and DA4 (M3 → M4 → M5;
   public launch after M5) were decided on 2026-10-08. D4 and DA13 are
-  decided; Android API 26 is the provisional D13 floor, pending the
-  technical spike before support is claimed.
+  decided; Android API 26 is the provisional D13 floor: the emulator
+  check passed on 2026-10-10 (B.1 §18.10); the Keystore key check and the
+  Play internal track remain before support is claimed.
 - **Known sync limit closed** (shared by OneDrive and Google Drive): a
   device that joined while the listing lagged, while another device
   compacted, ended in `RebuildRequired`. The join now waits until the
@@ -424,6 +425,7 @@ profile operation schemas 4 and 5).
    particular predate the new main window and dark mode.
 4. Mobile: the Android spikes S1–S5 and S8 are done. The Android plan
    and DA3/DA4 decisions were approved on 2026-10-08. Resolve D11, DA2
-   and DA5 before M1; validate the provisional API 26 floor in the
-   deferred technical spike; build M1–M5 for internal testing and
+   and DA5 before M1; the API 26 floor passed its emulator check on
+   2026-10-10, and the Keystore key check and the Play internal track
+   remain before support is claimed; build M1–M5 for internal testing and
    publish to Play only after M5. Independent of items 1–3.

@@ -30,9 +30,10 @@ workflow are detailed in `ANALYSIS-B1-ANDROID-TEAM-PLAN.md`.
   screen-reader semantics, scalable text/layout, loading/empty/error/offline
   states, and accessibility verification where applicable. Do not make a
   later-milestone control appear active early.
-- The API 26 compatibility spike remains an explicit prerequisite at its
-  plan gate. It is listed here as deferred work; this backlog does not
-  launch it. Spike S11 (billing) was dropped on 2026-10-09 with the
+- The API 26 compatibility check ran on the emulator on 2026-10-10
+  (`ANALYSIS-B1-MOBILE-SYNC.md` §18.10); claiming API 26 support still
+  needs the Keystore key check on API 26 and the Play internal track
+  (D13 below). Spike S11 (billing) was dropped on 2026-10-09 with the
   premium tier.
 - The apps are entirely free (plan A6, decided 2026-10-09): no slice adds
   a purchase, a premium gate or an entitlement.
@@ -48,7 +49,7 @@ workflow are detailed in `ANALYSIS-B1-ANDROID-TEAM-PLAN.md`.
 | A6 | Free or paid mobile apps | **Decided 2026-10-09**: entirely free, like the desktop; no premium tier or in-app purchase (plan §4.8). | — |
 | DA9 | Donation links on mobile | **Decided again 2026-10-09**: drop, because of the Google Play and App Store payment rules (plan §4.8); Help and about links to the project website (UI-10). | Store listing and settings screens (B1-09, B5-05) |
 | DA12 | Onboarding privacy acknowledgment | **Decided 2026-10-08**: explicit acknowledgment at first start, not presented as GDPR consent (UI-00, UI-17). | B1-02 |
-| D13 | Android minimum OS | API 26 selected provisionally; verify MAUI, alarms and store compatibility in the M1 spike before claiming support. **Emulator check run 2026-10-10** (`ANALYSIS-B1-MOBILE-SYNC.md` §18.10): app, alarms, Doze, reboot, upgrade, app lock and `.mrz` pass; the Keystore key (first secret, M2) and the Play side (internal track) remain open. | M1 release claim and M2 entry |
+| D13 | Android minimum OS | API 26 selected provisionally; verify MAUI, alarms and store compatibility in the M1 spike before claiming support. **Emulator check run 2026-10-10** (`ANALYSIS-B1-MOBILE-SYNC.md` §18.10): app, alarms, Doze, reboot, upgrade, app lock and `.mrz` pass; the Keystore key and the Play side (internal track) remain open. M2 entry needs the emulator check; claiming API 26 support also needs the Keystore key check on API 26 (the first stored secret came with B2-03) and the internal track. Findings 1 and 2 of §18.10 are fixed (`medreminder-mobile` #22); finding 3 is tracked in B1-09. | Emulator check: M2 entry. Keystore and Play: any API 26 support claim |
 | DA5 | Play account and application ID | **Decided 2026-10-08**: personal account, application ID `com.vger70.medreminder` (immutable after first upload); production access needs the closed test of plan §5.0. | B1-09, B5-05 |
 | M2 accounts | Google Drive and OneDrive Android OAuth clients | Provision and verify before their respective M2 integration gates. | M2 provider sign-in |
 
@@ -88,9 +89,10 @@ and behave unchanged on desktop; Android can consume the portable APIs.
 
 **Entry:** M0 merged (D11, DA2, DA5 and DA12 decided on 2026-10-08);
 D13 selected provisionally (API 26); Play account and private
-repository ready. M1 implementation may proceed, but claiming API 26
-support is gated on the deferred D13 technical spike and compatibility
-check, which are not started in this task.
+repository ready. M1 implementation may proceed; claiming API 26
+support is gated on the D13 checks: the emulator check passed on
+2026-10-10 (`ANALYSIS-B1-MOBILE-SYNC.md` §18.10), the Keystore key and
+the Play internal track remain.
 **Exit:** the 14-day closed test on the closed testing track completes on
 a phone without PC/account, with no data loss across update, reboot, and
 export/import.
@@ -105,12 +107,14 @@ export/import.
 | B1-06 | Free export/import and backup reminder | Export/import encrypted `.mrz` using Android document flows; preview selected profile and replacement effect; failure/cancel preserves data; offer free export after 30 days without backup when sync is off. | UI-11, UI-17 |
 | B1-07 | Security, profile and app lock | One local profile with administrator role; biometric app lock; app data in private storage and secrets protected by the Android Keystore adapter. | UI-10, UI-17; plan §4.7 |
 | B1-08 | Reminder settings and recovery states | Expose permission status and routes to Android settings; when battery restrictions may delay reminders, offer contextual optional guidance and explain the limitation. | DA13; UI-09, UI-18 |
-| B1-09 | Pre-release readiness | Private-repository CI with a Release strip target equivalent to `StripReleaseDebugArtifacts` (D11), application ID `com.vger70.medreminder` (DA5), signing outside source control, internal and closed testing tracks (plan §5.0), five-language user guides, upgrade/reboot/export-import checklist, and no health data in logs. | B1-01–08; D13 validation |
+| B1-09 | Pre-release readiness | Private-repository CI with a Release strip target equivalent to `StripReleaseDebugArtifacts` (D11), application ID `com.vger70.medreminder` (DA5), signing outside source control, internal and closed testing tracks (plan §5.0), five-language user guides, upgrade/reboot/export-import checklist, and no health data in logs. Open from the D13 check (§18.10 finding 3): the export file name carries the profile name, which Android's media scanner writes to logcat; use a name without it. | B1-01–08; D13 validation |
 
 ### B2 — Cloud and household (M2)
 
-**Entry:** M1 exit passed, API 26 support validated, D4 recorded, S6/S7 Android
-OAuth clients ready. Google Drive integration precedes OneDrive.
+**Entry:** M1 exit passed, D13 emulator check passed (2026-10-10), D4
+recorded, S6/S7 Android OAuth clients ready. The rest of the D13 gate (the
+Keystore key, run once M2 stores its first secret, and the Play internal
+track) gates any API 26 support claim, not M2 entry. Google Drive integration precedes OneDrive.
 **Exit:** offline, conflict, restore and device-removal flows preserve
 user data and accurately report state. B2-01 (Play products and
 entitlement) and B2-02 (Premium gates) were removed on 2026-10-09 with
@@ -195,9 +199,9 @@ Every user-facing item is complete only when:
 ## 5. Recommended execution order
 
 1. Create the personal Play account with application ID
-   `com.vger70.medreminder` (DA5) and schedule the
-   API 26 technical spike as a separate later task; do not claim API 26
-   support before its result.
+   `com.vger70.medreminder` (DA5). The API 26 check ran on the emulator
+   on 2026-10-10; do not claim API 26 support before the Keystore key
+   check on API 26 and the Play internal track.
 2. Deliver B0, then B1 and its closed-test exit criteria.
 3. Complete M2 provider, household and recovery work; keep Google
    Drive ahead of OneDrive.
@@ -207,4 +211,4 @@ Every user-facing item is complete only when:
    as desktop.
 
 This ordering refines the product plan into work slices; it does not
-change the approved M0–M5 scope or authorize the deferred API 26 spike.
+change the approved M0–M5 scope.
