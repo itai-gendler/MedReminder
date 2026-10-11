@@ -30,7 +30,7 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #232 — Delete the sync temporary file when a write or rename fails
+## PR #232 — Clean up sync temporary files; lock down the help viewer
 
 Link: [vger70/MedReminder#232](https://github.com/vger70/MedReminder/pull/232)
 Branch: `claude/compassionate-euler-em6pvu`
@@ -38,6 +38,10 @@ Branch: `claude/compassionate-euler-em6pvu`
 ### Fixed
 
 - `LocalFolderSyncTransport` (`Infrastructure.Portable/Sync`): a cancelled or failed write, or a failed rename, no longer leaves a `.tmp-*` file in the synced folder. The cleanup is best effort, so the original exception still surfaces.
+
+### Security
+
+- Help viewer (`UI/Forms/HelpViewerForm`, `HelpGuideMarkdown`): the guide's raw HTML is limited to the section anchors `<a id="..."></a>` used by the table of contents, and every other HTML block or tag is dropped. The guide copy read from the per-user install folder is not trusted. In addition, WebView2 scripts are off, a Content-Security-Policy blocks external resources, and no navigation leaves the guide: a clicked https link opens in the default browser, and anything else is cancelled.
 
 ---
 
