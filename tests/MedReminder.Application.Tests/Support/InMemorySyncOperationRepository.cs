@@ -30,6 +30,11 @@ internal sealed class InMemorySyncOperationRepository : ISyncOperationRepository
     public Task<IReadOnlyList<SyncOperation>> ListForMedicineAsync(Guid medicineId, CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<SyncOperation>>([.. _items.Where(o => o.MedicineId == medicineId).OrderBy(o => o.Timestamp)]);
 
+    public Task<IReadOnlyList<SyncOperation>> ListByDeviceAndGenerationAsync(Guid deviceId, int generation, CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<SyncOperation>>([.. _items
+            .Where(o => o.DeviceId == deviceId && o.Generation == generation)
+            .OrderBy(o => o.Timestamp)]);
+
     public Task<IReadOnlyList<SyncOperation>> ListPendingAsync(Guid deviceId, int generation, CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<SyncOperation>>([.. _items
             .Where(o => o.DeviceId == deviceId && o.Generation == generation && o.SegmentSeq is null)

@@ -13,8 +13,7 @@ namespace MedReminder.Infrastructure.Sync;
 // in like an import (ProfileDatabaseSwap); the UI restarts the
 // application. Nothing is logged about the passphrase or the key.
 // Phase 4c: join with a pairing code, and the rekey after a key rotation
-// on another device (rebuild plus carry-over of this device's own
-// operations, applied to the new database before the restart).
+// on another device (ProfileSyncRekey, shared with the phone).
 internal sealed class SyncSetupService : ISyncSetupService
 {
     private readonly ICurrentProfile _profile;
@@ -24,11 +23,10 @@ internal sealed class SyncSetupService : ISyncSetupService
     private readonly ISyncSettingsStore _settings;
     private readonly ISyncKeyStore _keys;
     private readonly ISyncTransportFactory _transports;
-    private readonly ISyncOperationRepository _operations;
-    private readonly ApplyRemoteOperations _apply;
     private readonly TimeProvider _clock;
     private readonly IDatabaseExclusiveAccess _exclusiveAccess;
     private readonly ProfileSyncRebuild _rebuild;
+    private readonly ProfileSyncRekey _rekey;
     private readonly ILogger<SyncSetupService> _log;
 
     public SyncSetupService(
@@ -39,11 +37,10 @@ internal sealed class SyncSetupService : ISyncSetupService
         ISyncSettingsStore settings,
         ISyncKeyStore keys,
         ISyncTransportFactory transports,
-        ISyncOperationRepository operations,
-        ApplyRemoteOperations apply,
         TimeProvider clock,
         IDatabaseExclusiveAccess exclusiveAccess,
         ProfileSyncRebuild rebuild,
+        ProfileSyncRekey rekey,
         ILogger<SyncSetupService> log)
     {
         _profile = profile;
@@ -53,11 +50,10 @@ internal sealed class SyncSetupService : ISyncSetupService
         _settings = settings;
         _keys = keys;
         _transports = transports;
-        _operations = operations;
-        _apply = apply;
         _clock = clock;
         _exclusiveAccess = exclusiveAccess;
         _rebuild = rebuild;
+        _rekey = rekey;
         _log = log;
     }
 
@@ -121,43 +117,15 @@ internal sealed class SyncSetupService : ISyncSetupService
         _log.LogInformation("Profile {ProfileId} rebuilt from sync generation {Generation}.", _profile.Id, generation);
     }
 
+    // Shared with the phone (ProfileSyncRekey).
     public async Task<(int Carried, int Dropped)> RekeyAsync(SyncKeySource source, CancellationToken cancellationToken)
     {
-        var current = _settings.Load() ?? throw new InvalidOperationException("Sync is not enabled for this profile.");
-        // Read before the swap: the new database holds only what the
-        // rotating device had.
-        var own = (await _operations.ListAllAsync(cancellationToken))
-            .Where(o => o.DeviceId == current.DeviceId && o.Generation == current.Generation)
-            .ToList();
-        var temp = TempPath();
-        try
-        {
-            var result = await _join.RekeyAsync(_transports.Create(SyncTarget.Of(current)), current, source, temp,
-                cancellationToken);
-            try
-            {
-                await ProfileDatabaseSwap.ReplaceAsync(
-                    _exclusiveAccess, _db, _profile.DatabasePath, temp, _clock, cancellationToken);
-                // Nothing read from the replaced file may be written back.
-                _db.ChangeTracker.Clear();
-                _keys.Save(result.Settings.GroupId, result.Settings.KeyVersion, result.Key);
-                _settings.Save(result.Settings);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(result.Key);
-            }
-            var (carried, dropped) = await _apply.ApplyCarriedAsync(own, cancellationToken);
-            _log.LogInformation(
-                "Profile {ProfileId} took key version {KeyVersion} and generation {Generation}: " +
-                "{Carried} own operations carried over, {Dropped} dropped.",
-                _profile.Id, result.Settings.KeyVersion, result.Settings.Generation, carried, dropped);
-            return (carried, dropped);
-        }
-        finally
-        {
-            DeleteIfPresent(temp);
-        }
+        var (settings, carried, dropped) = await _rekey.ExecuteAsync(source, cancellationToken);
+        _log.LogInformation(
+            "Profile {ProfileId} took key version {KeyVersion} and generation {Generation}: " +
+            "{Carried} own operations carried over, {Dropped} dropped.",
+            _profile.Id, settings.KeyVersion, settings.Generation, carried, dropped);
+        return (carried, dropped);
     }
 
     private string TempPath()

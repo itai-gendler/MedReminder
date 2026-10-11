@@ -30,6 +30,29 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #241 — B2-07 shared core: portable profile rekey after a key rotation
+
+Link: [vger70/MedReminder#241](https://github.com/vger70/MedReminder/pull/241)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Added
+
+- `ProfileSyncRekey` (Infrastructure.Portable): the open profile takes a
+  new group key after a rotation elsewhere (passphrase, pairing code or
+  household grant), is rebuilt from the rotated generation and keeps
+  this device's own operations; the Android app needs it for backlog
+  B2-07.
+
+### Changed
+
+- The desktop's `SyncSetupService.RekeyAsync` delegates to it; the key
+  rotation tests run it in place.
+
+### Docs
+
+- Android backlog: B2-07 recorded as implemented in the private
+  repository.
+
 ## PR #240 — Keep the newest local backup of each profile
 
 Link: [vger70/MedReminder#240](https://github.com/vger70/MedReminder/pull/240)

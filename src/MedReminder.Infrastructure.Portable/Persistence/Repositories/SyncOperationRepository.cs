@@ -52,6 +52,15 @@ internal sealed class SyncOperationRepository : ISyncOperationRepository
         return [.. rows.OrderBy(o => o.Timestamp)];
     }
 
+    public async Task<IReadOnlyList<SyncOperation>> ListByDeviceAndGenerationAsync(
+        Guid deviceId, int generation, CancellationToken cancellationToken)
+    {
+        var rows = await _db.SyncOperations.AsNoTracking()
+            .Where(o => o.DeviceId == deviceId && o.Generation == generation)
+            .ToListAsync(cancellationToken);
+        return [.. rows.OrderBy(o => o.Timestamp)];
+    }
+
     public async Task<IReadOnlyList<SyncOperation>> ListPendingAsync(
         Guid deviceId, int generation, CancellationToken cancellationToken)
     {

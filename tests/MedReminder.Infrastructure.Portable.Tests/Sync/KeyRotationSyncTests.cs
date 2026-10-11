@@ -79,12 +79,12 @@ public sealed class KeyRotationSyncTests : IDisposable
 
         await FluentActions.Awaiting(() => RekeyAsync(lost, new SyncKeySource.Passphrase(Passphrase.ToCharArray())))
             .Should().ThrowAsync<CryptographicException>();
-        var (b2, carried, dropped) = await RekeyAsync(b, new SyncKeySource.Passphrase(NewPassphrase.ToCharArray()));
+        var (carried, dropped) = await RekeyAsync(b, new SyncKeySource.Passphrase(NewPassphrase.ToCharArray()));
         carried.Should().Be(2);
         dropped.Should().Be(0);
 
-        await SyncAllAsync([a, b2]);
-        ShouldConverge(await StatesAsync([a, b2]));
+        await SyncAllAsync([a, b]);
+        ShouldConverge(await StatesAsync([a, b]));
         var notes = (await a.RunAsync(sp => sp.GetRequiredService<IStockMovementRepository>().ListForMedicineAsync(id, default)))
             .Select(m => m.Notes).ToList();
         notes.Should().Contain(["published before the rotation", "recorded offline", "after the rotation"]);
@@ -101,10 +101,10 @@ public sealed class KeyRotationSyncTests : IDisposable
         var oldKey = a.Keys.Load(groupId, 1)!;
 
         await RotateAsync(a);
-        var (b2, _, _) = await RekeyAsync(b, new SyncKeySource.Passphrase(NewPassphrase.ToCharArray()));
+        await RekeyAsync(b, new SyncKeySource.Passphrase(NewPassphrase.ToCharArray()));
         var id = await MedicineIdAsync(a);
-        await AddStockAsync(b2, id, 2m, "new generation");
-        await SyncAllAsync([a, b2]);
+        await AddStockAsync(b, id, 2m, "new generation");
+        await SyncAllAsync([a, b]);
 
         var files = Directory.EnumerateFiles(Path.Combine(Folder, groupId.ToString("N")), "*", SearchOption.AllDirectories)
             .Where(f => f.EndsWith(".mrs", StringComparison.Ordinal) || f.EndsWith(".mrg", StringComparison.Ordinal)
@@ -208,13 +208,13 @@ public sealed class KeyRotationSyncTests : IDisposable
         await AddStockAsync(b, id, 6m, "offline on B");
 
         var offer = await a.RunAsync(sp => sp.GetRequiredService<SyncPairingOffers>().StartAsync(Transport, CancellationToken.None));
-        var (b2, carried, _) = await RekeyAsync(b, new SyncKeySource.Pairing(offer.Code));
+        var (carried, _) = await RekeyAsync(b, new SyncKeySource.Pairing(offer.Code));
 
         carried.Should().Be(1);
-        b2.Settings.Load()!.KeyVersion.Should().Be(2);
-        b2.Settings.Load()!.DeviceId.Should().Be(b.Settings.Load()!.DeviceId);
-        await SyncAllAsync([a, b2]);
-        ShouldConverge(await StatesAsync([a, b2]));
+        b.Settings.Load()!.KeyVersion.Should().Be(2);
+        b.Settings.Load()!.DeviceId.Should().Be(b.Settings.Load()!.DeviceId);
+        await SyncAllAsync([a, b]);
+        ShouldConverge(await StatesAsync([a, b]));
     }
 
     // Household step H5b: after a device removal, a remaining device takes
@@ -230,12 +230,12 @@ public sealed class KeyRotationSyncTests : IDisposable
         await AddStockAsync(b, id, 6m, "offline on B");
         var key = a.Keys.Load(rotated.GroupId, rotated.KeyVersion)!;
 
-        var (b2, carried, _) = await RekeyAsync(b, new SyncKeySource.Known(rotated.KeyVersion, key));
+        var (carried, _) = await RekeyAsync(b, new SyncKeySource.Known(rotated.KeyVersion, key));
 
         carried.Should().Be(1);
-        b2.Settings.Load()!.KeyVersion.Should().Be(rotated.KeyVersion);
-        await SyncAllAsync([a, b2]);
-        ShouldConverge(await StatesAsync([a, b2]));
+        b.Settings.Load()!.KeyVersion.Should().Be(rotated.KeyVersion);
+        await SyncAllAsync([a, b]);
+        ShouldConverge(await StatesAsync([a, b]));
     }
 
     [Fact]
@@ -331,22 +331,15 @@ public sealed class KeyRotationSyncTests : IDisposable
         => device.RunAsync(sp => sp.GetRequiredService<RotateSyncKey>().ExecuteAsync(
             Transport, NewPassphrase.ToCharArray(), CancellationToken.None, SyncFileFormatTests.FastKdf));
 
-    // What SyncSetupService.RekeyAsync does on the desktop: read the own
-    // operations, build the new database, then carry them over into it.
-    private async Task<(SyncDevice Device, int Carried, int Dropped)> RekeyAsync(SyncDevice device, SyncKeySource source)
+    // The shared rekey the desktop and the phone run (ProfileSyncRekey):
+    // the new database is swapped in place and the own operations carried
+    // over into it.
+    private static async Task<(int Carried, int Dropped)> RekeyAsync(SyncDevice device, SyncKeySource source)
     {
-        var current = device.Settings.Load()!;
-        var own = (await device.RunAsync(sp => sp.GetRequiredService<ISyncOperationRepository>().ListAllAsync(default)))
-            .Where(o => o.DeviceId == current.DeviceId && o.Generation == current.Generation)
-            .ToList();
-        var path = Path.Combine(_root, $"{device.Name}-{Guid.NewGuid():N}.db");
-        var joined = await device.RunAsync(sp => sp.GetRequiredService<JoinSyncGroup>().RekeyAsync(
-            Transport, current, source, path, CancellationToken.None));
-        var rebuilt = Track(new SyncDevice(device.Name + "2", path, device.Clock.GetUtcNow(), joined.Settings, joined.Key));
-        await rebuilt.InitializeAsync();
-        var (carried, dropped) = await rebuilt.RunAsync(sp =>
-            sp.GetRequiredService<ApplyRemoteOperations>().ApplyCarriedAsync(own, CancellationToken.None));
-        return (rebuilt, carried, dropped);
+        var (_, carried, dropped) = await device.RunAsync(sp =>
+            sp.GetRequiredService<ProfileSyncRekey>().ExecuteAsync(source, CancellationToken.None));
+        await device.InitializeAsync();
+        return (carried, dropped);
     }
 
     private SyncDevice Track(SyncDevice device)
