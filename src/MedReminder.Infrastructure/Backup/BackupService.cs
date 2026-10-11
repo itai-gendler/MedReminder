@@ -82,29 +82,9 @@ internal sealed class BackupService : IBackupService
             destinationDirectory,
             $"medreminder-{profileId}-{timestamp}.db");
 
-        var sourceConnectionString =
-            new SqliteConnectionStringBuilder(
-                AppDataPaths.BuildSqliteConnectionString(sourcePath))
-            {
-                Cache = SqliteCacheMode.Private,
-                Mode = SqliteOpenMode.ReadWriteCreate,
-            }.ToString();
-
-        var destConnectionString =
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = destinationFile,
-                Mode = SqliteOpenMode.ReadWriteCreate,
-            }.ToString();
-
-        await using var source = new SqliteConnection(sourceConnectionString);
-        await using var dest = new SqliteConnection(destConnectionString);
-        await source.OpenAsync(cancellationToken);
-        await dest.OpenAsync(cancellationToken);
-
-        // BackupDatabase is synchronous — run it on the ThreadPool so
-        // a UI thread caller does not block.
-        await Task.Run(() => source.BackupDatabase(dest), cancellationToken);
+        // Online backup off the caller's thread, retried while another
+        // connection briefly holds a lock (shared with ProfileArchive).
+        await SqliteOnlineBackup.CopyAsync(sourcePath, destinationFile, cancellationToken);
 
         _ = _db;
         return destinationFile;
