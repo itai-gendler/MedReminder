@@ -30,6 +30,27 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #239 — Share the profile rebuild from the sync group with the phone
+
+Link: [vger70/MedReminder#239](https://github.com/vger70/MedReminder/pull/239)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Added
+
+- `ProfileSyncRebuild` (Infrastructure.Portable): rebuilds the open
+  profile from its sync group with the stored key after a new
+  generation or a too-long absence, as the Android app needs for
+  backlog B2-06 (`ProfileDatabaseSwap` stays internal).
+
+### Changed
+
+- The desktop's `SyncSetupService.RebuildAsync` delegates to it.
+
+### Docs
+
+- Android backlog: B2-06 recorded as implemented in the private
+  repository; taking a new key on a phone moved to B2-07.
+
 ## PR #238 — Make the sync group keys portable for the phone's household join
 
 Link: [vger70/MedReminder#238](https://github.com/vger70/MedReminder/pull/238)
