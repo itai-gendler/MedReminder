@@ -172,21 +172,7 @@ public sealed class ProfileArchive
             throw new InvalidOperationException("The profile database does not exist.");
         }
 
-        var sourceConnection = new SqliteConnectionStringBuilder(SqliteConnectionStrings.ForFile(source))
-        {
-            Cache = SqliteCacheMode.Private,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-        }.ToString();
-        var destinationConnection = new SqliteConnectionStringBuilder
-        {
-            DataSource = destination,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-        }.ToString();
-
-        await using var from = new SqliteConnection(sourceConnection);
-        await using var to = new SqliteConnection(destinationConnection);
-        await from.OpenAsync(cancellationToken);
-        await to.OpenAsync(cancellationToken);
-        await Task.Run(() => from.BackupDatabase(to), cancellationToken);
+        // Retried while another connection briefly holds a lock.
+        await SqliteOnlineBackup.CopyAsync(source, destination, cancellationToken);
     }
 }

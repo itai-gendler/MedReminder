@@ -30,6 +30,17 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #233 — Retry the SQLite online backup while the database is briefly locked
+
+Link: [vger70/MedReminder#233](https://github.com/vger70/MedReminder/pull/233)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Fixed
+
+- The database copy that starts every export, the desktop's raw-database backup and the phone's cloud backup failed at once with "database is locked" (SQLITE_BUSY or SQLITE_LOCKED) when another connection held a lock at that moment: a write being committed, or the checkpoint SQLite runs when the last connection of a WAL database closes. Seen in the Android app's tests. The copy is now retried after short delays, about 4 seconds in all, before the error is reported; each attempt starts from a new destination file. One helper, `SqliteOnlineBackup` (`Infrastructure.Portable/Persistence`), serves `ProfileArchive` and `BackupService`.
+
+---
+
 ## PR #232 — Harden the sync folder transport and the help viewer
 
 Link: [vger70/MedReminder#232](https://github.com/vger70/MedReminder/pull/232)
