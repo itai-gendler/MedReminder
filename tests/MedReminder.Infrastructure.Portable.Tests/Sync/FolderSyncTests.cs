@@ -270,7 +270,7 @@ public sealed class FolderSyncTests : IDisposable
 
         generation.Should().Be(reset.Generation);
         b.Settings.Load()!.Should().Match<SyncSettings>(s => s.Generation == reset.Generation && s.DeviceId == device && !s.ResetPending);
-        b.Keys.Load(reset.GroupId, 1).Should().NotBeNull();
+        b.Keys.Load(reset.GroupId, b.Settings.Load()!.KeyVersion).Should().NotBeNull();
         Directory.EnumerateFiles(_root, "B.db.bak-*").Should().ContainSingle();
         Directory.EnumerateFiles(_root, "medreminder.sync-*").Should().BeEmpty();
         await b.InitializeAsync();

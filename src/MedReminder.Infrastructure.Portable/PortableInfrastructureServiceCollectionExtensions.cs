@@ -93,11 +93,10 @@ public static class PortableInfrastructureServiceCollectionExtensions
                 ?? throw new InvalidOperationException("Sync is not enabled for this profile."))));
         // Rebuild of the open profile from its group (B.1 Phase 3d), shared
         // by the desktop and the phone.
-        services.AddScoped(sp => new ProfileSyncRebuild(databasePath, sp.GetRequiredService<MedReminderDbContext>(),
+        services.TryAddScoped(sp => new ProfileSyncRebuild(databasePath, sp.GetRequiredService<MedReminderDbContext>(),
             sp.GetRequiredService<MedReminder.Application.Sync.JoinSyncGroup>(), sp.GetRequiredService<ISyncSettingsStore>(),
             sp.GetRequiredService<ISyncKeyStore>(), sp.GetRequiredService<ISyncTransportFactory>(),
-            sp.GetRequiredService<IDatabaseExclusiveAccess>(), sp.GetRequiredService<TimeProvider>(),
-            sp.GetService<Microsoft.Extensions.Logging.ILogger<ProfileSyncRebuild>>()));
+            sp.GetRequiredService<IDatabaseExclusiveAccess>(), sp.GetRequiredService<TimeProvider>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITransactionalScope, TransactionalScope>();
         services.AddScoped<DatabaseInitializer>();

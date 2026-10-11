@@ -4,7 +4,6 @@ using MedReminder.Application.Sync;
 using MedReminder.Infrastructure.Persistence;
 using MedReminder.Infrastructure.Storage;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Logging;
 
 namespace MedReminder.Infrastructure.Sync;
 
@@ -29,11 +28,10 @@ public sealed class ProfileSyncRebuild
     private readonly ISyncTransportFactory _transports;
     private readonly IDatabaseExclusiveAccess _exclusiveAccess;
     private readonly TimeProvider _clock;
-    private readonly ILogger<ProfileSyncRebuild>? _log;
 
     internal ProfileSyncRebuild(string databasePath, MedReminderDbContext db, JoinSyncGroup join,
         ISyncSettingsStore settings, ISyncKeyStore keys, ISyncTransportFactory transports,
-        IDatabaseExclusiveAccess exclusiveAccess, TimeProvider clock, ILogger<ProfileSyncRebuild>? log)
+        IDatabaseExclusiveAccess exclusiveAccess, TimeProvider clock)
     {
         _databasePath = databasePath;
         _db = db;
@@ -43,7 +41,6 @@ public sealed class ProfileSyncRebuild
         _transports = transports;
         _exclusiveAccess = exclusiveAccess;
         _clock = clock;
-        _log = log;
     }
 
     // Returns the generation the profile was rebuilt from.
@@ -62,8 +59,8 @@ public sealed class ProfileSyncRebuild
             var rebuilt = await _join.RejoinAsync(_transports.Create(SyncTarget.Of(current)), current, key, temp,
                 cancellationToken);
             await ProfileDatabaseSwap.ReplaceAsync(_exclusiveAccess, _db, _databasePath, temp, _clock, cancellationToken);
+            _db.ChangeTracker.Clear();
             _settings.Save(rebuilt with { ResetPending = false });
-            _log?.LogInformation("Profile rebuilt from sync generation {Generation}.", rebuilt.Generation);
             return rebuilt.Generation;
         }
         finally
