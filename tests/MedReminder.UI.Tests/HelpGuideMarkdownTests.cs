@@ -52,7 +52,8 @@ public sealed class HelpGuideMarkdownTests
     [MemberData(nameof(Languages))]
     public void Shipped_guides_keep_every_section_anchor(string language)
     {
-        var markdown = ReadEmbeddedGuide(language);
+        var markdown = File.ReadAllText(
+            Path.Combine(FindRepoRoot(), "docs", $"USER_GUIDE.{language}.md"), Encoding.UTF8);
         var anchors = Regex.Count(markdown, "<a id=\"[A-Za-z0-9-]+\"></a>");
 
         var html = HelpGuideMarkdown.ToHtml(markdown);
@@ -62,11 +63,17 @@ public sealed class HelpGuideMarkdownTests
         html.Should().NotContain("&lt;a id=");
     }
 
-    private static string ReadEmbeddedGuide(string language)
+    // The guides are read from docs/: the embedded copies are not found in
+    // the MedReminder.UI assembly (the .de.md culture suffix likely sends
+    // them to satellite assemblies).
+    private static string FindRepoRoot()
     {
-        using var stream = typeof(HelpGuideMarkdown).Assembly
-            .GetManifestResourceStream($"USER_GUIDE.{language}.md")!;
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return reader.ReadToEnd();
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "MedReminder.sln")))
+        {
+            dir = dir.Parent;
+        }
+        dir.Should().NotBeNull("the test must run inside the repository");
+        return dir!.FullName;
     }
 }
