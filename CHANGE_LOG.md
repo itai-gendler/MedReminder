@@ -30,6 +30,17 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #232 — Delete the sync temporary file when a write or rename fails
+
+Link: [vger70/MedReminder#232](https://github.com/vger70/MedReminder/pull/232)
+Branch: `claude/compassionate-euler-em6pvu`
+
+### Fixed
+
+- `LocalFolderSyncTransport` (`Infrastructure.Portable/Sync`): a cancelled or failed write, or a failed rename, no longer leaves a `.tmp-*` file in the synced folder. The cleanup is best effort, so the original exception still surfaces.
+
+---
+
 ## PR #231 — Shared cloud backup run for the Android app (M2, B2-03)
 
 Link: [vger70/MedReminder#231](https://github.com/vger70/MedReminder/pull/231)
