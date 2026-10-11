@@ -142,4 +142,33 @@ public static class PortableInfrastructureServiceCollectionExtensions
         services.TryAddSingleton<IInstallationSettingsStore, InstallationSettingsStore>();
         return services;
     }
+
+    // Android plan M2 (B2-05): the sync group keys behind the host's
+    // credential protector (ProtectedSyncKeyStore), for a host without its
+    // own key store: the open profile's key, the key of any profile for
+    // household grants, and the installer of profiles an installation join
+    // brings. The Windows host registers its DPAPI stores instead and does
+    // not call this. Requires ICredentialProtector from the host.
+    public static IServiceCollection AddMedReminderPortableSyncKeys(
+        this IServiceCollection services,
+        string profilesRootDirectory,
+        string currentProfileDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(profilesRootDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentProfileDirectory);
+
+        services.TryAddSingleton<ISyncKeyStore>(sp => ProtectedSyncKeyStore.In(
+            sp.GetRequiredService<ICredentialProtector>(), currentProfileDirectory));
+        services.TryAddSingleton<IProfileGroupKeys>(sp =>
+        {
+            var protector = sp.GetRequiredService<ICredentialProtector>();
+            return new ProfileGroupKeys(profilesRootDirectory, directory => ProtectedSyncKeyStore.In(protector, directory));
+        });
+        services.TryAddSingleton<IHouseholdProfileInstaller>(sp =>
+        {
+            var protector = sp.GetRequiredService<ICredentialProtector>();
+            return new HouseholdProfileInstaller(profilesRootDirectory, directory => ProtectedSyncKeyStore.In(protector, directory));
+        });
+        return services;
+    }
 }

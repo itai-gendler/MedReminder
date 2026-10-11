@@ -8,7 +8,7 @@ namespace MedReminder.Infrastructure.Household;
 // lists it, and Install moves it to profiles\<id>\ with the same files a
 // single-group join leaves (medreminder.db, sync.settings.json and the
 // protected group key). The key store is the host's (DPAPI on Windows).
-internal sealed class HouseholdProfileInstaller : IHouseholdProfileInstaller
+public sealed class HouseholdProfileInstaller : IHouseholdProfileInstaller
 {
     public const string DatabaseFileName = "medreminder.db";
     private const string StagingPrefix = ".join-";
