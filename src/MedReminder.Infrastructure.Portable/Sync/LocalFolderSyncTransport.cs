@@ -60,8 +60,11 @@ public sealed class LocalFolderSyncTransport : ISyncTransport
         }
         catch (IOException) when (File.Exists(full))
         {
-            File.Delete(temp);
             return false;
+        }
+        finally
+        {
+            TryDelete(temp);
         }
     }
 
@@ -69,7 +72,14 @@ public sealed class LocalFolderSyncTransport : ISyncTransport
     {
         var full = Resolve(path);
         var temp = await WriteTempAsync(full, content, cancellationToken);
-        File.Move(temp, full, overwrite: true);
+        try
+        {
+            File.Move(temp, full, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(temp);
+        }
     }
 
     public Task DeleteAsync(string path, CancellationToken cancellationToken)
@@ -84,8 +94,32 @@ public sealed class LocalFolderSyncTransport : ISyncTransport
         ArgumentNullException.ThrowIfNull(content);
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         var temp = Path.Combine(Path.GetDirectoryName(full)!, TempPrefix + Guid.NewGuid().ToString("N"));
-        await File.WriteAllBytesAsync(temp, content, cancellationToken);
-        return temp;
+        try
+        {
+            await File.WriteAllBytesAsync(temp, content, cancellationToken);
+            return temp;
+        }
+        catch
+        {
+            TryDelete(temp);
+            throw;
+        }
+    }
+
+    // A failed write or rename must not leave the temporary file behind:
+    // List skips it, but leftovers would pile up in the synced folder.
+    // After a successful rename the file is gone and Delete does nothing.
+    private static void TryDelete(string temp)
+    {
+        try
+        {
+            File.Delete(temp);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Best effort (the sync client may hold the file): the original
+            // failure is the one that surfaces, and List skips the leftover.
+        }
     }
 
     // Relative paths only, never outside the root.

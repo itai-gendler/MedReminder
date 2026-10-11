@@ -85,6 +85,30 @@ public sealed class LocalFolderSyncTransportTests : SyncTransportContractTests, 
     }
 
     [Fact]
+    public async Task A_failed_write_leaves_no_temporary_file()
+    {
+        var transport = CreateTransport();
+        Directory.CreateDirectory(Path.Combine(_root, "g", "blocked.mrs"));
+
+        await FluentActions.Awaiting(() => transport.WriteAsync("g/blocked.mrs", [1], default))
+            .Should().ThrowAsync<Exception>();
+
+        Directory.EnumerateFiles(Path.Combine(_root, "g")).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_failed_create_leaves_no_temporary_file()
+    {
+        var transport = CreateTransport();
+        Directory.CreateDirectory(Path.Combine(_root, "g", "blocked.mrs"));
+
+        await FluentActions.Awaiting(() => transport.CreateAsync("g/blocked.mrs", [1], default))
+            .Should().ThrowAsync<Exception>();
+
+        Directory.EnumerateFiles(Path.Combine(_root, "g")).Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Paths_cannot_leave_the_folder()
     {
         var transport = CreateTransport();
