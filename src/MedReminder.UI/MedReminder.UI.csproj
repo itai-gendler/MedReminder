@@ -106,7 +106,12 @@
          loads the one matching the current UI language; if missing,
          falls back to English. Copied as Content into
          bin/localization/ so they are inspectable / editable; ALSO
-         embedded for single-file publish. -->
+         embedded for single-file publish.
+         WithCulture=false on the embedded copies (here and for the
+         dictionaries below): without it MSBuild reads the .<lang>.
+         suffix as a culture and moves the resource into a satellite
+         assembly (<lang>\MedReminder.resources.dll), where the
+         embedded fallback never finds it. -->
     <Content Include="..\..\docs\USER_GUIDE.en.md">
       <Link>localization\USER_GUIDE.en.md</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -130,22 +135,27 @@
     <EmbeddedResource Include="..\..\docs\USER_GUIDE.en.md">
       <Link>Assets\USER_GUIDE.en.md</Link>
       <LogicalName>USER_GUIDE.en.md</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\docs\USER_GUIDE.it.md">
       <Link>Assets\USER_GUIDE.it.md</Link>
       <LogicalName>USER_GUIDE.it.md</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\docs\USER_GUIDE.fr.md">
       <Link>Assets\USER_GUIDE.fr.md</Link>
       <LogicalName>USER_GUIDE.fr.md</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\docs\USER_GUIDE.es.md">
       <Link>Assets\USER_GUIDE.es.md</Link>
       <LogicalName>USER_GUIDE.es.md</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\docs\USER_GUIDE.de.md">
       <Link>Assets\USER_GUIDE.de.md</Link>
       <LogicalName>USER_GUIDE.de.md</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <!-- Localization dictionaries (Increment 16a). Copied as
          Content into bin/localization/ so they are inspectable and
@@ -175,22 +185,27 @@
     <EmbeddedResource Include="..\..\assets\localization\strings.en.json">
       <Link>Assets\strings.en.json</Link>
       <LogicalName>strings.en.json</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\localization\strings.it.json">
       <Link>Assets\strings.it.json</Link>
       <LogicalName>strings.it.json</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\localization\strings.fr.json">
       <Link>Assets\strings.fr.json</Link>
       <LogicalName>strings.fr.json</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\localization\strings.es.json">
       <Link>Assets\strings.es.json</Link>
       <LogicalName>strings.es.json</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\localization\strings.de.json">
       <Link>Assets\strings.de.json</Link>
       <LogicalName>strings.de.json</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
   </ItemGroup>
 
