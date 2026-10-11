@@ -9,25 +9,7 @@ updated only if the PR's scope changes materially before it merges.
 - Every time a new pull request is created for this repository, an
   entry is prepended below in reverse-chronological order (newest
   first).
-- The entry title is `## PR #238 — Make the sync group keys portable for the phone's household join
-
-Link: [vger70/MedReminder#238](https://github.com/vger70/MedReminder/pull/238)
-Branch: `claude/m2-implementation-stepwise-8sv8t8`
-
-### Added
-
-- `ProtectedSyncKeyStore`: a profile's sync group key behind the host's
-  credential protector (Android Keystore on the phone; B2-05).
-- `AddMedReminderPortableSyncKeys`: registers the group key stores and
-  the household profile installer for a host without DPAPI.
-
-### Changed
-
-- `ProfileGroupKeys` is portable and public, with the key store passed
-  in; the desktop keeps its DPAPI store and files.
-- `HouseholdProfileInstaller` is public.
-
-## PR #<number> — <one-line summary>` and links
+- The entry title is `## PR #<number> — <one-line summary>` and links
   back to the PR on GitHub.
 - The body lists the observable changes as terse bullet points,
   focused on **what changed** and **why**, not on implementation
@@ -47,6 +29,24 @@ with the classification adapted to per-PR granularity: **Added**,
 **Docs**, **Build**.
 
 ---
+
+## PR #238 — Make the sync group keys portable for the phone's household join
+
+Link: [vger70/MedReminder#238](https://github.com/vger70/MedReminder/pull/238)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Added
+
+- `ProtectedSyncKeyStore`: a profile's sync group key behind the host's
+  credential protector (Android Keystore on the phone; B2-05).
+- `AddMedReminderPortableSyncKeys`: registers the group key stores and
+  the household profile installer for a host without DPAPI.
+
+### Changed
+
+- `ProfileGroupKeys` is portable and public, with the key store passed
+  in; the desktop keeps its DPAPI store and files.
+- `HouseholdProfileInstaller` is public.
 
 ## PR #236 — Describe where Android keeps the OneDrive tokens
 
