@@ -69,10 +69,14 @@ dati; per rimuoverli, elimina la cartella separatamente.
 MedReminder conserva database, impostazioni e file di log nello spazio
 privato dell'app sul telefono. Il backup automatico dei dati dell'app di
 Android è disattivato, quindi il sistema operativo non copia questi dati
-relativi alla salute in un account di backup Android. I segreti dell'app, come i
-token di accesso al cloud e la passphrase di backup, sono conservati
-tramite l'archiviazione sicura delle chiavi di Android. I log Android
-non contengono password, testi delle email o note mediche.
+relativi alla salute in un account di backup Android. La passphrase di
+backup è conservata tramite l'archiviazione sicura delle chiavi di
+Android. L'accesso a Google Drive è gestito dai servizi Google Play, che
+conservano l'autorizzazione e forniscono all'app token di accesso di
+breve durata. I token di accesso a OneDrive sono conservati dalla
+libreria di accesso Microsoft nell'archiviazione privata dell'app, che
+le altre app non possono leggere ed è esclusa dal backup Android. I log
+Android non contengono password, testi delle email o note mediche.
 
 Cancellare i dati dell'app MedReminder o disinstallarla rimuove la copia
 locale. Prima di farlo, usa le funzioni di esportazione o backup cloud
