@@ -30,6 +30,35 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #238 — Make the sync group keys portable for the phone's household join
+
+Link: [vger70/MedReminder#238](https://github.com/vger70/MedReminder/pull/238)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Added
+
+- `ProtectedSyncKeyStore`: a profile's sync group key behind the host's
+  credential protector (Android Keystore on the phone; B2-05).
+- `AddMedReminderPortableSyncKeys`: registers the group key stores and
+  the household profile installer for a host without DPAPI.
+
+### Changed
+
+- `ProfileGroupKeys` is portable and public, with the key store passed
+  in; the desktop keeps its DPAPI store and files.
+- `HouseholdProfileInstaller` is public.
+
+### Docs
+
+- `PRIVACY*.md`: the Android camera also reads the QR code of an
+  installation join (B2-05).
+- D13 documents after the review of PR #230: M2 entry needs the API 26
+  emulator check; the Keystore key check and the Play internal track gate
+  the API 26 support claim (B.1 §13, §16, §18.10; Android plan, backlog,
+  team plan, STATUS). §18.10 records finding 3 (profile name in the
+  export file name, written to logcat by the media scanner; tracked in
+  B1-09) and findings 1 and 2 as fixed in the private repository.
+
 ## PR #236 — Describe where Android keeps the OneDrive tokens
 
 Link: [vger70/MedReminder#236](https://github.com/vger70/MedReminder/pull/236)

@@ -107,7 +107,9 @@ public static class InfrastructureServiceCollectionExtensions
             new DpapiSyncKeyStore(Path.Combine(currentProfile.DataDirectory, DpapiSyncKeyStore.FileName)));
         // Household step H3b: the group key of any profile, for grants and
         // escrows.
-        services.TryAddSingleton<IProfileGroupKeys, ProfileGroupKeys>();
+        services.TryAddSingleton<IProfileGroupKeys>(_ => new ProfileGroupKeys(
+            AppDataPaths.GetProfilesRootDirectory(),
+            directory => new DpapiSyncKeyStore(Path.Combine(directory, DpapiSyncKeyStore.FileName))));
         // Household step H3c: profiles brought by an installation join, with
         // their group key DPAPI-protected like any synced profile.
         services.TryAddSingleton<IHouseholdProfileInstaller>(_ => new HouseholdProfileInstaller(

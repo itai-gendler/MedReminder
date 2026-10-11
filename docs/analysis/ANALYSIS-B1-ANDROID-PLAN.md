@@ -499,8 +499,9 @@ reader.
 
 Entry: M0 merged (D11, DA2, DA5 and DA12 were decided on 2026-10-08;
 DA5 fixes the application id `com.vger70.medreminder`); D13 selected provisionally
-(API 26), with its validation due before support is claimed and before
-M2; Play Console account; private repository created (A7). M1 and
+(API 26): the emulator check is due before M2 (passed 2026-10-10, B.1
+§18.10), the Keystore key check and the Play internal track before API 26
+support is claimed; Play Console account; private repository created (A7). M1 and
 later milestones are pre-release builds (§5.0). D4 multi-device
 delivery preferences are implemented in M2.
 
@@ -538,8 +539,10 @@ experience]`.
 
 ### M2 — Cloud: backup, sync, household
 
-Entry: M1 exit passed; D4 decided; Android API 26 validated by the M1
-technical spike; Android halves of S6 and S7 (Android OAuth clients,
+Entry: M1 exit passed; D4 decided; D13 emulator check passed (2026-10-10,
+B.1 §18.10; the Keystore key check runs once M2 stores its first secret and,
+with the Play internal track, gates the API 26 support claim, not M2
+entry); Android halves of S6 and S7 (Android OAuth clients,
 P14). Google Drive is the first Android provider, followed by OneDrive.
 
 - Google Drive sign-in on Android, then OneDrive sign-in; both use the
@@ -607,7 +610,7 @@ by the product owner.
 |---|---|---|---|
 | M0 | Portability refactor 2, notification planner | Approval of this plan | 10–15 d |
 | M1 | Standalone core, first pre-release milestone | M0; D13/API 26 selected provisionally (D11, DA2, DA5, DA12 decided); Play account; private repository | 35–50 d |
-| M2 | Cloud backup, sync, household, profiles, roles and PIN, local data deletion | M1; D4; API 26 validated; S6/S7 Android halves | 30–45 d |
+| M2 | Cloud backup, sync, household, profiles, roles and PIN, local data deletion | M1; D4; D13 emulator check (API 26); S6/S7 Android halves | 30–45 d |
 | M3 | Prescriptions, planning, views | M2 exit | 15–20 d |
 | M4 | Catalogue (DA3 defaults), scan, Italian services | M3 exit | 15–20 d |
 | M5 | Email; last pre-release milestone | M4 exit | 10–15 d |
@@ -642,8 +645,10 @@ Infrastructure.Portable code, B.1 §7.5]`.
 
 From B.1: D11 was decided on 2026-10-08 (reject; the private app
 repository adopts an equivalent strip target, see B.1 §16). D4 was
-decided on 2026-10-08. D13 selects Android API 26 provisionally; validate
-MAUI, alarm and Play compatibility in the M1 technical spike. iOS 15
+decided on 2026-10-08. D13 selects Android API 26 provisionally; the MAUI
+and alarm compatibility check passed on the emulator on 2026-10-10 (B.1
+§18.10); the Keystore key check and the Play internal track remain before
+API 26 support is claimed. iOS 15
 remains an inferred proposal and is outside this Android decision.
 
 New (prefix DA, to keep them apart from the B.1 and household
@@ -723,6 +728,11 @@ no donation links on Android or iOS (DA9, decided again on
 Numbering note: two entries carry revision 14 and none carries
 revision 17; the numbers are kept as recorded.
 
+- **2026-10-11 — revision 24:** D13 gate untangled after the
+  2026-10-10 emulator check (B.1 §18.10): M2 entry needs the emulator
+  check; the Keystore key check, possible only once M2 stores its first
+  secret, and the Play internal track gate the API 26 support claim
+  instead (M1 and M2 entries, §5 table, §6).
 - **2026-10-09 — revision 23:** Product-owner decision: the mobile
   apps are entirely free (A6). §4.8 rewritten (principles, store rules,
   trader status); split table, prices, license testing, entitlement and

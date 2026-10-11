@@ -49,10 +49,10 @@ must still be explicit for each milestone.
 | Stage | Work | Gate to proceed |
 |---|---|---|
 | P0 — Team readiness | Confirm private Android repository access, named role owners, available capacity, device/test access, and shared-core contribution/release workflow. Review the backlog against the approved UX requirements. | Team and repository ownership are clear; no code work is started from an unassigned or ambiguous slice. |
-| P1 — Prepare M1 entry inputs | D11, DA2, DA5 and DA12 are decided (2026-10-08). Create the personal Play account and reserve the application ID `com.vger70.medreminder`; add the strip target to the private repository (D11). Separately schedule the deferred API 26 spike and state its result is required before claiming API 26 support. | Play account and private-repository build rules ready; spike has an owner and a future slot, but is not run by this plan. |
+| P1 — Prepare M1 entry inputs | D11, DA2, DA5 and DA12 are decided (2026-10-08). Create the personal Play account and reserve the application ID `com.vger70.medreminder`; add the strip target to the private repository (D11). The API 26 check ran on the emulator on 2026-10-10 (B.1 §18.10); schedule the two remaining D13 checks, the Keystore key on API 26 (once M2 stores its first secret) and the Play internal track, and state that both are required before claiming API 26 support. | Play account and private-repository build rules ready; the remaining D13 checks have an owner and a slot. |
 | M0 — Shared foundations | Deliver B0-01–04 in dependency order: profile/settings extraction, notification planner, Android consumption proof, then shared-core CI/release discipline. | Existing desktop behavior remains unchanged; Android builds against a pinned shared-core revision; portable CI is green. |
 | M1 — Standalone core | Deliver B1-01–09. Establish the shell and local data path first; develop medicine/regimen and package/intake flows alongside permission/reminder work after shared APIs are stable; complete export/import, security and recovery; then run the closed test on the closed testing track. | 14-day closed test passes on a phone without PC/account; no data loss across update, reboot, export/import; API 26 claim only after compatibility validation. |
-| M2 — Cloud and household | Before entry, finish Android OAuth client work for S6/S7 and API 26 validation. Deliver Google Drive backup/restore, OneDrive, pairing/sync, household and local deletion in that order as dependencies permit. | Offline, conflict, restore, provider recovery and device-removal scenarios preserve data and report accurate state. |
+| M2 — Cloud and household | Before entry, finish Android OAuth client work for S6/S7 and the D13 emulator check (passed 2026-10-10); run the Keystore key check on API 26 with the first stored secret. Deliver Google Drive backup/restore, OneDrive, pairing/sync, household and local deletion in that order as dependencies permit. | Offline, conflict, restore, provider recovery and device-removal scenarios preserve data and report accurate state. |
 | M3 — Prescriptions and planning | Deliver B3-01–05 after M2 exit; build the PDF report with SkiaSharp (DA14; no iText) and verify public regional-service links as data inputs. | Milestone acceptance of prescription lifecycle, reminders, planning, calendar/report handoff. |
 | M4 — Catalogue and scan | Deliver B4-01–05 after M3 exit. Verify data attribution/redistribution for each feed; implement the DA3 defaults: reference country from the device region, national catalogue if one exists (IT, ES, FR, US), otherwise EMA for an EU/EEA country, otherwise no catalogue; the UI language stays independent of the country. | Catalogue/manual-entry behavior, offline states, safety information and scan pass milestone acceptance. |
 | M5 — Email and release preparation | Deliver B5-01–04 after M4 exit; complete B5-05 store, privacy/legal, security and operational checks, and a closed test that meets the Play production-access rule. | M5 exit and final release checks pass; product owner authorizes public Play release. |
@@ -120,8 +120,9 @@ Before implementation starts, the team should:
 2. Create the personal Play account with the application ID
    `com.vger70.medreminder` (DA5) and recruit at least 20 closed-test
    testers, so that 12 remain opted in for 14 consecutive days.
-3. Assign an owner and proposed date to the deferred API 26 spike without
-   starting it; schedule S6/S7 Android OAuth work before M2.
+3. Assign an owner and a date to the two remaining D13 checks (the
+   Keystore key on API 26 and the Play internal track; the emulator check
+   ran on 2026-10-10); schedule S6/S7 Android OAuth work before M2.
 4. Confirm available devices and OS versions for closed testing, including
    low-end hardware and permission/reboot scenarios from the existing B.1
    spike findings.

@@ -115,7 +115,9 @@ you choose to scan. Images are processed on your device and are not
 saved or sent by MedReminder. On Windows, the camera turns off when a
 code is read, when you close the scan window, or after 30 seconds. On
 Android, camera access is controlled by the Android permission and app
-lifecycle.
+lifecycle. On Android, the camera also reads the QR code another device
+shows when you join an installation; it is used only while the scan page
+is open, and the code is not saved.
 
 ## 6. Links that open your browser
 
