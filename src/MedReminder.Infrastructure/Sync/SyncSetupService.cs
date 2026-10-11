@@ -120,12 +120,11 @@ internal sealed class SyncSetupService : ISyncSetupService
     // Shared with the phone (ProfileSyncRekey).
     public async Task<(int Carried, int Dropped)> RekeyAsync(SyncKeySource source, CancellationToken cancellationToken)
     {
-        var (carried, dropped) = await _rekey.ExecuteAsync(source, cancellationToken);
-        var settings = _settings.Load();
+        var (settings, carried, dropped) = await _rekey.ExecuteAsync(source, cancellationToken);
         _log.LogInformation(
             "Profile {ProfileId} took key version {KeyVersion} and generation {Generation}: " +
             "{Carried} own operations carried over, {Dropped} dropped.",
-            _profile.Id, settings?.KeyVersion, settings?.Generation, carried, dropped);
+            _profile.Id, settings.KeyVersion, settings.Generation, carried, dropped);
         return (carried, dropped);
     }
 

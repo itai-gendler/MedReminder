@@ -48,19 +48,17 @@ public sealed class ProfileSyncRekey
         _clock = clock;
     }
 
-    // Returns the own operations carried over and those dropped (for a
-    // medicine the new generation does not have). CryptographicException
-    // for a wrong passphrase; the pairing exceptions for a code no longer
-    // offered; InvalidOperationException when sync is off.
-    public async Task<(int Carried, int Dropped)> ExecuteAsync(SyncKeySource source, CancellationToken cancellationToken)
+    // Returns the new settings and the own operations carried over and
+    // dropped (for a medicine the new generation does not have).
+    // CryptographicException for a wrong passphrase; the pairing exceptions
+    // for a code no longer offered; InvalidOperationException when sync is off.
+    public async Task<(SyncSettings Settings, int Carried, int Dropped)> ExecuteAsync(SyncKeySource source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
         var current = _settings.Load() ?? throw new InvalidOperationException("Sync is not enabled for this profile.");
         // Read before the swap: the new database holds only what the
         // rotating device had.
-        var own = (await _operations.ListAllAsync(cancellationToken))
-            .Where(o => o.DeviceId == current.DeviceId && o.Generation == current.Generation)
-            .ToList();
+        var own = await _operations.ListByDeviceAndGenerationAsync(current.DeviceId, current.Generation, cancellationToken);
         var temp = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_databasePath))!,
             $"medreminder.sync-{Guid.NewGuid():N}.db");
         try
@@ -79,7 +77,8 @@ public sealed class ProfileSyncRekey
             {
                 CryptographicOperations.ZeroMemory(result.Key);
             }
-            return await _apply.ApplyCarriedAsync(own, cancellationToken);
+            var (carried, dropped) = await _apply.ApplyCarriedAsync(own, cancellationToken);
+            return (result.Settings, carried, dropped);
         }
         finally
         {
