@@ -1049,6 +1049,9 @@ Le impostazioni di backup sono gestite da un amministratore.
    subito.
 
 Ogni profilo viene salvato, come `medreminder-<profilo>-<data>-<ora>.db`.
+I backup più vecchi della conservazione vengono eliminati, tranne il più
+recente di ogni profilo: un profilo i cui backup si sono fermati ne
+conserva l'ultima copia.
 MedReminder deve essere in esecuzione all'orario scelto; se il PC era
 spento, il backup parte al successivo avvio. Non scegliere per questo
 backup una cartella sincronizzata nel cloud: i file non sono cifrati

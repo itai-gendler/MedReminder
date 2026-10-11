@@ -58,6 +58,28 @@ public sealed class BackupServicePruneCloudTests : IDisposable
     }
 
     [Fact]
+    public async Task Local_prune_keeps_the_newest_backup_of_each_profile()
+    {
+        // Profile a is still backed up; profile b's backups stopped 60 days ago.
+        var a = "medreminder-" + new string('a', 32);
+        var b = "medreminder-" + new string('b', 32);
+        var aRecent = WriteFile(a + "-20260901-120000.db", ageDays: 1);
+        var aOld = WriteFile(a + "-20260701-120000.db", ageDays: 60);
+        var bLast = WriteFile(b + "-20260801-120000.db", ageDays: 60);
+        var bOlder = WriteFile(b + "-20260701-120000.db", ageDays: 90);
+        var renamed = WriteFile("medreminder-mine.db", ageDays: 400);
+
+        var deleted = await CreateService().PruneOldBackupsAsync(_folder, retentionDays: 30, CancellationToken.None);
+
+        deleted.Should().Be(2);
+        File.Exists(aRecent).Should().BeTrue();
+        File.Exists(aOld).Should().BeFalse();
+        File.Exists(bLast).Should().BeTrue("the newest backup of a profile is kept even past the retention");
+        File.Exists(bOlder).Should().BeFalse();
+        File.Exists(renamed).Should().BeTrue("files that do not match the .db regex are left alone");
+    }
+
+    [Fact]
     public async Task Retention_of_zero_prunes_nothing()
     {
         var oldMrz = WriteFile(

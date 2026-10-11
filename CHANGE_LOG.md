@@ -30,6 +30,25 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #240 — Keep the newest local backup of each profile
+
+Link: [vger70/MedReminder#240](https://github.com/vger70/MedReminder/pull/240)
+Branch: `claude/m2-implementation-stepwise-8sv8t8`
+
+### Fixed
+
+- Local backup retention works per profile and never deletes the newest
+  backup of a profile: a profile whose backups stopped no longer loses
+  every copy once they pass the retention
+  (`Infrastructure/Backup/BackupService.cs`).
+
+### Docs
+
+- Retention tooltip (five languages), user guides and `ANALYSIS.md`
+  state the rule.
+- Android: D13 finding 3 (profile name in the export file name)
+  recorded as fixed in the private repository.
+
 ## PR #239 — Share the profile rebuild from the sync group with the phone
 
 Link: [vger70/MedReminder#239](https://github.com/vger70/MedReminder/pull/239)

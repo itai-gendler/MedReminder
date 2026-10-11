@@ -741,7 +741,8 @@ online-backup API (consistent under concurrent writes) to
 `medreminder-<profileId>-<yyyyMMdd-HHmmss>.db` in `Backup:Directory`.
 The automatic service backs up **every** profile once per day at or
 after `PreferredTime`, catching up at the first tick if the app was
-off. Retention (`RetentionDays`) is applied per profile. Restore
+off. Retention (`RetentionDays`) is applied per profile and never deletes
+the newest backup of a profile. Restore
 replaces the database file after renaming the current one to
 `<db>.bak-<timestamp>`.
 

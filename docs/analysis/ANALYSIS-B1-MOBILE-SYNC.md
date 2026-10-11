@@ -1906,9 +1906,11 @@ installation are checked on the internal track.
 `medreminder-mobile` #22 (`94ed54b`, 2026-10-10): snoozes are kept in a
 file and set again after a reboot, an update or a clock change; a
 password field gets its name as the accessibility hint instead of a
-description that carried the typed text. Finding 3 is open, tracked in
-backlog B1-09 (`ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`): a file
-name without the profile name.
+description that carried the typed text. Finding 3 is fixed in
+`medreminder-mobile` #34 (2026-10-11): the export is suggested as
+`MedReminder-<date>.mrz`, without the profile name, and the release
+checklist searches the whole `logcat` for the profile name after an
+export.
 
 **Decision**: the MAUI app, alarms, notifications, document flows, app
 lock and archive cryptography work on API 26, so the floor is kept, and

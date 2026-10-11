@@ -22,8 +22,10 @@ namespace MedReminder.Infrastructure.Backup;
 // ExportProfileAsync targets any profile by id, ImportProfileAsync
 // replaces any profile's DB. The file name embeds the profileId so
 // backups of different profiles can coexist in the same directory.
-// PruneOldBackupsAsync deletes by age only: every backup older than the
-// retention, whatever its profile.
+// PruneOldBackupsAsync works per profile: a backup older than the
+// retention is deleted unless it is the newest of its profile, so a
+// profile whose backups stopped (a locked database, a failing export)
+// keeps its last copy.
 internal sealed class BackupService : IBackupService
 {
     // File naming: "medreminder-<profileId>-YYYYMMDD-HHmmss.db".
@@ -97,18 +99,19 @@ internal sealed class BackupService : IBackupService
 
         var cutoff = _clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
 
-        // Age only, for every profile alike (§11.1). Files that do not
-        // match the expected pattern (user-renamed backups, other
-        // unrelated files) are left alone.
-        var candidates = new List<(string Path, DateTime LastWriteUtc)>();
+        // Grouped by the profile id of the file name; the newest of each
+        // profile is never deleted. Files that do not match the expected
+        // pattern (user-renamed backups, other unrelated files) are left
+        // alone.
+        var candidates = new List<(string Path, string ProfileId, DateTime LastWriteUtc)>();
         foreach (var path in Directory.EnumerateFiles(directory, "medreminder-*.db"))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var name = Path.GetFileName(path);
-            if (!BackupFileRegex.IsMatch(name)) continue;
+            var match = BackupFileRegex.Match(Path.GetFileName(path));
+            if (!match.Success) continue;
             try
             {
-                candidates.Add((path, File.GetLastWriteTimeUtc(path)));
+                candidates.Add((path, match.Groups["profileId"].Value.ToLowerInvariant(), File.GetLastWriteTimeUtc(path)));
             }
             catch
             {
@@ -117,10 +120,11 @@ internal sealed class BackupService : IBackupService
         }
 
         var deleted = 0;
-        foreach (var candidate in candidates)
+        foreach (var profile in candidates.GroupBy(c => c.ProfileId, StringComparer.Ordinal))
         {
-            if (candidate.LastWriteUtc < cutoff)
+            foreach (var candidate in profile.OrderByDescending(c => c.LastWriteUtc).Skip(1))
             {
+                if (candidate.LastWriteUtc >= cutoff) continue;
                 try
                 {
                     File.Delete(candidate.Path);

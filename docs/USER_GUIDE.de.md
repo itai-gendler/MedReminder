@@ -1091,6 +1091,9 @@ Die Sicherungseinstellungen verwaltet ein Administrator.
    erstellt sofort eine.
 
 Jedes Profil wird gesichert, als `medreminder-<Profil>-<Datum>-<Zeit>.db`.
+Sicherungen, die älter als die Aufbewahrungsdauer sind, werden gelöscht,
+außer der neuesten jedes Profils: Ein Profil, dessen Sicherungen
+aufgehört haben, behält seine letzte Kopie.
 MedReminder muss zur gewählten Uhrzeit laufen; war der PC aus, läuft die
 Sicherung beim nächsten Start. Wähle für diese Sicherung keinen
 Cloud-synchronisierten Ordner: Die Dateien sind nicht verschlüsselt
