@@ -30,6 +30,17 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #235 — Keep the embedded guides and dictionaries in the main assembly
+
+Link: [vger70/MedReminder#235](https://github.com/vger70/MedReminder/pull/235)
+Branch: `claude/compassionate-euler-em6pvu`
+
+### Fixed
+
+- `MedReminder.UI.csproj`: the embedded `USER_GUIDE.<lang>.md` and `strings.<lang>.json` are marked `WithCulture=false`. MSBuild read their language suffix as a culture and moved them into satellite assemblies (`<lang>\MedReminder.resources.dll`), so the embedded fallback of `HelpViewerForm` and `LocalizationService` never found them; only the copies under `<bin>/localization` worked.
+
+---
+
 ## PR #233 — Retry the SQLite online backup while the database is briefly locked
 
 Link: [vger70/MedReminder#233](https://github.com/vger70/MedReminder/pull/233)
