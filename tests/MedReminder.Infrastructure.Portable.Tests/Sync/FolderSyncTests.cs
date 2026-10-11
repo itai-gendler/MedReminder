@@ -253,6 +253,33 @@ public sealed class FolderSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task The_rebuild_swaps_the_new_generation_in_and_keeps_the_device()
+    {
+        var a = await CreateGroupAsync();
+        var b = await JoinAsync(a, "B");
+        var id = (await a.RunAsync(sp => sp.GetRequiredService<IMedicineRepository>().ListAllAsync(default)))[0].Id;
+        var reset = await a.RunAsync(sp => sp.GetRequiredService<ResetSyncGeneration>().ExecuteAsync(
+            new LocalFolderSyncTransport(Folder), CancellationToken.None));
+        await a.RunAsync(sp => sp.GetRequiredService<AddStock>().ExecuteAsync(
+            new AddStockCommand(id, 5m, StockMovementKind.ManualAdd), default));
+        await a.SyncAsync();
+        (await b.SyncAsync()).NewerGeneration.Should().Be(reset.Generation);
+        var device = b.Settings.Load()!.DeviceId;
+
+        var generation = await b.RunAsync(sp => sp.GetRequiredService<ProfileSyncRebuild>().ExecuteAsync(CancellationToken.None));
+
+        generation.Should().Be(reset.Generation);
+        b.Settings.Load()!.Should().Match<SyncSettings>(s => s.Generation == reset.Generation && s.DeviceId == device && !s.ResetPending);
+        b.Keys.Load(reset.GroupId, 1).Should().NotBeNull();
+        Directory.EnumerateFiles(_root, "B.db.bak-*").Should().ContainSingle();
+        Directory.EnumerateFiles(_root, "medreminder.sync-*").Should().BeEmpty();
+        await b.InitializeAsync();
+        (await b.SyncAsync()).NewerGeneration.Should().BeNull();
+        await SyncAllAsync([a, b]);
+        ShouldConverge(await StatesAsync([a, b]));
+    }
+
+    [Fact]
     public async Task A_tampered_segment_is_reported_and_not_applied()
     {
         var a = await CreateGroupAsync();

@@ -28,6 +28,7 @@ internal sealed class SyncSetupService : ISyncSetupService
     private readonly ApplyRemoteOperations _apply;
     private readonly TimeProvider _clock;
     private readonly IDatabaseExclusiveAccess _exclusiveAccess;
+    private readonly ProfileSyncRebuild _rebuild;
     private readonly ILogger<SyncSetupService> _log;
 
     public SyncSetupService(
@@ -42,6 +43,7 @@ internal sealed class SyncSetupService : ISyncSetupService
         ApplyRemoteOperations apply,
         TimeProvider clock,
         IDatabaseExclusiveAccess exclusiveAccess,
+        ProfileSyncRebuild rebuild,
         ILogger<SyncSetupService> log)
     {
         _profile = profile;
@@ -55,6 +57,7 @@ internal sealed class SyncSetupService : ISyncSetupService
         _apply = apply;
         _clock = clock;
         _exclusiveAccess = exclusiveAccess;
+        _rebuild = rebuild;
         _log = log;
     }
 
@@ -111,27 +114,11 @@ internal sealed class SyncSetupService : ISyncSetupService
         }
     }
 
+    // Shared with the phone (ProfileSyncRebuild).
     public async Task RebuildAsync(CancellationToken cancellationToken)
     {
-        var current = _settings.Load() ?? throw new InvalidOperationException("Sync is not enabled for this profile.");
-        var key = _keys.Load(current.GroupId, current.KeyVersion)
-            ?? throw new InvalidOperationException("The group key is not stored on this device.");
-        var temp = TempPath();
-        try
-        {
-            var rebuilt = await _join.RejoinAsync(_transports.Create(SyncTarget.Of(current)), current, key, temp,
-                cancellationToken);
-            await ProfileDatabaseSwap.ReplaceAsync(
-                _exclusiveAccess, _db, _profile.DatabasePath, temp, _clock, cancellationToken);
-            _settings.Save(rebuilt with { ResetPending = false });
-            _log.LogInformation("Profile {ProfileId} rebuilt from sync generation {Generation}.",
-                _profile.Id, rebuilt.Generation);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(key);
-            DeleteIfPresent(temp);
-        }
+        var generation = await _rebuild.ExecuteAsync(cancellationToken);
+        _log.LogInformation("Profile {ProfileId} rebuilt from sync generation {Generation}.", _profile.Id, generation);
     }
 
     public async Task<(int Carried, int Dropped)> RekeyAsync(SyncKeySource source, CancellationToken cancellationToken)
