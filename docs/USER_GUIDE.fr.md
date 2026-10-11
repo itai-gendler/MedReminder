@@ -1096,7 +1096,10 @@ Les paramètres de sauvegarde sont gérés par un administrateur.
    maintenant** en fait une tout de suite.
 
 Chaque profil est sauvegardé, sous la forme
-`medreminder-<profil>-<date>-<heure>.db`. MedReminder doit tourner à
+`medreminder-<profil>-<date>-<heure>.db`. Les sauvegardes plus anciennes
+que la durée de conservation sont supprimées, sauf la plus récente de
+chaque profil : un profil dont les sauvegardes se sont arrêtées garde sa
+dernière copie. MedReminder doit tourner à
 l'heure choisie ; si le PC était éteint, la sauvegarde se fait au
 démarrage suivant. Ne choisis pas un dossier synchronisé dans le cloud
 pour cette sauvegarde : les fichiers ne sont pas chiffrés (MedReminder

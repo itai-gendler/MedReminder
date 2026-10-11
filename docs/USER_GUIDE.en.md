@@ -1013,6 +1013,8 @@ The backup settings are managed by an administrator.
 3. **Save backup settings**. **Run backup now** makes one at once.
 
 Every profile is saved, as `medreminder-<profile>-<date>-<time>.db`.
+Backups older than the retention are deleted, except the newest of each
+profile, so a profile whose backups stopped keeps its last copy.
 MedReminder must be running at the chosen time; if the PC was off, the
 backup runs at the next start. Do not choose a cloud-synced folder
 for this backup: the files are not encrypted (MedReminder warns you).

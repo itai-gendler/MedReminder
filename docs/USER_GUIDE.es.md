@@ -1061,6 +1061,9 @@ La configuración de copia de seguridad la gestiona un administrador.
    enseguida.
 
 Se guarda cada perfil, como `medreminder-<perfil>-<fecha>-<hora>.db`.
+Las copias más antiguas que la conservación se eliminan, salvo la más
+reciente de cada perfil: un perfil cuyas copias se detuvieron conserva la
+última.
 MedReminder tiene que estar en marcha a la hora elegida; si el PC
 estaba apagado, la copia se hace en el siguiente inicio. No elijas una
 carpeta sincronizada en la nube para esta copia: los archivos no están
