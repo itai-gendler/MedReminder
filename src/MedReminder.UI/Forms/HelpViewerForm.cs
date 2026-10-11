@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Markdig;
 using MedReminder.Application.Abstractions;
 using MedReminder.UI.UiExtensions;
 using Microsoft.Web.WebView2.Core;
@@ -20,6 +19,10 @@ namespace MedReminder.UI.Forms;
 // Windows 11 and on recently updated Windows 10. If initialization
 // fails we show a fallback message that offers to open the guide
 // directly on GitHub in the default browser.
+//
+// The view is locked down: scripts are off, a Content-Security-Policy
+// blocks every external resource, raw HTML is limited to the section
+// anchors (HelpGuideMarkdown) and no navigation leaves the guide.
 internal sealed class HelpViewerForm : MedReminderFormBase
 {
     // The "Open on GitHub" button points at the MD version of the
@@ -116,6 +119,15 @@ internal sealed class HelpViewerForm : MedReminderFormBase
             // installed.
             await _webView.EnsureCoreWebView2Async(null);
 
+            // The guide needs no script. The settings apply from the
+            // next navigation, so they are set before NavigateToString.
+            var core = _webView.CoreWebView2;
+            core.Settings.IsScriptEnabled = false;
+            core.Settings.IsWebMessageEnabled = false;
+            core.Settings.AreDefaultScriptDialogsEnabled = false;
+            core.NavigationStarting += OnNavigationStarting;
+            core.NewWindowRequested += OnNewWindowRequested;
+
             var html = BuildHtmlFromEmbeddedGuide();
             _webView.NavigateToString(html);
             _fallbackLabel.Visible = false;
@@ -150,11 +162,42 @@ internal sealed class HelpViewerForm : MedReminderFormBase
         _btnForward.Enabled = core?.CanGoForward ?? false;
     }
 
-    private void OpenOnGithub()
+    // Only the guide document loads in the view: NavigateToString,
+    // its anchors and Back/Forward. A link that leaves it is cancelled
+    // and, when the user clicked it and it is https, opened in the
+    // default browser; any other scheme or automatic redirect is dropped.
+    private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+    {
+        if (e.Uri.StartsWith("about:", StringComparison.OrdinalIgnoreCase)
+            || e.Uri.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+        e.Cancel = true;
+        if (e.IsUserInitiated) OpenExternalLink(e.Uri);
+    }
+
+    private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        e.Handled = true;
+        if (e.IsUserInitiated) OpenExternalLink(e.Uri);
+    }
+
+    // Deferred so the browser start and a possible error box do not run
+    // inside the WebView2 event handler.
+    private void OpenExternalLink(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var url) || url.Scheme != Uri.UriSchemeHttps) return;
+        BeginInvoke(new Action(() => OpenInBrowser(url.AbsoluteUri)));
+    }
+
+    private void OpenOnGithub() => OpenInBrowser(GithubGuideUrl);
+
+    private void OpenInBrowser(string url)
     {
         try
         {
-            Process.Start(new ProcessStartInfo(GithubGuideUrl) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception ex)
         {
@@ -181,19 +224,17 @@ internal sealed class HelpViewerForm : MedReminderFormBase
             TryLoadGuideFromEmbedded("en") ??
             _loc.Get("Ui.HelpViewer.NoResource");
 
-        var pipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions() // tables, task lists, autolinks, footnotes, etc.
-            .Build();
-        var body = Markdown.ToHtml(markdown, pipeline);
+        var body = HelpGuideMarkdown.ToHtml(markdown);
 
         // Minimal HTML template with inline CSS: system font,
         // controlled width, adaptive theme (light / dark) via
         // prefers-color-scheme. No external assets — fully
-        // self-contained for NavigateToString.
+        // self-contained for NavigateToString; the CSP enforces it.
         return $@"<!DOCTYPE html>
 <html lang=""{_loc.CurrentLanguage}"">
 <head>
 <meta charset=""utf-8"">
+<meta http-equiv=""Content-Security-Policy"" content=""default-src 'none'; style-src 'unsafe-inline'; img-src data:"">
 <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
 <title>MedReminder guide</title>
 <style>

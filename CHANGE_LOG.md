@@ -41,6 +41,22 @@ Branch: `claude/m2-implementation-stepwise-8sv8t8`
 
 ---
 
+## PR #232 — Harden the sync folder transport and the help viewer
+
+Link: [vger70/MedReminder#232](https://github.com/vger70/MedReminder/pull/232)
+Branch: `claude/compassionate-euler-em6pvu`
+
+### Fixed
+
+- `LocalFolderSyncTransport` (`Infrastructure.Portable/Sync`): a cancelled or failed write, or a failed rename, no longer leaves a `.tmp-*` file in the synced folder. The cleanup is best effort, so the original exception still surfaces.
+
+### Security
+
+- `LocalFolderSyncTransport`: paths cannot go through a symbolic link or junction below the sync folder (checked component by component before every read, write and delete), and the listing does not follow such links. Before, the check was only lexical, so a link inside the folder could redirect file operations outside it. OneDrive Files On-Demand placeholders, which are reparse points without a link target, are unaffected.
+- Help viewer (`UI/Forms/HelpViewerForm`, `HelpGuideMarkdown`): the guide's raw HTML is limited to the section anchors `<a id="..."></a>` used by the table of contents, and every other HTML block or tag is dropped. The guide copy read from the per-user install folder is not trusted. In addition, WebView2 scripts are off, a Content-Security-Policy blocks external resources, and no navigation leaves the guide: a clicked https link opens in the default browser, and anything else is cancelled.
+
+---
+
 ## PR #231 — Shared cloud backup run for the Android app (M2, B2-03)
 
 Link: [vger70/MedReminder#231](https://github.com/vger70/MedReminder/pull/231)

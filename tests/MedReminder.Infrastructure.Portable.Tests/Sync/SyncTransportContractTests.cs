@@ -85,6 +85,72 @@ public sealed class LocalFolderSyncTransportTests : SyncTransportContractTests, 
     }
 
     [Fact]
+    public async Task A_failed_write_leaves_no_temporary_file()
+    {
+        var transport = CreateTransport();
+        Directory.CreateDirectory(Path.Combine(_root, "g", "blocked.mrs"));
+
+        await FluentActions.Awaiting(() => transport.WriteAsync("g/blocked.mrs", [1], default))
+            .Should().ThrowAsync<Exception>();
+
+        Directory.EnumerateFiles(Path.Combine(_root, "g")).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_failed_create_leaves_no_temporary_file()
+    {
+        var transport = CreateTransport();
+        Directory.CreateDirectory(Path.Combine(_root, "g", "blocked.mrs"));
+
+        await FluentActions.Awaiting(() => transport.CreateAsync("g/blocked.mrs", [1], default))
+            .Should().ThrowAsync<Exception>();
+
+        Directory.EnumerateFiles(Path.Combine(_root, "g")).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Paths_cannot_go_through_a_link_below_the_folder()
+    {
+        var transport = CreateTransport();
+        var outside = Path.Combine(Path.GetTempPath(), "mr-outside-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(outside);
+        try
+        {
+            await File.WriteAllBytesAsync(Path.Combine(outside, "secret.mrs"), [1]);
+            Directory.CreateDirectory(_root);
+            if (!TryCreateDirectoryLink(Path.Combine(_root, "g"), outside)) return;
+
+            await FluentActions.Awaiting(() => transport.ReadAsync("g/secret.mrs", default))
+                .Should().ThrowAsync<IOException>();
+            await FluentActions.Awaiting(() => transport.WriteAsync("g/new.mrs", [2], default))
+                .Should().ThrowAsync<IOException>();
+            await FluentActions.Awaiting(() => transport.DeleteAsync("g/secret.mrs", default))
+                .Should().ThrowAsync<IOException>();
+            (await transport.ListAsync(string.Empty, default)).Should().BeEmpty();
+            Directory.EnumerateFiles(outside).Should().ContainSingle();
+        }
+        finally
+        {
+            Directory.Delete(outside, recursive: true);
+        }
+    }
+
+    // Windows needs a privilege or Developer Mode for symbolic links; the
+    // test then has nothing to check and passes. CI runs it on Linux.
+    private static bool TryCreateDirectoryLink(string link, string target)
+    {
+        try
+        {
+            Directory.CreateSymbolicLink(link, target);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    [Fact]
     public async Task Paths_cannot_leave_the_folder()
     {
         var transport = CreateTransport();
