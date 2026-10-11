@@ -168,8 +168,7 @@ internal sealed class HelpViewerForm : MedReminderFormBase
     // default browser; any other scheme or automatic redirect is dropped.
     private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
     {
-        if (e.Uri.StartsWith("about:", StringComparison.OrdinalIgnoreCase)
-            || e.Uri.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        if (e.Uri.StartsWith("about:", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
