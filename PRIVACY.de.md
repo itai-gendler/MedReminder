@@ -36,7 +36,7 @@ Windows-Protokolldateien enthalten weder Passwörter noch E-Mail-Inhalte oder me
 
 ### Android
 
-MedReminder speichert Datenbanken, Einstellungen und Protokolldateien im privaten App-Speicher des Telefons. Die automatische Android-App-Datensicherung ist deaktiviert; das Betriebssystem kopiert diese Gesundheitsdaten daher nicht in ein Android-Sicherungskonto. App-Geheimnisse wie Cloud-Zugriffstoken und die Sicherungs-Passphrase werden mithilfe des sicheren Android-Schlüsselspeichers aufbewahrt. Android-Protokolle enthalten weder Passwörter noch E-Mail-Inhalte oder medizinische Notizen.
+MedReminder speichert Datenbanken, Einstellungen und Protokolldateien im privaten App-Speicher des Telefons. Die automatische Android-App-Datensicherung ist deaktiviert; das Betriebssystem kopiert diese Gesundheitsdaten daher nicht in ein Android-Sicherungskonto. Die Sicherungs-Passphrase wird mithilfe des sicheren Android-Schlüsselspeichers aufbewahrt. Der Zugriff auf Google Drive wird von den Google Play-Diensten verwaltet, die die Berechtigung speichern und der App kurzlebige Zugriffstoken geben. Die Anmeldetoken für OneDrive werden von der Microsoft-Anmeldebibliothek im privaten App-Speicher aufbewahrt, den andere Apps nicht lesen können und der von der Android-Sicherung ausgeschlossen ist. Android-Protokolle enthalten weder Passwörter noch E-Mail-Inhalte oder medizinische Notizen.
 
 Wenn Sie die MedReminder-App-Daten löschen oder die App deinstallieren, wird die lokale Kopie entfernt. Verwenden Sie vorher die Export- oder Cloud-Sicherungsfunktionen, wenn Sie eine Kopie behalten möchten.
 

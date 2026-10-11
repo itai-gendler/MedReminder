@@ -36,7 +36,7 @@ Les journaux Windows ne contiennent ni mots de passe, ni contenu d'e-mails, ni n
 
 ### Android
 
-MedReminder conserve les bases de données, paramètres et journaux dans l'espace privé de l'application sur le téléphone. La sauvegarde automatique des données de l'application Android est désactivée ; le système ne copie donc pas ces données de santé dans un compte de sauvegarde Android. Les secrets de l'application, comme les jetons d'accès cloud et la phrase secrète de sauvegarde, sont conservés à l'aide du stockage sécurisé des clés d'Android. Les journaux Android ne contiennent ni mots de passe, ni contenu d'e-mails, ni notes médicales.
+MedReminder conserve les bases de données, paramètres et journaux dans l'espace privé de l'application sur le téléphone. La sauvegarde automatique des données de l'application Android est désactivée ; le système ne copie donc pas ces données de santé dans un compte de sauvegarde Android. La phrase secrète de sauvegarde est conservée à l'aide du stockage sécurisé des clés d'Android. L'accès à Google Drive est géré par les services Google Play, qui conservent l'autorisation et fournissent à l'application des jetons d'accès de courte durée. Les jetons de connexion à OneDrive sont conservés par la bibliothèque de connexion Microsoft dans l'espace privé de l'application, que les autres applications ne peuvent pas lire et qui est exclu de la sauvegarde Android. Les journaux Android ne contiennent ni mots de passe, ni contenu d'e-mails, ni notes médicales.
 
 Effacer les données de MedReminder ou désinstaller l'application supprime sa copie locale. Avant cela, utilisez les fonctions d'exportation ou de sauvegarde cloud pour en garder une copie.
 
