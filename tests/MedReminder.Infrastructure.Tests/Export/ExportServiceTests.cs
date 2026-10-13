@@ -610,6 +610,7 @@ public sealed class ExportServiceTests : IDisposable
         public Profile Create(string displayName, ProfileRole role) => throw new NotSupportedException();
         public void Rename(string id, string newDisplayName) => throw new NotSupportedException();
         public void Delete(string id, bool deleteData) => throw new NotSupportedException();
+        public void DeleteAllLocalData() => throw new NotSupportedException();
         public void SetActiveProfileHint(string id) => throw new NotSupportedException();
         public void SetPin(string id, string? pin) => throw new NotSupportedException();
         public bool VerifyPin(string id, string pin) => throw new NotSupportedException();
