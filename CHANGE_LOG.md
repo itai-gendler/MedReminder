@@ -30,6 +30,23 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #243 — Add local profile data reset primitive
+
+Link: [vger70/MedReminder#243](https://github.com/vger70/MedReminder/pull/243)
+Branch: `claude/local-data-deletion`
+
+### Added
+
+- `IProfileRegistry.DeleteAllLocalData` clears the device's profile registry
+  and profile folders for the mobile B2-08 local-data-deletion flow, while
+  deliberately leaving household/device and application settings untouched.
+
+### Docs
+
+- Android backlog: the shared-core portion of B2-08 is recorded, including
+  the exception to the normal last-administrator invariant for a complete
+  device-local reset.
+
 ## PR #241 — B2-07 shared core: portable profile rekey after a key rotation
 
 Link: [vger70/MedReminder#241](https://github.com/vger70/MedReminder/pull/241)

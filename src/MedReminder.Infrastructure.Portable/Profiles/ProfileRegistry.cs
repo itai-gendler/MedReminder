@@ -57,6 +57,7 @@ public sealed class ProfileRegistry : IProfileRegistry
     private readonly string _registryPath;
     private readonly string _profilesRootDirectory;
     private readonly TimeProvider _clock;
+    private readonly Func<string, bool> _deleteProfilesDirectory;
     private readonly object _sync = new();
 
     // The two paths are passed in explicitly so unit tests can
@@ -68,13 +69,26 @@ public sealed class ProfileRegistry : IProfileRegistry
         string registryPath,
         string profilesRootDirectory,
         TimeProvider clock)
+        : this(registryPath, profilesRootDirectory, clock, DeleteProfilesDirectory)
+    {
+    }
+
+    // The test seam makes the incomplete-cleanup outcome deterministic on
+    // every supported filesystem; production always uses Directory.Delete.
+    internal ProfileRegistry(
+        string registryPath,
+        string profilesRootDirectory,
+        TimeProvider clock,
+        Func<string, bool> deleteProfilesDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(registryPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(profilesRootDirectory);
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(deleteProfilesDirectory);
         _registryPath = registryPath;
         _profilesRootDirectory = profilesRootDirectory;
         _clock = clock;
+        _deleteProfilesDirectory = deleteProfilesDirectory;
     }
 
     public IReadOnlyList<Profile> ListProfiles()
@@ -289,6 +303,33 @@ public sealed class ProfileRegistry : IProfileRegistry
                         // operation.
                     }
                 }
+            }
+        }
+    }
+
+    public bool DeleteAllLocalData()
+    {
+        lock (_sync)
+        {
+            // This is not Delete repeated: a local reset deliberately permits
+            // an empty registry, whereas Delete preserves the last admin.
+            Save(new RegistryDocument
+            {
+                SchemaVersion = CurrentSchemaVersion,
+                ActiveProfileId = null,
+                Profiles = new List<ProfileEntry>(),
+            });
+
+            try
+            {
+                return _deleteProfilesDirectory(_profilesRootDirectory);
+            }
+            catch
+            {
+                // Keep the empty registry even if an open SQLite handle or a
+                // platform file lock delays cleanup. Returning false lets the
+                // UI report the orphan instead of claiming a complete wipe.
+                return false;
             }
         }
     }
@@ -536,6 +577,13 @@ public sealed class ProfileRegistry : IProfileRegistry
     private static bool StringEqualsAdmin(string? raw) =>
         !string.IsNullOrWhiteSpace(raw)
         && string.Equals(raw, "admin", StringComparison.OrdinalIgnoreCase);
+
+    private static bool DeleteProfilesDirectory(string directory)
+    {
+        if (!Directory.Exists(directory)) return true;
+        Directory.Delete(directory, recursive: true);
+        return true;
+    }
 
     private static byte[] Pbkdf2(string pin, byte[] salt, int iterations)
     {

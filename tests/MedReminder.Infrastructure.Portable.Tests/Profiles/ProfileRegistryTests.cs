@@ -389,4 +389,35 @@ public sealed class ProfileRegistryTests : IDisposable
 
         sut.ActiveProfileIdHint.Should().Be(admin.Id);
     }
+
+    [Fact]
+    public void DeleteAllLocalData_removes_every_profile_and_folder_even_the_last_admin()
+    {
+        var sut = NewRegistry();
+        var admin = sut.Create("Owner", ProfileRole.Admin);
+        var user = sut.Create("Grandma", ProfileRole.User);
+        Directory.CreateDirectory(Path.Combine(_profilesRoot, admin.Id));
+        Directory.CreateDirectory(Path.Combine(_profilesRoot, user.Id));
+
+        sut.DeleteAllLocalData().Should().BeTrue();
+
+        sut.ListProfiles().Should().BeEmpty();
+        sut.ActiveProfileIdHint.Should().BeNull();
+        Directory.Exists(_profilesRoot).Should().BeFalse();
+    }
+
+    [Fact]
+    public void DeleteAllLocalData_reports_a_retained_profile_folder()
+    {
+        var sut = new ProfileRegistry(_registryPath, _profilesRoot, _clock,
+            _ => throw new IOException("The profile database is locked."));
+        var profile = sut.Create("Owner", ProfileRole.Admin);
+        var folder = Path.Combine(_profilesRoot, profile.Id);
+        Directory.CreateDirectory(folder);
+
+        sut.DeleteAllLocalData().Should().BeFalse();
+
+        sut.ListProfiles().Should().BeEmpty();
+        Directory.Exists(folder).Should().BeTrue();
+    }
 }

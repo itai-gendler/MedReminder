@@ -870,6 +870,11 @@ public sealed class HouseholdSyncTests : IDisposable
         public bool VerifyPin(string id, string pin) => throw new NotSupportedException();
         public Profile Create(string displayName, ProfileRole role) => throw new NotSupportedException();
         public void Delete(string id, bool deleteData) => throw new NotSupportedException();
+        public bool DeleteAllLocalData()
+        {
+            _entries.Clear();
+            return true;
+        }
         public void SetActiveProfileHint(string id) { }
 
         private void Update(string id, Func<(string Id, string Name, ProfileRole Role, ProfilePinHash? Pin),
