@@ -399,7 +399,7 @@ public sealed class ProfileRegistryTests : IDisposable
         Directory.CreateDirectory(Path.Combine(_profilesRoot, admin.Id));
         Directory.CreateDirectory(Path.Combine(_profilesRoot, user.Id));
 
-        sut.DeleteAllLocalData();
+        sut.DeleteAllLocalData().Should().BeTrue();
 
         sut.ListProfiles().Should().BeEmpty();
         sut.ActiveProfileIdHint.Should().BeNull();

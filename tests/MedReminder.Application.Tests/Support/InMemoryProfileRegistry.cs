@@ -42,7 +42,11 @@ internal sealed class InMemoryProfileRegistry : IProfileRegistry
         _entries.Remove(entry);
     }
 
-    public void DeleteAllLocalData() => _entries.Clear();
+    public bool DeleteAllLocalData()
+    {
+        _entries.Clear();
+        return true;
+    }
 
     public void SetActiveProfileHint(string id) { }
 

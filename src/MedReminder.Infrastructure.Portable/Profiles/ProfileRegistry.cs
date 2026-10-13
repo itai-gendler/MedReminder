@@ -293,7 +293,7 @@ public sealed class ProfileRegistry : IProfileRegistry
         }
     }
 
-    public void DeleteAllLocalData()
+    public bool DeleteAllLocalData()
     {
         lock (_sync)
         {
@@ -306,16 +306,18 @@ public sealed class ProfileRegistry : IProfileRegistry
                 Profiles = new List<ProfileEntry>(),
             });
 
-            if (!Directory.Exists(_profilesRootDirectory)) return;
+            if (!Directory.Exists(_profilesRootDirectory)) return true;
             try
             {
                 Directory.Delete(_profilesRootDirectory, recursive: true);
+                return true;
             }
             catch
             {
                 // Keep the empty registry even if an open SQLite handle or a
-                // platform file lock delays cleanup. The orphan is local only
-                // and can be removed on a later reset or by the user.
+                // platform file lock delays cleanup. Returning false lets the
+                // UI report the orphan instead of claiming a complete wipe.
+                return false;
             }
         }
     }
