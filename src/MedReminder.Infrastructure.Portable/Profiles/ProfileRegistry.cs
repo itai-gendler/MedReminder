@@ -57,6 +57,7 @@ public sealed class ProfileRegistry : IProfileRegistry
     private readonly string _registryPath;
     private readonly string _profilesRootDirectory;
     private readonly TimeProvider _clock;
+    private readonly Func<string, bool> _deleteProfilesDirectory;
     private readonly object _sync = new();
 
     // The two paths are passed in explicitly so unit tests can
@@ -68,13 +69,26 @@ public sealed class ProfileRegistry : IProfileRegistry
         string registryPath,
         string profilesRootDirectory,
         TimeProvider clock)
+        : this(registryPath, profilesRootDirectory, clock, DeleteProfilesDirectory)
+    {
+    }
+
+    // The test seam makes the incomplete-cleanup outcome deterministic on
+    // every supported filesystem; production always uses Directory.Delete.
+    internal ProfileRegistry(
+        string registryPath,
+        string profilesRootDirectory,
+        TimeProvider clock,
+        Func<string, bool> deleteProfilesDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(registryPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(profilesRootDirectory);
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(deleteProfilesDirectory);
         _registryPath = registryPath;
         _profilesRootDirectory = profilesRootDirectory;
         _clock = clock;
+        _deleteProfilesDirectory = deleteProfilesDirectory;
     }
 
     public IReadOnlyList<Profile> ListProfiles()
@@ -306,11 +320,9 @@ public sealed class ProfileRegistry : IProfileRegistry
                 Profiles = new List<ProfileEntry>(),
             });
 
-            if (!Directory.Exists(_profilesRootDirectory)) return true;
             try
             {
-                Directory.Delete(_profilesRootDirectory, recursive: true);
-                return true;
+                return _deleteProfilesDirectory(_profilesRootDirectory);
             }
             catch
             {
@@ -565,6 +577,13 @@ public sealed class ProfileRegistry : IProfileRegistry
     private static bool StringEqualsAdmin(string? raw) =>
         !string.IsNullOrWhiteSpace(raw)
         && string.Equals(raw, "admin", StringComparison.OrdinalIgnoreCase);
+
+    private static bool DeleteProfilesDirectory(string directory)
+    {
+        if (!Directory.Exists(directory)) return true;
+        Directory.Delete(directory, recursive: true);
+        return true;
+    }
 
     private static byte[] Pbkdf2(string pin, byte[] salt, int iterations)
     {

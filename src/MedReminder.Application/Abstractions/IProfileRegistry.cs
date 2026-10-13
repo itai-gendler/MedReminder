@@ -47,9 +47,8 @@ public interface IProfileRegistry
     // Removes every registry entry and their profile folders. Returns false
     // when the folder could not be deleted (for example, because a SQLite
     // handle is still open); the registry is still empty, and the caller
-    // must report the remaining local files instead of claiming success.
-    // This is the
-    // explicit device-local reset exception to the usual last-admin
+    // must report the remaining local files instead of claiming success. This
+    // is the explicit device-local reset exception to the usual last-admin
     // invariant: no profile remains on this installation afterwards.
     // Household, device and application settings live outside the profile
     // root and are intentionally not affected.
