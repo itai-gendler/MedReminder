@@ -389,4 +389,20 @@ public sealed class ProfileRegistryTests : IDisposable
 
         sut.ActiveProfileIdHint.Should().Be(admin.Id);
     }
+
+    [Fact]
+    public void DeleteAllLocalData_removes_every_profile_and_folder_even_the_last_admin()
+    {
+        var sut = NewRegistry();
+        var admin = sut.Create("Owner", ProfileRole.Admin);
+        var user = sut.Create("Grandma", ProfileRole.User);
+        Directory.CreateDirectory(Path.Combine(_profilesRoot, admin.Id));
+        Directory.CreateDirectory(Path.Combine(_profilesRoot, user.Id));
+
+        sut.DeleteAllLocalData();
+
+        sut.ListProfiles().Should().BeEmpty();
+        sut.ActiveProfileIdHint.Should().BeNull();
+        Directory.Exists(_profilesRoot).Should().BeFalse();
+    }
 }

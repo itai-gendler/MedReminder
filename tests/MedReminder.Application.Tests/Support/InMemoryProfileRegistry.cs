@@ -42,6 +42,8 @@ internal sealed class InMemoryProfileRegistry : IProfileRegistry
         _entries.Remove(entry);
     }
 
+    public void DeleteAllLocalData() => _entries.Clear();
+
     public void SetActiveProfileHint(string id) { }
 
     public void SetPin(string id, string? pin) => Find(id).Pin = string.IsNullOrEmpty(pin) ? null : pin;

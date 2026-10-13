@@ -44,6 +44,13 @@ public interface IProfileRegistry
     // folder is left intact for manual recovery (§3).
     void Delete(string id, bool deleteData);
 
+    // Removes every registry entry and their profile folders. This is the
+    // explicit device-local reset exception to the usual last-admin
+    // invariant: no profile remains on this installation afterwards.
+    // Household, device and application settings live outside the profile
+    // root and are intentionally not affected.
+    void DeleteAllLocalData();
+
     void SetActiveProfileHint(string id);
 
     // pin == null clears the PIN. A non-null pin is hashed with

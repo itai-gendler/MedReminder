@@ -293,6 +293,33 @@ public sealed class ProfileRegistry : IProfileRegistry
         }
     }
 
+    public void DeleteAllLocalData()
+    {
+        lock (_sync)
+        {
+            // This is not Delete repeated: a local reset deliberately permits
+            // an empty registry, whereas Delete preserves the last admin.
+            Save(new RegistryDocument
+            {
+                SchemaVersion = CurrentSchemaVersion,
+                ActiveProfileId = null,
+                Profiles = new List<ProfileEntry>(),
+            });
+
+            if (!Directory.Exists(_profilesRootDirectory)) return;
+            try
+            {
+                Directory.Delete(_profilesRootDirectory, recursive: true);
+            }
+            catch
+            {
+                // Keep the empty registry even if an open SQLite handle or a
+                // platform file lock delays cleanup. The orphan is local only
+                // and can be removed on a later reset or by the user.
+            }
+        }
+    }
+
     public void SetActiveProfileHint(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
