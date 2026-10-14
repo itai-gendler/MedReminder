@@ -37,17 +37,21 @@ Branch: `claude/minor-requirements-phases-0eb6e6`
 
 ### Docs
 
-- Android backlog: B2-07 extended with optional passphrase change after device
-  removal (non-mandatory). New B2-12 (provider identity and profile-name
-  suggestion on Google Drive and OneDrive sign-in; no new OAuth scopes). New
-  B2-13 (in-app system/light/dark theme selector with icons; device-local, not
-  synced). B2-11 dependency column updated to cover B2-12 and B2-13.
-- Android plan (rev 25): M2 section extended with the three new items; feature
-  parity table: Appearance row notes the own selector in M2; change log added.
-- UI requirements: UI-18 Appearance and language group updated to mention the
-  M2 in-app theme selector.
-- STATUS §3.5: desktop counterparts for the three items, including the OAuth
-  scope analysis (no new scopes required on either provider).
+- Android backlog: B2-08 marked fully implemented (shared PR#243, mobile
+  PR#40); B2-09 marked implemented (private repository PR#40). New combined
+  B2-12 slice after B2-11 covering three minor enhancements: provider identity
+  and profile-name suggestion (no new OAuth scope), in-app system/light/dark
+  theme selector with icons (device-local, not synced), and optional passphrase
+  change after device removal (non-mandatory, extends B2-07 flow). B2-11
+  reverted to original dependencies; B2-07 reverted to original accepted text.
+- Android plan (rev 25): M2 section references the combined B2-12 slice;
+  feature parity table Appearance row notes own selector in M2; change log
+  updated.
+- UI requirements: UI-18 Appearance and language updated with M2 theme
+  selector note.
+- STATUS §3.1: Android M2 progress bullet (last completed: B2-09). §3.5:
+  desktop counterparts for the three items, including OAuth scope analysis
+  (no new scopes required on either provider).
 
 ---
 
