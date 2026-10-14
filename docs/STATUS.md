@@ -1,7 +1,7 @@
-# Development status — 2026-10-05
+# Development status — 2026-10-12
 
 Snapshot of what has shipped and what remains open, taken at
-`main` = v2.16.0 plus PR #161 (commit `c6f1f58`), with only draft PR #106 open. Sources: `CHANGE_LOG.md`,
+`main` = v2.17.1 (commit `38ccc08`), with only draft PR #106 open. Sources: `CHANGE_LOG.md`,
 `docs/EVOLUTION.md`, `docs/EVOLUTION-DONE.md`,
 `docs/notes/EVOLUTION-PROPOSALS.md`,
 `docs/analysis/ANALYSIS-B1-MOBILE-SYNC.md`, the GitHub tracker.
