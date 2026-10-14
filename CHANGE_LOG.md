@@ -30,6 +30,20 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #245 — Document B2-10 implementation in the Android backlog
+
+Link: [vger70/MedReminder#245](https://github.com/vger70/MedReminder/pull/245)
+Branch: `claude/battery-restriction-sync-c79755`
+
+### Docs
+
+- Android backlog: B2-10 marked implemented (mobile PR #41). Records
+  the design decisions: contextual card on More → Sync only, 30-day
+  dismissal, no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Battery Saver
+  alone does not trigger, stable route in Settings → Reminders.
+
+---
+
 ## PR #244 — Add three minor requirements to Android M2 (B2-07, B2-12, B2-13)
 
 Link: [vger70/MedReminder#244](https://github.com/vger70/MedReminder/pull/244)
