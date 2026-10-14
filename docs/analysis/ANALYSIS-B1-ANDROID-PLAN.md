@@ -167,7 +167,7 @@ in the plan. "M" refers to the milestones of §5.
 | People | Several profiles, roles, PIN, switch profile | Yes | M2 |
 | People | App lock | Device biometrics instead of the desktop PIN for the single M1 profile. **`[ANDROID EXPERT NOTE]`**: Implemented via AndroidX BiometricPrompt API. | M1 |
 | Support | Donation links (A6) | No on mobile: store payment rules (§4.8, DA9); Help and about links to the project website (UI-10) | — |
-| Appearance | Text size, dark mode, high contrast | System font scaling and dark theme; no own setting | M1 |
+| Appearance | Text size, dark mode, high contrast | System font scaling and dark theme (M1; no own override); in-app system / light / dark selector with icon per option (M2, B2-13) | M1 (follow system); M2 (own selector) |
 | Language | Five UI languages | Yes, same dictionaries | M1 |
 | Desktop only | Auto-start, tray, window placement, single-instance mutex | Not applicable: Android manages the app lifecycle | — |
 | Desktop only | Update check | Not applicable: Play Store updates | — |
@@ -562,6 +562,11 @@ user change administrator settings.
 - Local data deletion (UI-17): remove the active profile's local copy
 or all local profile data on this device, without deleting provider
 copies or other devices' data.
+- Three contained UX enhancements delivered as a single slice (B2-12):
+  provider display name and e-mail pre-fill after cloud sign-in (no
+  new OAuth scope); in-app system / light / dark theme selector with
+  icons; optional passphrase change after device removal (non-mandatory,
+  extends the B2-07 flow).
 - Exit: phone and desktop converge in the offline and conflict
 scenarios of the B.1 checklist; a phone-first installation is joined
 by a PC and the PC becomes master.
@@ -728,6 +733,11 @@ no donation links on Android or iOS (DA9, decided again on
 Numbering note: two entries carry revision 14 and none carries
 revision 17; the numbers are kept as recorded.
 
+- **2026-10-14 — revision 25:** Three minor requirements added to M2
+  (B2-12 and B2-13 in the backlog; B2-07 extended). Feature parity table:
+  Appearance row notes own selector in M2. M2 section extended. OAuth scope
+  analysis: no new scopes required for provider-identity suggestion on either
+  provider. See `docs/STATUS.md` §3.5 for the desktop counterparts.
 - **2026-10-11 — revision 24:** D13 gate untangled after the
   2026-10-10 emulator check (B.1 §18.10): M2 entry needs the emulator
   check; the Keystore key check, possible only once M2 stores its first

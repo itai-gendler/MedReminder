@@ -1,7 +1,7 @@
-# Development status — 2026-10-05
+# Development status — 2026-10-12
 
 Snapshot of what has shipped and what remains open, taken at
-`main` = v2.16.0 plus PR #161 (commit `c6f1f58`), with only draft PR #106 open. Sources: `CHANGE_LOG.md`,
+`main` = v2.17.1 (commit `38ccc08`), with only draft PR #106 open. Sources: `CHANGE_LOG.md`,
 `docs/EVOLUTION.md`, `docs/EVOLUTION-DONE.md`,
 `docs/notes/EVOLUTION-PROPOSALS.md`,
 `docs/analysis/ANALYSIS-B1-MOBILE-SYNC.md`, the GitHub tracker.
@@ -49,6 +49,12 @@ apps are entirely free, like the desktop; the free core and premium
 tier of 2026-10-07 are dropped (`ANALYSIS-B1-ANDROID-PLAN.md` A6,
 §4.8).
 
+Updated on 2026-10-11 after v2.17.0 (#161, #201–#235): §1, §2.12 (#161
+row fixed to v2.17.0), new §2.13, §3.5 (MSI note updated), §4.
+
+Updated on 2026-10-12 after v2.17.1 (#236–#241): new §2.14, §3.1
+(Android M2 progress), §3.5 minor fixes.
+
 Tags: **[INFERRED]** for deductions, **[UNCERTAIN]** for claims not
 verified against the tree or the tracker.
 
@@ -58,11 +64,11 @@ verified against the tree or the tracker.
 
 | Item | Value |
 |---|---|
-| Latest release | v2.16.0 (2026-10-04); v2.14.1, v2.14.2 and v2.15.0 on 2026-10-03; v2.14.0 on 2026-10-03 |
+| Latest release | v2.17.1 (2026-10-12); v2.17.0 (2026-10-11); v2.16.0 (2026-10-04) |
 | Projects | Domain, Application, Infrastructure.Portable (`net10.0`); Infrastructure (`net10.0-windows`); UI (WinForms, `net10.0-windows10.0.19041.0`); DataImporter |
-| Source files | 542 `.cs` under `src/` |
-| Test projects | 6 (one per project, plus UI and DataImporter); 252 `.cs` files, 1537 `[Fact]`/`[Theory]` attributes |
-| Open pull requests | #106 — Android spikes S1–S4 (draft, not to be merged) |
+| Source files | 542 `.cs` under `src/` at v2.16.0; not re-counted at v2.17.1 |
+| Test projects | 6 (one per project, plus UI and DataImporter); 252 `.cs` files, 1537 `[Fact]`/`[Theory]` attributes at v2.16.0 |
+| Open pull requests | #106 — Android spikes S1–S4 (draft, not to be merged); #243 — B2-08 shared-core (on `main`, not yet released); #244 — plan docs (open) |
 | Open issues | #11 — Simplified Chinese localization (catalogue search disabled) |
 | UI languages | en, it, fr, es, de |
 
@@ -255,7 +261,7 @@ maintainer ran the Windows-only test projects on #177 before v2.14.0;
 whether they ran on #178 before v2.14.1 cannot be verified from this
 repository `[UNCERTAIN]`.
 
-### 2.12 Changes v2.14.1 – v2.16.0 and after
+### 2.12 Changes v2.14.1 – v2.16.0
 
 Sources: the `CHANGE_LOG.md` entries of each PR.
 
@@ -271,10 +277,52 @@ Sources: the `CHANGE_LOG.md` entries of each PR.
 | #192, #193 | Review fixes of the daily catalogue check; dated-list feeds hardened, feed workflows publish concurrently | v2.16.0 |
 | #195, #196, #198, #200 | Implementation prompts: repeatable prescriptions, regional prescription services, guided setup (corrected by #200) | v2.16.0 |
 | #197, #199 | Repeatable prescriptions with several dispensations (`DispensationChanged`, operation schema 12 for repeatable prescriptions only, image schema 9, export `schemaVersion` 3 when present); regional prescription service link and "Paste NRE" (#199, stacked on #197) | v2.16.0 |
-| #161 | Self-contained MSI for the Microsoft Store (`dotnet-desktop.yml`, `release.ps1`, `publish-signed-release.ps1`, `store` branch on GitHub Pages); MSIX scaffolding removed | not released |
+| #161 | Self-contained MSI for the Microsoft Store (`dotnet-desktop.yml`, `release.ps1`, `publish-signed-release.ps1`, `store` branch on GitHub Pages); MSIX scaffolding removed | v2.17.0 |
 
 Every device of a sync group must run v2.16.0 before anyone records a
 repeatable prescription (operation schema 12).
+
+### 2.13 Changes v2.17.0 (2026-10-11)
+
+Sources: the `CHANGE_LOG.md` entries of each PR.
+
+| PR | Content | Area |
+|---|---|---|
+| #161 | Self-contained MSI released to the Microsoft Store; Partner Center submission is a product-owner action (`docs/PACKAGING.md` §26) | Desktop / Store |
+| #202, #203 | United States reference catalogue from the FDA NDC Directory (openFDA, CC0 1.0); `OpenFdaNdcParser`, `CatalogueFeedDescriptor.UnitedStates`; GB no longer downloads the unused EU feed; country change triggers an immediate feed refresh | Desktop |
+| #204 | Privacy policy (`PRIVACY.md`, four translations); "Privacy" section in `README.md`; needed for the Microsoft Store listing | Docs |
+| #205 | Closing Settings with unsaved changes in General, Email, Notifications or Backup now prompts to save | Desktop |
+| #207 | Guided setup: skippable wizard that takes a profile from zero to warnings; opens automatically on empty profiles, from **? → Guided setup…** and the main-list empty state | Desktop |
+| #208 | Stop logging the notification recipient address (PII) on a successful send | Security |
+| #215 | Webcam barcode: improved decoding for inverted and mirrored frames; central-region retry; continuous autofocus; up to 1920 px width | Desktop |
+| #217 | `CatalogueDefaults` (Application, portable): shared DA3 rule — national catalogue when the country has one, EMA for EU/EEA, otherwise none | Shared core |
+| #219 | Dose reminders no longer fire before the therapy start date or after its end date (`DoseReminderService`, `NotificationPlanner` parity) | Desktop |
+| #221 | Barcode decoder: explicit inverted-frame retry for cameras that report negative frames | Desktop |
+| #226 | `ProfileArchive` (Infrastructure.Portable, core-v0.2.0): stream-based export, preview decrypt and database swap, shared with the Android app (B1-06); `ExportService` delegates to it | Shared core |
+| #227 | Damaged or locked settings files skipped with a warning instead of stopping the app | Desktop |
+| #228 | `ProfileDatabaseSwap` rolls back on failure; `.mrz` manifest bounds; medicine edit is one transaction; payload preview skips decompression | Desktop |
+| #229 | `.mrz` import refuses more than 16 ZIP entries or a Zip64 count before indexing (size-limit hardening) | Security |
+| #231 | `CloudBackupRun` (Infrastructure.Portable): scheduled cloud backup for the Android app (B2-03 shared-core); `ProtectedCloudBackupPassphraseStore`; `CloudSnapshots` for listing and retention | Shared core |
+| #232 | Sync folder transport: `.tmp-*` cleanup on failure; symlink / junction traversal blocked; help viewer: only section-anchor HTML allowed, CSP blocks external resources, scripts off | Security |
+| #233 | SQLite online backup retried on SQLITE_BUSY / SQLITE_LOCKED (shared `SqliteOnlineBackup` in portable) | Shared core |
+| #234 | Stale PIN tooltip removed; duplicate `Ui.MedicineEditDialog.Field.InitialStock` key fixed; `DictionaryParityTests` added | Desktop |
+| #235 | Embedded user guides and localization dictionaries marked `WithCulture=false` so MSBuild does not split them into satellite assemblies | Build |
+| #206, #209, #211–#216, #218, #220, #222–#225, #230 | Android plan, spike results, B0-01–B0-04, docs | Android docs |
+
+No new sync operation schema. No compatibility barrier between v2.16.0 and v2.17.0 devices.
+
+### 2.14 Changes v2.17.1 (2026-10-12)
+
+| PR | Content | Area |
+|---|---|---|
+| #236 | `PRIVACY*.md`: Android OneDrive tokens kept in the app's private storage (MSAL, excluded from Android backup); B2-04 documented | Docs |
+| #237 | Help viewer: `data:` URI navigation blocked in WebView2 (CSP bypass) | Security |
+| #238 | `ProtectedSyncKeyStore` and `ProfileGroupKeys` made portable; `AddMedReminderPortableSyncKeys` registers group keys and the household installer for non-DPAPI hosts (B2-05 shared-core) | Shared core |
+| #239 | `ProfileSyncRebuild` (Infrastructure.Portable): rebuild the open profile from its sync group; desktop `SyncSetupService.RebuildAsync` delegates to it (B2-06 shared-core) | Shared core |
+| #240 | Local backup retention keeps the newest copy of every profile; a profile whose backups stopped no longer loses all copies once they age past the retention window | Desktop |
+| #241 | `ProfileSyncRekey` (Infrastructure.Portable): take a new group key after a rotation elsewhere; desktop `SyncSetupService.RekeyAsync` delegates to it (B2-07 shared-core) | Shared core |
+
+No new sync operation schema. No compatibility barrier between v2.17.0 and v2.17.1 devices.
 
 ---
 
@@ -319,6 +367,11 @@ Open prerequisites and debts inside B.1:
   deleted meanwhile (B.1 analysis §20, 2026-09-28).
 - **P15**: store accounts and macOS build host are product-owner
   actions.
+- **Android M2 progress** (`ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`):
+  B0-01–04 implemented (2026-10-09). B1-01–09 implemented. B2-03 shared-core
+  (2026-10-10), B2-04–07 in private repository (2026-10-11), B2-08 shared-core
+  PR#243 + mobile PR#40, B2-09 mobile PR#40. Last completed slice: **B2-09**.
+  Open: B2-10, B2-11, B2-12 (minor enhancements), then M3–M5.
 
 Total remaining B.1 effort: about 115–165 developer-days for Android
 (M0–M5 of `ANALYSIS-B1-ANDROID-PLAN.md`, which replace Phases 5 and 7
@@ -375,8 +428,8 @@ tracking.
   publishes unsigned packages that the script replaces with the signed
   ones (`docs/PACKAGING.md` §25); signing in CI is open. `README.md` and
   the user guides now describe signed binaries (#178).
-- **Microsoft Store**: the self-contained MSI (#161) is on `main`, not yet
-  released; the Partner Center submission is a product-owner action
+- **Microsoft Store**: the self-contained MSI (#161) was released in v2.17.0
+  (2026-10-11); the Partner Center submission is a product-owner action
   (`docs/PACKAGING.md` §26).
 - **UI, known limitations** (`ANALYSIS-UI-MODERNIZATION.md` §6b): in
   dark mode the date and time pickers keep a white field (a dark picker
@@ -386,15 +439,36 @@ tracking.
 - **Issue #11**: Simplified Chinese localization.
 - **Website**: `PROMPT-WEBSITE-CONTENT-REFRESH.md` is live on the site;
   whether `PROMPT-WEBSITE-V2.6-REFRESH.md` has been applied cannot be
-  verified from this repository `[UNCERTAIN]`. Neither covers v2.7–v2.14
+  verified from this repository `[UNCERTAIN]`. Neither covers v2.7–v2.17
   (sync, cloud providers, therapy card PDF, text size, webcam scan,
-  restock by scan, remote catalogue feeds, shared installation and
-  master device, dark mode and the new main window, the
-  `EVOLUTION-PROPOSALS-2` features, stock that follows the dose times
-  and as-needed doses) `[INFERRED]`.
+  restock by scan, remote catalogue feeds, shared installation and master
+  device, dark mode and the new main window, the `EVOLUTION-PROPOSALS-2`
+  features, stock that follows the dose times and as-needed doses, US
+  catalogue, guided setup, privacy policy, settings save prompt,
+  v2.17.0–v2.17.1 security and robustness fixes) `[INFERRED]`.
 - **Multi-user I** (`ANALYSIS-MULTI-USER-ROLES-OVERVIEW.md`): a
   read-only "All profiles" stock view for an admin. Not planned. Item G
   (role change) shipped (§2.2).
+- **Cloud provider identity at sign-in** (desktop + Android B2-12): after
+  OAuth sign-in to Google Drive or OneDrive, suggest the profile display
+  name from the provider identity (display name and e-mail). If a name is
+  already set, ask the user whether to replace it; declining has no effect
+  on the sign-in result. No new OAuth scope required: Google Drive — add
+  `displayName` to the existing `/drive/v3/about` call (the field is
+  returned with the existing `drive.file`/`drive.appdata` scopes); OneDrive
+  — read the `name` and `preferred_username` claims from the MSAL ID token,
+  always present with the implicit `openid profile` scopes. Desktop:
+  open; Android: B2-12 (M2).
+- **Device removal: optional passphrase change** (desktop + Android B2-12):
+  after removing a device from an installation and rotating the keys, offer
+  the user an optional change of the installation passphrase; do not make it
+  mandatory; declining does not affect the rotation result. Desktop: open;
+  Android: part of the combined B2-12 slice (M2).
+- **Settings: theme selector with icons** (desktop + Android B2-12): the
+  desktop already exposes System / Light / Dark per-profile (v2.12.0,
+  `AppearanceMode`); add a representative icon to each option in the desktop
+  Settings dialog. Android M1 follows the system only; M2 adds an explicit
+  in-app selector (system / light / dark) with icons, as part of B2-12.
 
 ### 3.6 Excluded by decision
 
@@ -407,25 +481,29 @@ tracking.
 
 ## 4. Suggested next steps `[INFERRED]`
 
-0. Release #161 (Store MSI) and submit the MSI in Partner Center
-   (`docs/PACKAGING.md` §26). Move the two implemented prompts to
-   `docs/prompt/Completed/`. Implement the guided setup
-   (`PROMPT-GUIDED-SETUP.md`).
-
 The household feature shipped after its manual tests (§2.7). Every
 device of a sync group or installation must run v2.12.0 or later
 before anyone uses the household features (older apps cannot read
-profile operation schemas 4 and 5).
+profile operation schemas 4 and 5). Every device must run v2.16.0
+before anyone records a repeatable prescription (operation schema 12).
 
+0. Submit the Store MSI in Partner Center (v2.17.0 released; the
+   Partner Center submission is a product-owner action,
+   `docs/PACKAGING.md` §26). Move `PROMPT-REPEATABLE-PRESCRIPTION.md`
+   and `PROMPT-REGIONAL-PRESCRIPTION-SERVICES.md` to
+   `docs/prompt/Completed/`.
 1. Desktop: confirm webcam decoding on a real pack with a webcam of
    sufficient resolution (A2 checklist item 7).
 2. UI: replace the date and time pickers if a fully dark mode is
    wanted (§3.5).
-3. Website content refresh for v2.7–v2.16; the screenshots in
-   particular predate the new main window and dark mode.
-4. Mobile: the Android spikes S1–S5 and S8 are done. The Android plan
-   and DA3/DA4 decisions were approved on 2026-10-08. Resolve D11, DA2
-   and DA5 before M1; the API 26 floor passed its emulator check on
-   2026-10-10, and the Keystore key check and the Play internal track
-   remain before support is claimed; build M1–M5 for internal testing and
-   publish to Play only after M5. Independent of items 1–3.
+3. Website content refresh for v2.7–v2.17; the screenshots in
+   particular predate the new main window and dark mode; v2.17.0
+   adds the US catalogue, guided setup and privacy policy.
+4. Mobile: Android M0–M2 shared-core work is largely done (B0-01–04 in
+   v2.17.0; B2-03, B2-05–B2-07 shared-core in v2.17.0–v2.17.1; B2-08
+   shared-core on `main` #243). Private-app implementation through B2-09.
+   Open: B2-10, B2-11, B2-12 (minor enhancements), then M3–M5.
+   S6/S7 Android OAuth still lack their Android halves (needed before M2
+   provider sign-in). Keystore key check and Play internal track remain
+   before API 26 support is claimed. Build M1–M5 on the Play testing
+   tracks and publish to production only after M5 (DA4).

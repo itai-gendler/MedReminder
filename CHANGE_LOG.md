@@ -30,6 +30,32 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #244 — Add three minor requirements to Android M2 (B2-07, B2-12, B2-13)
+
+Link: [vger70/MedReminder#244](https://github.com/vger70/MedReminder/pull/244)
+Branch: `claude/minor-requirements-phases-0eb6e6`
+
+### Docs
+
+- Android backlog: B2-08 marked fully implemented (shared PR#243, mobile
+  PR#40); B2-09 marked implemented (private repository PR#40). New combined
+  B2-12 slice after B2-11 covering three minor enhancements: provider identity
+  and profile-name suggestion (no new OAuth scope), in-app system/light/dark
+  theme selector with icons (device-local, not synced), and optional passphrase
+  change after device removal (non-mandatory, extends B2-07 flow). B2-11
+  reverted to original dependencies; B2-07 reverted to original accepted text.
+- Android plan (rev 25): M2 section references the combined B2-12 slice;
+  feature parity table Appearance row notes own selector in M2; change log
+  updated.
+- UI requirements: UI-18 Appearance and language updated with M2 theme
+  selector note.
+- STATUS updated to v2.17.1: §1 latest release, §2.12 #161 row fixed,
+  new §2.13 (v2.17.0) and §2.14 (v2.17.1), §3.1 Android M2 progress
+  (B2-09 last), §3.5 MSI note corrected and website gap extended to v2.17,
+  B2-07/13 references corrected to B2-12, §4 next steps updated.
+
+---
+
 ## PR #243 — Add local profile data reset primitive
 
 Link: [vger70/MedReminder#243](https://github.com/vger70/MedReminder/pull/243)
