@@ -1349,7 +1349,7 @@
   "Ui.HouseholdDialog.RemoveDevice.Title": "Nouvelle phrase secrète de l’installation",
   "Ui.HouseholdDialog.RemoveDevice.Hint": "Choisissez une nouvelle phrase secrète. L’appareil retiré ne doit pas la connaître.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Heading": "Choisir la gestion de la phrase secrète",
-  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text": "Installation and profile keys rotate either way. If you keep the passphrase, the removed device still knows it but cannot open the new keys. Remaining devices receive keys individually; adding devices requires a pairing code from one of them. Update all retained devices first.",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text": "Installation and profile keys rotate either way. If you keep the passphrase, the removed device still knows it but cannot open the new keys. Remaining devices receive keys individually; adding devices requires a pairing code from one of them. Update all retained devices first: if you lose them all, the unchanged passphrase cannot recover the data.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Change": "Changer la phrase",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.ChangeNote": "Définissez une nouvelle phrase. Les autres appareils pourront l’utiliser ou utiliser un code d’association.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Keep": "Garder la phrase actuelle",

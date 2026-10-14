@@ -1349,7 +1349,7 @@
   "Ui.HouseholdDialog.RemoveDevice.Title": "Nuova passphrase dell'installazione",
   "Ui.HouseholdDialog.RemoveDevice.Hint": "Scegli una nuova passphrase per l'installazione. Il dispositivo rimosso non deve conoscerla.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Heading": "Scegli come gestire la passphrase dell'installazione",
-  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text": "Le chiavi dell'installazione e dei profili ruotano in entrambi i casi. Se mantieni la passphrase, il dispositivo rimosso continuerà a conoscerla, ma non potrà aprire le nuove chiavi. I dispositivi rimasti ricevono le chiavi individualmente; per aggiungere dispositivi serve un codice da uno di essi. Aggiorna prima tutti i dispositivi rimasti.",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text": "Le chiavi dell'installazione e dei profili ruotano in entrambi i casi. Se mantieni la passphrase, il dispositivo rimosso continuerà a conoscerla, ma non potrà aprire le nuove chiavi. I dispositivi rimasti ricevono le chiavi individualmente; per aggiungere dispositivi serve un codice da uno di essi. Aggiorna prima tutti i dispositivi rimasti: se li perdi tutti, la passphrase invariata non può recuperare i dati.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Change": "Cambia passphrase",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.ChangeNote": "Imposta una nuova passphrase. Gli altri dispositivi potranno usare questa o un codice di abbinamento.",
   "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Keep": "Mantieni la passphrase attuale",
