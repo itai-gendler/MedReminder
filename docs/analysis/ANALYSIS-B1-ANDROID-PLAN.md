@@ -562,16 +562,11 @@ user change administrator settings.
 - Local data deletion (UI-17): remove the active profile's local copy
 or all local profile data on this device, without deleting provider
 copies or other devices' data.
-- After device removal, offer the user an optional change of the
-installation passphrase; declining does not affect the key-rotation
-result (B2-07).
-- After sign-in to Google Drive or OneDrive, offer to populate the
-profile display name from the provider identity (display name and
-e-mail); if a name is already set, ask the user whether to replace
-it; no new OAuth scope required (B2-12).
-- In-app theme selector (system / light / dark) with a representative
-icon for each option in More → Settings → Appearance and language;
-applies immediately, device-local, not synced (B2-13).
+- Three contained UX enhancements delivered as a single slice (B2-12):
+  provider display name and e-mail pre-fill after cloud sign-in (no
+  new OAuth scope); in-app system / light / dark theme selector with
+  icons; optional passphrase change after device removal (non-mandatory,
+  extends the B2-07 flow).
 - Exit: phone and desktop converge in the offline and conflict
 scenarios of the B.1 checklist; a phone-first installation is joined
 by a PC and the PC becomes master.

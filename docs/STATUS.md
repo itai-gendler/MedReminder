@@ -319,6 +319,11 @@ Open prerequisites and debts inside B.1:
   deleted meanwhile (B.1 analysis §20, 2026-09-28).
 - **P15**: store accounts and macOS build host are product-owner
   actions.
+- **Android M2 progress** (`ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`):
+  B0-01–04 implemented (2026-10-09). B1-01–09 implemented. B2-03 shared-core
+  (2026-10-10), B2-04–07 in private repository (2026-10-11), B2-08 shared-core
+  PR#243 + mobile PR#40, B2-09 mobile PR#40. Last completed slice: **B2-09**.
+  Open: B2-10, B2-11, B2-12 (minor enhancements), then M3–M5.
 
 Total remaining B.1 effort: about 115–165 developer-days for Android
 (M0–M5 of `ANALYSIS-B1-ANDROID-PLAN.md`, which replace Phases 5 and 7
