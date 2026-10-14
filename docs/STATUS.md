@@ -395,6 +395,26 @@ tracking.
 - **Multi-user I** (`ANALYSIS-MULTI-USER-ROLES-OVERVIEW.md`): a
   read-only "All profiles" stock view for an admin. Not planned. Item G
   (role change) shipped (§2.2).
+- **Cloud provider identity at sign-in** (desktop + Android B2-12): after
+  OAuth sign-in to Google Drive or OneDrive, suggest the profile display
+  name from the provider identity (display name and e-mail). If a name is
+  already set, ask the user whether to replace it; declining has no effect
+  on the sign-in result. No new OAuth scope required: Google Drive — add
+  `displayName` to the existing `/drive/v3/about` call (the field is
+  returned with the existing `drive.file`/`drive.appdata` scopes); OneDrive
+  — read the `name` and `preferred_username` claims from the MSAL ID token,
+  always present with the implicit `openid profile` scopes. Desktop:
+  open; Android: B2-12 (M2).
+- **Device removal: optional passphrase change** (desktop + Android B2-07):
+  after removing a device from an installation and rotating the keys, offer
+  the user an optional change of the installation passphrase; do not make it
+  mandatory; declining does not affect the rotation result. Desktop: open;
+  Android: incorporated in B2-07 (M2).
+- **Settings: theme selector with icons** (desktop + Android B2-13): the
+  desktop already exposes System / Light / Dark per-profile (v2.12.0,
+  `AppearanceMode`); add a representative icon to each option in the desktop
+  Settings dialog. Android M1 follows the system only; M2 adds an explicit
+  in-app selector (system / light / dark) with icons (B2-13).
 
 ### 3.6 Excluded by decision
 
