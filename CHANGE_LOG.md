@@ -30,6 +30,23 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #246 — Mark B2-12 implemented in the Android backlog
+
+Link: [vger70/MedReminder#246](https://github.com/vger70/MedReminder/pull/246)
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B2-12 row
+  marked implemented, referencing private repository PR #42 (2026-10-14).
+  Records the three sub-features delivered: provider display-name suggestion after
+  cloud sign-in, in-app theme selector, and the device-removal success page with
+  optional cloud backup passphrase offer. Notes the injectable identity delegate in
+  `GoogleDriveAccounts`, the MSAL ID token approach for OneDrive, the reuse of the
+  shared-core `AppearanceMode`/`ProfileUiSettingsFile`, and the design note that
+  a household-level passphrase rekey without a device removal is not yet supported
+  by the domain.
+
+---
+
 ## PR #245 — Document B2-10 implementation in the Android backlog
 
 Link: [vger70/MedReminder#245](https://github.com/vger70/MedReminder/pull/245)
