@@ -485,6 +485,64 @@ public sealed class HouseholdSync
         }
     }
 
+    // Rewrap the household after a successful device removal. This is a
+    // second, optional passphrase change; it keeps the current membership and
+    // profile keys while publishing a fresh household key and recovery wrap.
+    public async Task ChangePassphraseAsync(char[] passphrase, CancellationToken cancellationToken,
+        Argon2Params? kdf = null)
+    {
+        ArgumentNullException.ThrowIfNull(passphrase);
+        var before = await RunAsync(cancellationToken);
+        if (before.NewKeyRequired || before.Removed)
+            throw new InvalidOperationException("This device cannot change the household passphrase now.");
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        if (identity.Storage is null) throw new InvalidOperationException("The household is not published.");
+        var transport = _transports.Create(identity.Storage);
+        var version = (await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken))
+            .DefaultIfEmpty(identity.KeyVersion).Max() + 1;
+        var (recoveryPrivate, recoveryPublic) = HouseholdKeyWrap.CreateKeyPair();
+        var operations = new List<HouseholdOperationBody> { new RecoveryKeyPublished(version, recoveryPublic) };
+        operations.AddRange(await _keyring.EscrowAllAsync(recoveryPublic, cancellationToken));
+        await _household.AppendAsync(operations, cancellationToken);
+        var key = RandomNumberGenerator.GetBytes(SyncKeyWrap.KeySize);
+        var recovery = Convert.FromBase64String(recoveryPrivate);
+        try
+        {
+            if (!await transport.CreateAsync(SyncLayout.KeyWrap(identity.HouseholdId, version),
+                    SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, key, passphrase,
+                        kdf ?? Argon2Params.Default).ToBytes(), cancellationToken))
+                throw new InvalidOperationException("The household key is being changed on another device.");
+            await transport.CreateAsync(RecoveryWrapPath(identity.HouseholdId, version),
+                SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, recovery, passphrase,
+                    kdf ?? Argon2Params.Default, RecoveryPurpose).ToBytes(), cancellationToken);
+            var generation = await SyncEngine.LatestGenerationAsync(transport, identity.HouseholdId,
+                cancellationToken) + 1;
+            var moved = identity with { KeyVersion = version, Generation = generation, SegmentSeq = 0 };
+            var image = new HouseholdSegmentContent(new Dictionary<Guid, int>(),
+                [.. (await _store.ListOperationsAsync(cancellationToken)).Select(Outgoing)]);
+            var header = Header(SyncFileKind.Genesis, moved, moved.DeviceId, 0) with
+                { Vector = new Dictionary<Guid, int>() };
+            await transport.CreateAsync(SyncLayout.Genesis(identity.HouseholdId, generation),
+                SyncFileCodec.Seal(_cipher, key, header, image.ToBytes()), cancellationToken);
+            await HouseholdLog.Gate.WaitAsync(cancellationToken);
+            try
+            {
+                await _store.ResetAsync(moved, cancellationToken);
+                foreach (var operation in image.Operations)
+                    await ApplyOperationAsync(operation, generation, cancellationToken);
+            }
+            finally { HouseholdLog.Gate.Release(); }
+            await _store.MarkPublishedAsync([.. image.Operations.Select(o => o.Id)], 0, cancellationToken);
+            _keys.Save(identity.HouseholdId, version, key);
+            await WriteRecordAsync(transport, key, moved, new Dictionary<Guid, int>(), cancellationToken);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(recovery);
+        }
+    }
+
     // §9 last line: removing the master is a removal plus a takeover. When
     // the removed device was the elected one, the master still active is
     // elected again (it activates without a wizard), or this device takes

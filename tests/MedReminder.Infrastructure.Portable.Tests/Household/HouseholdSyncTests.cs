@@ -414,6 +414,27 @@ public sealed class HouseholdSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task Changing_the_installation_passphrase_after_removal_is_a_second_optional_rekey()
+    {
+        var (a, b, c) = await ThreeDevicesAsync();
+        var removed = await DeviceOf(c);
+        await a.Sync.RemoveDeviceAsync(removed, NewPassphrase.ToCharArray(), "admin", CancellationToken.None,
+            SyncFileFormatTests.FastKdf);
+
+        var replacement = "another installation passphrase".ToCharArray();
+        await a.Sync.ChangePassphraseAsync(replacement, CancellationToken.None, SyncFileFormatTests.FastKdf);
+        Array.Clear(replacement);
+
+        (await b.Sync.RunAsync(CancellationToken.None)).NewKeyRequired.Should().BeTrue();
+        (await b.Sync.RekeyAsync(new HouseholdKeySource.Passphrase("another installation passphrase".ToCharArray()),
+            CancellationToken.None)).NewKeyRequired.Should().BeFalse();
+        (await b.Keyring.KeysAsync(CancellationToken.None)).IsRemoved(removed).Should().BeTrue();
+        await FluentActions.Awaiting(() => c.Sync.RekeyAsync(
+                new HouseholdKeySource.Passphrase("another installation passphrase".ToCharArray()), CancellationToken.None))
+            .Should().ThrowAsync<HouseholdDeviceRemovedException>();
+    }
+
+    [Fact]
     public async Task A_device_takes_the_new_key_with_a_code_from_the_removing_device()
     {
         var (a, b, c) = await ThreeDevicesAsync();

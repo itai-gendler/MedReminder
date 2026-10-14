@@ -308,6 +308,31 @@ internal sealed class HouseholdDialog : MedReminderFormBase
             Array.Clear(passphrase);
         }
         await RefreshAllAsync();
+        if (ConfirmDialog.Show(_loc, this, _loc.Get("Ui.HouseholdDialog.RemoveDevice.ChangePassphrase"),
+                _loc.Get("Ui.HouseholdDialog.RemoveDevice.ChangePassphrase.Title"), MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+        {
+            using var change = new SyncPassphraseDialog(_loc, confirm: true, defaultDeviceName: null,
+                "Ui.HouseholdDialog.ChangePassphrase.Title", "Ui.HouseholdDialog.ChangePassphrase.Hint");
+            if (change.ShowDialog(this) == DialogResult.OK)
+            {
+                var replacement = change.TakePassphrase();
+                try
+                {
+                    await _household.WhileIdleAsync(async () =>
+                    {
+                        await using var scope = _scopes.CreateAsyncScope();
+                        await scope.ServiceProvider.GetRequiredService<HouseholdSync>()
+                            .ChangePassphraseAsync(replacement, CancellationToken.None);
+                        return true;
+                    });
+                    Info(_loc.Get("Ui.HouseholdDialog.ChangePassphrase.Done"));
+                }
+                catch (Exception ex) { Error(ex.Message); }
+                finally { Array.Clear(replacement); }
+                await RefreshAllAsync();
+            }
+        }
         if (ConfirmDialog.Show(_loc, this, _loc.Get("Ui.HouseholdDialog.RemoveDevice.Done"), Text, MessageBoxIcon.Information) == DialogResult.Yes)
         {
             await ShowNewKeyCodeAsync();
