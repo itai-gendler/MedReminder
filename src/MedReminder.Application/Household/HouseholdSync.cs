@@ -542,6 +542,7 @@ public sealed class HouseholdSync
 
     public async Task<bool> HasDeviceKeyGrantAsync(CancellationToken cancellationToken)
     {
+        await RunAsync(cancellationToken);
         var identity = await _store.EnsureCreatedAsync(cancellationToken);
         if (identity.Storage is null) return false;
         var version = (await SyncKeys.KeyVersionsAsync(_transports.Create(identity.Storage), identity.HouseholdId,
