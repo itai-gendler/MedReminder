@@ -16,6 +16,7 @@ public static class HouseholdRegisters
     // Step H3b: entities of the keys (never a profile id, which is
     // "default" or 32 hex digits).
     public const string Recovery = "recovery";
+    public const string HouseholdKey = "household-key";
     public const string PublicKey = "PublicKey";
     public const string Escrow = "Escrow";
 
@@ -50,6 +51,8 @@ public static class HouseholdRegisters
         HouseholdSettingChanged s => [(s.Setting, s.Value)],
         DeviceKeyPublished d => [(PublicKey, d.PublicKey)],
         RecoveryKeyPublished r => [(PublicKey, Wrapped(r.KeyVersion, Guid.Empty, r.PublicKey))],
+        RecoveryKeyGranted r => [(GrantRegister(r.DeviceId), Wrapped(r.KeyVersion, Guid.Empty, r.WrappedKey))],
+        HouseholdKeyGranted h => [(GrantRegister(h.DeviceId), Wrapped(h.KeyVersion, Guid.Empty, h.WrappedKey))],
         ProfileKeyGranted g => [(GrantRegister(g.DeviceId), Wrapped(g.KeyVersion, g.GroupId, g.WrappedKey))],
         ProfileKeyRevoked r => [(GrantRegister(r.DeviceId), null)],
         ProfileKeyEscrowed e => [(Escrow, Wrapped(e.KeyVersion, e.GroupId, e.WrappedKey))],
@@ -106,6 +109,8 @@ public static class HouseholdRegisters
             .ToDictionary(g => g.Key, g => g.MaxBy(v => v.Version).Value);
         var devices = new Dictionary<Guid, string>();
         var removed = new HashSet<Guid>();
+        var recoveryGrants = new Dictionary<Guid, HouseholdWrappedKey>();
+        var householdKeyGrants = new Dictionary<Guid, HouseholdWrappedKey>();
         HouseholdWrappedKey? recovery = null;
         var escrows = new Dictionary<string, HouseholdWrappedKey>(StringComparer.Ordinal);
         var grants = new Dictionary<(string ProfileId, Guid DeviceId), HouseholdWrappedKey>();
@@ -126,6 +131,18 @@ public static class HouseholdRegisters
             {
                 recovery = ParseWrapped(value);
             }
+            else if (entity == Recovery && register.StartsWith("Grant:", StringComparison.Ordinal)
+                     && Guid.TryParseExact(register["Grant:".Length..], "N", out var recoveryDevice)
+                     && ParseWrapped(value) is { } recoveryGrant)
+            {
+                recoveryGrants[recoveryDevice] = recoveryGrant;
+            }
+            else if (entity == HouseholdKey && register.StartsWith("Grant:", StringComparison.Ordinal)
+                     && Guid.TryParseExact(register["Grant:".Length..], "N", out var keyDevice)
+                     && ParseWrapped(value) is { } keyGrant)
+            {
+                householdKeyGrants[keyDevice] = keyGrant;
+            }
             else if (register == Escrow && ParseWrapped(value) is { } escrow)
             {
                 escrows[entity] = escrow;
@@ -138,8 +155,14 @@ public static class HouseholdRegisters
             }
         }
         // Step H5a: a removed device has no public key to grant to.
-        foreach (var gone in removed) devices.Remove(gone);
-        return new HouseholdKeys(devices, recovery, escrows, grants, removed);
+        foreach (var gone in removed)
+        {
+            devices.Remove(gone);
+            recoveryGrants.Remove(gone);
+        }
+        foreach (var gone in removed) { devices.Remove(gone); recoveryGrants.Remove(gone); householdKeyGrants.Remove(gone); }
+        return new HouseholdKeys(devices, recovery, escrows, grants, removed)
+            { RecoveryGrants = recoveryGrants, HouseholdKeyGrants = householdKeyGrants };
     }
 
     // Step H4a: the master registers.
@@ -232,5 +255,10 @@ public sealed record HouseholdKeys(
     // Step H5a.
     IReadOnlySet<Guid>? RemovedDevices = null)
 {
+    public IReadOnlyDictionary<Guid, HouseholdWrappedKey> RecoveryGrants { get; init; }
+        = new Dictionary<Guid, HouseholdWrappedKey>();
+    public IReadOnlyDictionary<Guid, HouseholdWrappedKey> HouseholdKeyGrants { get; init; }
+        = new Dictionary<Guid, HouseholdWrappedKey>();
+
     public bool IsRemoved(Guid deviceId) => RemovedDevices?.Contains(deviceId) == true;
 }

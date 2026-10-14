@@ -20,6 +20,8 @@ public class HouseholdOperationCodecTests
         new HouseholdSettingChanged(HouseholdSetting.SmtpPassword, null),
         new DeviceKeyPublished(Guid.Parse("0a0a0a0a000000000000000000000002"), "cHVibGlj"),
         new RecoveryKeyPublished(1, "cmVjb3Zlcnk="),
+        new RecoveryKeyGranted(2, Guid.Parse("0a0a0a0a000000000000000000000002"), "wrapped"),
+        new HouseholdKeyGranted(2, Guid.Parse("0a0a0a0a000000000000000000000002"), "wrapped"),
         new ProfileKeyGranted("default", Guid.Parse("0a0a0a0a000000000000000000000002"),
             Guid.Parse("0a0a0a0a000000000000000000000003"), 1, "1.a.b.c.d"),
         new ProfileKeyRevoked("default", Guid.Parse("0a0a0a0a000000000000000000000002")),
@@ -64,6 +66,8 @@ public class HouseholdOperationCodecTests
         FluentActions.Invoking(() => HouseholdOperationCodec.Deserialize("SomethingNew", 1, "{}"))
             .Should().Throw<NotSupportedException>();
         FluentActions.Invoking(() => HouseholdOperationCodec.Deserialize("ProfileRemoved", 2, "{\"profileId\":\"x\"}"))
+            .Should().Throw<NotSupportedException>();
+        FluentActions.Invoking(() => HouseholdOperationCodec.Deserialize("HouseholdKeyGranted", 1, "{}"))
             .Should().Throw<NotSupportedException>();
     }
 }

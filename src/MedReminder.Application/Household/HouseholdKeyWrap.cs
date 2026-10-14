@@ -81,6 +81,12 @@ public static class HouseholdKeyWrap
     public static string EscrowPurpose(Guid groupId, int keyVersion)
         => $"MedReminder.Household.Escrow|{groupId:N}|{keyVersion}";
 
+    public static string RecoveryGrantPurpose(int keyVersion, Guid deviceId)
+        => $"MedReminder.Household.RecoveryGrant|{keyVersion}|{deviceId:N}";
+
+    public static string HouseholdKeyGrantPurpose(int keyVersion, Guid deviceId)
+        => $"MedReminder.Household.KeyGrant|{keyVersion}|{deviceId:N}";
+
     private static ECDiffieHellman ImportPrivate(string privateKey)
     {
         var ecdh = ECDiffieHellman.Create();

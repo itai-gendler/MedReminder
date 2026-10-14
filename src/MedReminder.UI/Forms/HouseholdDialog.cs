@@ -276,10 +276,26 @@ internal sealed class HouseholdDialog : MedReminderFormBase
         {
             return;
         }
-        using var dialog = new SyncPassphraseDialog(_loc, confirm: true, defaultDeviceName: null,
-            "Ui.HouseholdDialog.RemoveDevice.Title", "Ui.HouseholdDialog.RemoveDevice.Hint");
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        var passphrase = dialog.TakePassphrase();
+        const int changePassphrase = 0, keepPassphrase = 1;
+        var passphraseChoice = ChoiceDialog.Show(this, _loc, _loc.Get("Ui.HouseholdDialog.RemoveDevice"),
+            _loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Heading"),
+            _loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text"),
+        [
+            (_loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Change"),
+                _loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.ChangeNote")),
+            (_loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Keep"),
+                _loc.Get("Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.KeepNote")),
+        ]);
+        if (passphraseChoice is not (changePassphrase or keepPassphrase)) return;
+        var keepExistingPassphrase = passphraseChoice == keepPassphrase;
+        var passphrase = Array.Empty<char>();
+        if (!keepExistingPassphrase)
+        {
+            using var dialog = new SyncPassphraseDialog(_loc, confirm: true, defaultDeviceName: null,
+                "Ui.HouseholdDialog.RemoveDevice.Title", "Ui.HouseholdDialog.RemoveDevice.Hint");
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            passphrase = dialog.TakePassphrase();
+        }
         try
         {
             // Step H5b: the profile groups the device held are rotated too.
@@ -287,7 +303,7 @@ internal sealed class HouseholdDialog : MedReminderFormBase
             {
                 await using var scope = _scopes.CreateAsyncScope();
                 return await scope.ServiceProvider.GetRequiredService<RemoveDevice>()
-                    .ExecuteAsync(device, passphrase, CancellationToken.None);
+                    .ExecuteAsync(device, passphrase, CancellationToken.None, keepCurrentPassphrase: keepExistingPassphrase);
             });
         }
         catch (ProfilesNotHeldException ex)
@@ -352,9 +368,17 @@ internal sealed class HouseholdDialog : MedReminderFormBase
     // Step H5a: the new key after a removal on another device.
     private async Task NewKeyAsync()
     {
-        const int passphraseChoice = 0, codeChoice = 1;
+        const int passphraseChoice = 0, codeChoice = 1, grantChoice = 2;
+        bool hasGrant;
+        try { hasGrant = await _household.WhileIdleAsync(async () =>
+        { await using var scope = _scopes.CreateAsyncScope(); return await scope.ServiceProvider.GetRequiredService<HouseholdSync>().HasDeviceKeyGrantAsync(CancellationToken.None); }); }
+        catch { hasGrant = false; }
         var choice = ChoiceDialog.Show(this, _loc, Text, _loc.Get("Ui.HouseholdDialog.NewKey.Heading"), null,
-        [
+        hasGrant ? [
+            (_loc.Get("Ui.HouseholdDialog.NewKey.Passphrase"), _loc.Get("Ui.HouseholdDialog.NewKey.PassphraseNote")),
+            (_loc.Get("Ui.HouseholdDialog.NewKey.Code"), _loc.Get("Ui.HouseholdDialog.NewKey.CodeNote")),
+            (_loc.Get("Ui.HouseholdDialog.NewKey.DeviceGrant"), _loc.Get("Ui.HouseholdDialog.NewKey.DeviceGrantNote")),
+        ] : [
             (_loc.Get("Ui.HouseholdDialog.NewKey.Passphrase"), _loc.Get("Ui.HouseholdDialog.NewKey.PassphraseNote")),
             (_loc.Get("Ui.HouseholdDialog.NewKey.Code"), _loc.Get("Ui.HouseholdDialog.NewKey.CodeNote")),
         ]);
@@ -373,6 +397,7 @@ internal sealed class HouseholdDialog : MedReminderFormBase
             if (dialog.ShowDialog(this) != DialogResult.OK || dialog.HouseholdCode is not { } code) return;
             source = new HouseholdKeySource.Code(code);
         }
+        else if (choice == grantChoice && hasGrant) source = new HouseholdKeySource.DeviceGrant();
         else
         {
             return;

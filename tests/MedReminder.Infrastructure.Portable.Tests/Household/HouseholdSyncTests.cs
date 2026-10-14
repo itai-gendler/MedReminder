@@ -414,6 +414,33 @@ public sealed class HouseholdSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task Removing_a_device_can_keep_the_passphrase_and_device_bind_the_new_recovery_key()
+    {
+        var (a, b, c) = await ThreeDevicesAsync();
+        var removed = await DeviceOf(c);
+        await a.Keyring.GrantAsync("user", removed, CancellationToken.None);
+        await a.Sync.RunAsync(CancellationToken.None);
+
+        await a.Remove().ExecuteAsync(removed, [], CancellationToken.None,
+            SyncFileFormatTests.FastKdf, keepCurrentPassphrase: true);
+
+        (await b.Sync.RunAsync(CancellationToken.None)).NewKeyRequired.Should().BeTrue();
+        (await b.Sync.RekeyAsync(new HouseholdKeySource.DeviceGrant(), CancellationToken.None))
+            .NewKeyRequired.Should().BeFalse();
+        (await b.Keyring.KeysAsync(CancellationToken.None)).IsRemoved(removed).Should().BeTrue();
+        (await b.Sync.RecoverProfileKeyAsync("user", Passphrase.ToCharArray(), CancellationToken.None))!
+            .Key.Should().Equal(a.GroupKeys.Keys["user"].Key);
+        var fresh = Create("Fresh");
+        var householdId = (await a.Store.EnsureCreatedAsync(CancellationToken.None)).HouseholdId;
+        await FluentActions.Awaiting(() => fresh.Sync.JoinAsync(SyncTarget.ForFolder(Folder), householdId,
+                Passphrase.ToCharArray(), "Fresh device", CancellationToken.None))
+            .Should().ThrowAsync<InvalidOperationException>().WithMessage("*delivered to retained devices*");
+        await FluentActions.Awaiting(() => c.Sync.RekeyAsync(
+                new HouseholdKeySource.Passphrase(Passphrase.ToCharArray()), CancellationToken.None))
+            .Should().ThrowAsync<HouseholdDeviceRemovedException>();
+    }
+
+    [Fact]
     public async Task A_device_takes_the_new_key_with_a_code_from_the_removing_device()
     {
         var (a, b, c) = await ThreeDevicesAsync();

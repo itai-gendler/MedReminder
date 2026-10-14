@@ -190,6 +190,87 @@ public sealed class HouseholdKeyring
         return operations;
     }
 
+    // In retain-passphrase removal mode, recovery must not be recoverable by
+    // anyone who knows the shared passphrase. Give the new recovery private
+    // key only to devices still in the household, protected by their device
+    // keys and the authenticated household log.
+    public async Task GrantRecoveryKeyAsync(int keyVersion, string recoveryPrivateKey,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recoveryPrivateKey);
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        var keys = await _household.KeysAsync(cancellationToken);
+        var privateBytes = Convert.FromBase64String(recoveryPrivateKey);
+        try
+        {
+            var grants = keys.DevicePublicKeys
+                .Where(pair => !keys.IsRemoved(pair.Key))
+                .Select(pair => (HouseholdOperationBody)new RecoveryKeyGranted(keyVersion, pair.Key,
+                    HouseholdKeyWrap.Wrap(_cipher, pair.Value, privateBytes,
+                        HouseholdKeyWrap.RecoveryGrantPurpose(keyVersion, pair.Key))))
+                .ToList();
+            if (!keys.DevicePublicKeys.ContainsKey(identity.DeviceId))
+                throw new InvalidOperationException("This device has no household public key.");
+            await _household.AppendAsync(grants, cancellationToken);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(privateBytes);
+        }
+    }
+
+    public async Task GrantHouseholdKeyAsync(int keyVersion, byte[] householdKey, CancellationToken cancellationToken)
+    {
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        var keys = await _household.KeysAsync(cancellationToken);
+        var grants = keys.DevicePublicKeys.Where(pair => !keys.IsRemoved(pair.Key))
+            .Select(pair => (HouseholdOperationBody)new HouseholdKeyGranted(keyVersion, pair.Key,
+                HouseholdKeyWrap.Wrap(_cipher, pair.Value, householdKey,
+                    HouseholdKeyWrap.HouseholdKeyGrantPurpose(keyVersion, pair.Key)))).ToList();
+        if (!keys.DevicePublicKeys.ContainsKey(identity.DeviceId))
+            throw new InvalidOperationException("This device has no household public key.");
+        await _household.AppendAsync(grants, cancellationToken);
+    }
+
+    public async Task<byte[]?> OpenHouseholdKeyGrantAsync(int keyVersion, CancellationToken cancellationToken)
+    {
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        var keys = await _household.KeysAsync(cancellationToken);
+        if (!keys.HouseholdKeyGrants.TryGetValue(identity.DeviceId, out var grant) || grant.KeyVersion != keyVersion)
+            return null;
+        var privateKey = _deviceKeys.LoadPrivateKey()
+            ?? throw new InvalidOperationException("This device has no household key pair.");
+        return HouseholdKeyWrap.Unwrap(_cipher, privateKey, grant.Wrapped,
+            HouseholdKeyWrap.HouseholdKeyGrantPurpose(keyVersion, identity.DeviceId));
+    }
+
+    // Opens this device's generation-specific recovery grant. Null means
+    // this device was not among the retained devices for that generation.
+    public async Task<string?> OpenRecoveryGrantAsync(int keyVersion, CancellationToken cancellationToken)
+    {
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        var keys = await _household.KeysAsync(cancellationToken);
+        if (!keys.RecoveryGrants.TryGetValue(identity.DeviceId, out var grant)
+            || grant.KeyVersion != keyVersion)
+            return null;
+        var privateKey = _deviceKeys.LoadPrivateKey()
+            ?? throw new InvalidOperationException("This device has no household key pair.");
+        var bytes = HouseholdKeyWrap.Unwrap(_cipher, privateKey, grant.Wrapped,
+            HouseholdKeyWrap.RecoveryGrantPurpose(keyVersion, identity.DeviceId));
+        try { return Convert.ToBase64String(bytes); }
+        finally { CryptographicOperations.ZeroMemory(bytes); }
+    }
+
+    public Task<bool> HasRecoveryGrantAsync(int keyVersion, CancellationToken cancellationToken)
+        => HasGrantCoreAsync(keyVersion, cancellationToken);
+
+    private async Task<bool> HasGrantCoreAsync(int keyVersion, CancellationToken cancellationToken)
+    {
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        var keys = await _household.KeysAsync(cancellationToken);
+        return keys.RecoveryGrants.TryGetValue(identity.DeviceId, out var grant) && grant.KeyVersion == keyVersion;
+    }
+
     public Task RevokeAsync(string profileId, Guid deviceId, CancellationToken cancellationToken)
         => _household.AppendAsync([new ProfileKeyRevoked(profileId, deviceId)], cancellationToken);
 
