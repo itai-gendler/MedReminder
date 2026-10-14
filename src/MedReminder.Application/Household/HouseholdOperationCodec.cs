@@ -61,10 +61,11 @@ public static class HouseholdOperationCodec
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(payload);
-        if (schemaVersion < 1 || schemaVersion > CurrentSchemaVersion)
-            throw new NotSupportedException($"Household operation schema version {schemaVersion} is not supported.");
         if (!TypeByName.TryGetValue(type, out var clr))
             throw new NotSupportedException($"Unknown household operation type '{type}'.");
+        var supportedVersion = clr == typeof(RecoveryKeyGranted) || clr == typeof(HouseholdKeyGranted) ? 2 : 1;
+        if (schemaVersion != supportedVersion)
+            throw new NotSupportedException($"Household operation schema version {schemaVersion} is not supported for '{type}'.");
         return (HouseholdOperationBody)(JsonSerializer.Deserialize(payload, clr, Options)
             ?? throw new JsonException($"Empty payload for household operation type '{type}'."));
     }
