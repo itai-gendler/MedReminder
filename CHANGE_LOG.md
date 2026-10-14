@@ -49,9 +49,10 @@ Branch: `claude/minor-requirements-phases-0eb6e6`
   updated.
 - UI requirements: UI-18 Appearance and language updated with M2 theme
   selector note.
-- STATUS §3.1: Android M2 progress bullet (last completed: B2-09). §3.5:
-  desktop counterparts for the three items, including OAuth scope analysis
-  (no new scopes required on either provider).
+- STATUS updated to v2.17.1: §1 latest release, §2.12 #161 row fixed,
+  new §2.13 (v2.17.0) and §2.14 (v2.17.1), §3.1 Android M2 progress
+  (B2-09 last), §3.5 MSI note corrected and website gap extended to v2.17,
+  B2-07/13 references corrected to B2-12, §4 next steps updated.
 
 ---
 
