@@ -326,7 +326,7 @@ public sealed class HouseholdSync
             var problems = new List<string>();
             // Step H5a: after a removal the household runs on a new key and
             // generation; this device stops until it has them.
-            if ((await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken)).FirstOrDefault()
+            if ((await SyncKeys.LatestUsableAsync(transport, identity.HouseholdId, cancellationToken))?.KeyVersion
                 > identity.KeyVersion)
             {
                 var pendingProblems = new List<string>();
@@ -536,8 +536,8 @@ public sealed class HouseholdSync
     {
         var identity = await _store.EnsureCreatedAsync(cancellationToken);
         if (identity.Storage is null) return false;
-        return (await SyncKeys.KeyVersionsAsync(_transports.Create(identity.Storage), identity.HouseholdId, cancellationToken))
-            .FirstOrDefault() > identity.KeyVersion;
+        return (await SyncKeys.LatestUsableAsync(_transports.Create(identity.Storage), identity.HouseholdId, cancellationToken))
+            ?.KeyVersion > identity.KeyVersion;
     }
 
     public async Task<bool> HasDeviceKeyGrantAsync(CancellationToken cancellationToken)
@@ -545,11 +545,12 @@ public sealed class HouseholdSync
         await RunAsync(cancellationToken);
         var identity = await _store.EnsureCreatedAsync(cancellationToken);
         if (identity.Storage is null) return false;
-        var version = (await SyncKeys.KeyVersionsAsync(_transports.Create(identity.Storage), identity.HouseholdId,
-            cancellationToken)).FirstOrDefault();
-        if (version <= identity.KeyVersion) return false;
+        var latest = await SyncKeys.LatestUsableAsync(_transports.Create(identity.Storage), identity.HouseholdId,
+            cancellationToken);
+        if (latest is null || latest.Value.KeyVersion <= identity.KeyVersion) return false;
         var keys = await _household.KeysAsync(cancellationToken);
-        return keys.HouseholdKeyGrants.TryGetValue(identity.DeviceId, out var grant) && grant.KeyVersion == version;
+        return keys.HouseholdKeyGrants.TryGetValue(identity.DeviceId, out var grant)
+            && grant.KeyVersion == latest.Value.KeyVersion;
     }
 
     // Step H5a (D-15 option A): the new household key after a removal on
@@ -589,7 +590,8 @@ public sealed class HouseholdSync
                     break;
                 case HouseholdKeySource.DeviceGrant:
                 {
-                    var version = (await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken)).First();
+                    var version = (await SyncKeys.LatestUsableAsync(transport, identity.HouseholdId, cancellationToken))?.KeyVersion
+                        ?? throw new InvalidOperationException("The new installation generation is not available yet.");
                     var granted = await _keyring.OpenHouseholdKeyGrantAsync(version, cancellationToken)
                         ?? throw new InvalidOperationException("This device was not retained for the new installation key.");
                     try

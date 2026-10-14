@@ -47,6 +47,20 @@ public static class SyncKeys
             .Distinct()
             .OrderDescending()];
 
+    // Highest key version that already has a generation. Rotation writes
+    // the wrap/marker before the new genesis, so a crash between those
+    // writes must not strand devices on an unusable version.
+    public static async Task<(int KeyVersion, int Generation)?> LatestUsableAsync(ISyncTransport transport,
+        Guid groupId, CancellationToken cancellationToken)
+    {
+        foreach (var version in await KeyVersionsAsync(transport, groupId, cancellationToken))
+        {
+            var generation = await CurrentGenerationAsync(transport, groupId, version, cancellationToken);
+            if (generation > 0) return (version, generation);
+        }
+        return null;
+    }
+
     // Key version a generation's genesis is sealed with; null when the
     // genesis is missing or its header cannot be read. The header is not
     // authenticated here: the genesis is opened with that key later.
