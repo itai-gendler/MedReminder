@@ -32,6 +32,7 @@ public abstract record HouseholdKeySource
     public sealed record Passphrase(char[] Value) : HouseholdKeySource;
 
     public sealed record Code(HouseholdPairingCode Value) : HouseholdKeySource;
+    public sealed record DeviceGrant : HouseholdKeySource;
 }
 
 // Step H5a: this device was removed from the household; it cannot take
@@ -328,8 +329,11 @@ public sealed class HouseholdSync
             if ((await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken)).FirstOrDefault()
                 > identity.KeyVersion)
             {
+                var pendingProblems = new List<string>();
+                await PullAsync(transport, key, identity, pendingProblems, cancellationToken);
+                pendingProblems.AddRange(await _projection.ProjectAsync(cancellationToken));
                 var removed = (await _household.KeysAsync(cancellationToken)).IsRemoved(identity.DeviceId);
-                return new HouseholdSyncResult(0, 0, 0, [], NewKeyRequired: true, Removed: removed);
+                return new HouseholdSyncResult(0, 0, 0, pendingProblems, NewKeyRequired: true, Removed: removed);
             }
             // Step H3b: a profile synced since the last run joins the household.
             await _keyring.EnsureDeviceKeyAsync(cancellationToken);
@@ -378,8 +382,16 @@ public sealed class HouseholdSync
         var keys = await _keyring.KeysAsync(ct);
         if (keys.RecoveryPublicKey is not { } recovery) return null;
         var file = await _transports.Create(identity.Storage)
-            .ReadAsync(RecoveryWrapPath(identity.HouseholdId, recovery.KeyVersion), ct)
-            ?? throw new InvalidOperationException("The recovery key is missing from the storage.");
+            .ReadAsync(RecoveryWrapPath(identity.HouseholdId, recovery.KeyVersion), ct);
+        if (file is null)
+        {
+            // When removal retains the shared passphrase, it must not also
+            // make the new recovery private key available through it. Each
+            // retained device opens its own device-key-wrapped grant instead.
+            return await _keyring.OpenRecoveryGrantAsync(recovery.KeyVersion, ct)
+                ?? throw new InvalidOperationException(
+                    "This device has no recovery grant. Join with a pairing code from a retained device.");
+        }
         var privateKey = SyncKeyWrap.Parse(file).Unwrap(_cipher, passphrase, RecoveryPurpose);
         try
         {
@@ -411,7 +423,7 @@ public sealed class HouseholdSync
     // behind (it needs the new key itself), the device is unknown or
     // already removed, or another device is changing the key.
     public async Task RemoveDeviceAsync(Guid deviceId, char[] passphrase, string electedBy,
-        CancellationToken cancellationToken, Argon2Params? kdf = null)
+        CancellationToken cancellationToken, Argon2Params? kdf = null, bool keepCurrentPassphrase = false)
     {
         ArgumentNullException.ThrowIfNull(passphrase);
         var before = await RunAsync(cancellationToken);
@@ -438,23 +450,35 @@ public sealed class HouseholdSync
         operations.AddRange(await _keyring.EscrowAllAsync(recoveryPublic, cancellationToken));
         operations.AddRange(MasterAfterRemoval(await _household.MasterAsync(cancellationToken), deviceId,
             identity.DeviceId, electedBy));
-        await _household.AppendAsync(operations, cancellationToken);
-
         var key = RandomNumberGenerator.GetBytes(SyncKeyWrap.KeySize);
         var recovery = Convert.FromBase64String(recoveryPrivate);
         try
         {
+            await _household.AppendAsync(operations, cancellationToken);
+            if (keepCurrentPassphrase)
+            {
+                await _keyring.GrantRecoveryKeyAsync(version, recoveryPrivate, cancellationToken);
+                await _keyring.GrantHouseholdKeyAsync(version, key, cancellationToken);
+                var oldKey = _keys.Load(identity.HouseholdId, identity.KeyVersion)
+                    ?? throw new InvalidOperationException("The current household key is not stored on this device.");
+                try { await PublishPendingAsync(transport, oldKey, identity, cancellationToken); }
+                finally { CryptographicOperations.ZeroMemory(oldKey); }
+            }
             // Wraps first: an interruption leaves a wrap without a
             // generation, which no device takes (SyncKeys.ObtainAsync).
             if (!await transport.CreateAsync(SyncLayout.KeyWrap(identity.HouseholdId, version),
-                    SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, key, passphrase, kdf ?? Argon2Params.Default)
-                        .ToBytes(), cancellationToken))
+                    keepCurrentPassphrase ? System.Text.Encoding.UTF8.GetBytes(SyncKeys.DeviceGrantMarker)
+                        : SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, key, passphrase,
+                            kdf ?? Argon2Params.Default).ToBytes(), cancellationToken))
             {
                 throw new InvalidOperationException("The household key is being changed on another device.");
             }
-            await transport.CreateAsync(RecoveryWrapPath(identity.HouseholdId, version),
-                SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, recovery, passphrase, kdf ?? Argon2Params.Default,
-                    RecoveryPurpose).ToBytes(), cancellationToken);
+            if (!keepCurrentPassphrase)
+            {
+                await transport.CreateAsync(RecoveryWrapPath(identity.HouseholdId, version),
+                    SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, recovery, passphrase,
+                        kdf ?? Argon2Params.Default, RecoveryPurpose).ToBytes(), cancellationToken);
+            }
 
             var generation = await SyncEngine.LatestGenerationAsync(transport, identity.HouseholdId, cancellationToken) + 1;
             var moved = identity with { KeyVersion = version, Generation = generation, SegmentSeq = 0 };
@@ -474,64 +498,6 @@ public sealed class HouseholdSync
             {
                 HouseholdLog.Gate.Release();
             }
-            await _store.MarkPublishedAsync([.. image.Operations.Select(o => o.Id)], 0, cancellationToken);
-            _keys.Save(identity.HouseholdId, version, key);
-            await WriteRecordAsync(transport, key, moved, new Dictionary<Guid, int>(), cancellationToken);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(key);
-            CryptographicOperations.ZeroMemory(recovery);
-        }
-    }
-
-    // Rewrap the household after a successful device removal. This is a
-    // second, optional passphrase change; it keeps the current membership and
-    // profile keys while publishing a fresh household key and recovery wrap.
-    public async Task ChangePassphraseAsync(char[] passphrase, CancellationToken cancellationToken,
-        Argon2Params? kdf = null)
-    {
-        ArgumentNullException.ThrowIfNull(passphrase);
-        var before = await RunAsync(cancellationToken);
-        if (before.NewKeyRequired || before.Removed)
-            throw new InvalidOperationException("This device cannot change the household passphrase now.");
-        var identity = await _store.EnsureCreatedAsync(cancellationToken);
-        if (identity.Storage is null) throw new InvalidOperationException("The household is not published.");
-        var transport = _transports.Create(identity.Storage);
-        var version = (await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken))
-            .DefaultIfEmpty(identity.KeyVersion).Max() + 1;
-        var (recoveryPrivate, recoveryPublic) = HouseholdKeyWrap.CreateKeyPair();
-        var operations = new List<HouseholdOperationBody> { new RecoveryKeyPublished(version, recoveryPublic) };
-        operations.AddRange(await _keyring.EscrowAllAsync(recoveryPublic, cancellationToken));
-        await _household.AppendAsync(operations, cancellationToken);
-        var key = RandomNumberGenerator.GetBytes(SyncKeyWrap.KeySize);
-        var recovery = Convert.FromBase64String(recoveryPrivate);
-        try
-        {
-            if (!await transport.CreateAsync(SyncLayout.KeyWrap(identity.HouseholdId, version),
-                    SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, key, passphrase,
-                        kdf ?? Argon2Params.Default).ToBytes(), cancellationToken))
-                throw new InvalidOperationException("The household key is being changed on another device.");
-            await transport.CreateAsync(RecoveryWrapPath(identity.HouseholdId, version),
-                SyncKeyWrap.Wrap(_cipher, identity.HouseholdId, version, recovery, passphrase,
-                    kdf ?? Argon2Params.Default, RecoveryPurpose).ToBytes(), cancellationToken);
-            var generation = await SyncEngine.LatestGenerationAsync(transport, identity.HouseholdId,
-                cancellationToken) + 1;
-            var moved = identity with { KeyVersion = version, Generation = generation, SegmentSeq = 0 };
-            var image = new HouseholdSegmentContent(new Dictionary<Guid, int>(),
-                [.. (await _store.ListOperationsAsync(cancellationToken)).Select(Outgoing)]);
-            var header = Header(SyncFileKind.Genesis, moved, moved.DeviceId, 0) with
-                { Vector = new Dictionary<Guid, int>() };
-            await transport.CreateAsync(SyncLayout.Genesis(identity.HouseholdId, generation),
-                SyncFileCodec.Seal(_cipher, key, header, image.ToBytes()), cancellationToken);
-            await HouseholdLog.Gate.WaitAsync(cancellationToken);
-            try
-            {
-                await _store.ResetAsync(moved, cancellationToken);
-                foreach (var operation in image.Operations)
-                    await ApplyOperationAsync(operation, generation, cancellationToken);
-            }
-            finally { HouseholdLog.Gate.Release(); }
             await _store.MarkPublishedAsync([.. image.Operations.Select(o => o.Id)], 0, cancellationToken);
             _keys.Save(identity.HouseholdId, version, key);
             await WriteRecordAsync(transport, key, moved, new Dictionary<Guid, int>(), cancellationToken);
@@ -574,6 +540,17 @@ public sealed class HouseholdSync
             .FirstOrDefault() > identity.KeyVersion;
     }
 
+    public async Task<bool> HasDeviceKeyGrantAsync(CancellationToken cancellationToken)
+    {
+        var identity = await _store.EnsureCreatedAsync(cancellationToken);
+        if (identity.Storage is null) return false;
+        var version = (await SyncKeys.KeyVersionsAsync(_transports.Create(identity.Storage), identity.HouseholdId,
+            cancellationToken)).FirstOrDefault();
+        if (version <= identity.KeyVersion) return false;
+        var keys = await _household.KeysAsync(cancellationToken);
+        return keys.HouseholdKeyGrants.TryGetValue(identity.DeviceId, out var grant) && grant.KeyVersion == version;
+    }
+
     // Step H5a (D-15 option A): the new household key after a removal on
     // another device, from the new passphrase or a code (mrpair2) shown by
     // a device that has it. The local household moves to the new
@@ -584,6 +561,8 @@ public sealed class HouseholdSync
     public async Task<HouseholdSyncResult> RekeyAsync(HouseholdKeySource source, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
+        var syncBeforeRekey = await RunAsync(cancellationToken);
+        if (syncBeforeRekey.Removed) throw new HouseholdDeviceRemovedException();
         var identity = await _store.EnsureCreatedAsync(cancellationToken);
         if (identity.Storage is null) throw new InvalidOperationException("The household is not published.");
         var transport = _transports.Create(identity.Storage);
@@ -607,6 +586,19 @@ public sealed class HouseholdSync
                     obtained = await SyncKeys.ObtainAsync(transport, _cipher, identity.HouseholdId,
                         new SyncKeySource.Known(offer.KeyVersion, offer.Key), _clock, cancellationToken);
                     break;
+                case HouseholdKeySource.DeviceGrant:
+                {
+                    var version = (await SyncKeys.KeyVersionsAsync(transport, identity.HouseholdId, cancellationToken)).First();
+                    var granted = await _keyring.OpenHouseholdKeyGrantAsync(version, cancellationToken)
+                        ?? throw new InvalidOperationException("This device was not retained for the new installation key.");
+                    try
+                    {
+                        obtained = await SyncKeys.ObtainAsync(transport, _cipher, identity.HouseholdId,
+                            new SyncKeySource.Known(version, granted), _clock, cancellationToken);
+                    }
+                    finally { CryptographicOperations.ZeroMemory(granted); }
+                    break;
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(source));
             }

@@ -37,6 +37,7 @@ public sealed record SyncGroupKey(int KeyVersion, int Generation, byte[] Key);
 // only ever needs the key of its current generation.
 public static class SyncKeys
 {
+    public const string DeviceGrantMarker = "device-grant-v1";
     // Versions of the key wraps present, highest first.
     public static async Task<IReadOnlyList<int>> KeyVersionsAsync(ISyncTransport transport, Guid groupId,
         CancellationToken cancellationToken)
@@ -116,8 +117,11 @@ public static class SyncKeys
                 {
                     var generation = await CurrentGenerationAsync(transport, groupId, version, cancellationToken, cache);
                     if (generation == 0) continue;
-                    var wrap = SyncKeyWrap.Parse(await transport.ReadAsync(SyncLayout.KeyWrap(groupId, version), cancellationToken)
-                        ?? throw new InvalidOperationException("The group key is missing."));
+                    var bytes = await transport.ReadAsync(SyncLayout.KeyWrap(groupId, version), cancellationToken)
+                        ?? throw new InvalidOperationException("The group key is missing.");
+                    if (System.Text.Encoding.UTF8.GetString(bytes) == DeviceGrantMarker)
+                        throw new InvalidOperationException("This installation key is delivered to retained devices. Use the key already shared with this device or pair from a retained device.");
+                    var wrap = SyncKeyWrap.Parse(bytes);
                     if (wrap.GroupId != groupId || wrap.KeyVersion != version)
                         throw new InvalidDataException("The key wrap does not match its path.");
                     return new SyncGroupKey(version, generation, wrap.Unwrap(cipher, passphrase.Value));

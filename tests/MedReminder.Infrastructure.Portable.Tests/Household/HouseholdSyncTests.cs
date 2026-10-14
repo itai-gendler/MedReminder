@@ -414,23 +414,29 @@ public sealed class HouseholdSyncTests : IDisposable
     }
 
     [Fact]
-    public async Task Changing_the_installation_passphrase_after_removal_is_a_second_optional_rekey()
+    public async Task Removing_a_device_can_keep_the_passphrase_and_device_bind_the_new_recovery_key()
     {
         var (a, b, c) = await ThreeDevicesAsync();
         var removed = await DeviceOf(c);
-        await a.Sync.RemoveDeviceAsync(removed, NewPassphrase.ToCharArray(), "admin", CancellationToken.None,
-            SyncFileFormatTests.FastKdf);
+        await a.Keyring.GrantAsync("user", removed, CancellationToken.None);
+        await a.Sync.RunAsync(CancellationToken.None);
 
-        var replacement = "another installation passphrase".ToCharArray();
-        await a.Sync.ChangePassphraseAsync(replacement, CancellationToken.None, SyncFileFormatTests.FastKdf);
-        Array.Clear(replacement);
+        await a.Remove().ExecuteAsync(removed, [], CancellationToken.None,
+            SyncFileFormatTests.FastKdf, keepCurrentPassphrase: true);
 
         (await b.Sync.RunAsync(CancellationToken.None)).NewKeyRequired.Should().BeTrue();
-        (await b.Sync.RekeyAsync(new HouseholdKeySource.Passphrase("another installation passphrase".ToCharArray()),
-            CancellationToken.None)).NewKeyRequired.Should().BeFalse();
+        (await b.Sync.RekeyAsync(new HouseholdKeySource.DeviceGrant(), CancellationToken.None))
+            .NewKeyRequired.Should().BeFalse();
         (await b.Keyring.KeysAsync(CancellationToken.None)).IsRemoved(removed).Should().BeTrue();
+        (await b.Sync.RecoverProfileKeyAsync("user", Passphrase.ToCharArray(), CancellationToken.None))!
+            .Key.Should().Equal(a.GroupKeys.Keys["user"].Key);
+        var fresh = Create("Fresh");
+        var householdId = (await a.Store.EnsureCreatedAsync(CancellationToken.None)).HouseholdId;
+        await FluentActions.Awaiting(() => fresh.Sync.JoinAsync(SyncTarget.ForFolder(Folder), householdId,
+                Passphrase.ToCharArray(), "Fresh device", CancellationToken.None))
+            .Should().ThrowAsync<InvalidOperationException>().WithMessage("*delivered to retained devices*");
         await FluentActions.Awaiting(() => c.Sync.RekeyAsync(
-                new HouseholdKeySource.Passphrase("another installation passphrase".ToCharArray()), CancellationToken.None))
+                new HouseholdKeySource.Passphrase(Passphrase.ToCharArray()), CancellationToken.None))
             .Should().ThrowAsync<HouseholdDeviceRemovedException>();
     }
 

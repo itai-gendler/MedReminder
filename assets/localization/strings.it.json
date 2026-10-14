@@ -11,19 +11,16 @@
   "Common.Information": "Informazione",
   "Common.Browse": "Sfoglia…",
   "Common.NotAvailable": "—",
-
   "Language.English": "Inglese",
   "Language.Italian": "Italiano",
   "Language.French": "Francese",
   "Language.Spanish": "Spagnolo",
   "Language.German": "Tedesco",
-
   "Domain.Medicine.Status.Ok": "OK",
   "Domain.Medicine.Status.Warning": "Attenzione",
   "Domain.Medicine.Status.Empty": "Esaurita",
   "Domain.Medicine.Status.Suspended": "Sospesa",
   "Domain.Medicine.Status.Inactive": "Inattiva",
-
   "Ui.App.Title": "MedReminder",
   "Ui.App.Ready": "Pronto.",
   "Ui.App.AlreadyRunning": "MedReminder è già in esecuzione.\nUsa l'icona nell'area di notifica per aprirlo.",
@@ -32,7 +29,6 @@
   "Ui.App.UnexpectedError.Body": "Si è verificato un errore inatteso.\n\n{0}\n\nL'errore è stato registrato nei log dell'applicazione.",
   "Ui.App.PrintCancelled.Title": "Stampa interrotta",
   "Ui.App.PrintCancelled.Body": "Stampa annullata o non completata.\n\nSe hai annullato la finestra di salvataggio PDF puoi ignorare questo messaggio.",
-
   "Ui.MainForm.Title": "MedReminder",
   "Ui.MainForm.LastCheck.None": "Ultimo controllo: —",
   "Ui.MainForm.LastCheck.At": "Ultimo controllo: {0}",
@@ -47,7 +43,6 @@
   "Ui.MainForm.Column.RunOut": "Esaurimento",
   "Ui.MainForm.Column.Status": "Stato",
   "Ui.MainForm.Column.Supply": "Disponibilità",
-
   "Ui.MainForm.Menu.File": "&File",
   "Ui.MainForm.Menu.File.Exit": "Esci",
   "Ui.MainForm.Menu.Therapy": "&Terapia",
@@ -82,8 +77,6 @@
   "Ui.MainForm.Menu.Help.Guide": "&Guida utente",
   "Ui.MainForm.Menu.Help.About": "&Info su MedReminder…",
   "Ui.MainForm.Menu.Help.CheckUpdates": "Controlla &aggiornamenti…",
-
-
   "Ui.MainForm.Status.Loading": "Caricamento…",
   "Ui.MainForm.Status.MedicinesLoaded": "{0} medicine caricate.",
   "Ui.MainForm.Nav.Medicines": "Medicine",
@@ -97,7 +90,6 @@
   "Ui.MainForm.Status.LoadError": "Errore caricamento — vedi log.",
   "Ui.MainForm.Status.CheckRunning": "Controllo in corso…",
   "Ui.MainForm.Status.CheckCompleted": "Controllo completato: {0} medicine, {1} notifiche inviate.",
-
   "Ui.AboutDialog.Title": "Info su MedReminder",
   "Ui.AboutDialog.AppName": "MedReminder",
   "Ui.AboutDialog.Version": "Versione {0}",
@@ -118,14 +110,12 @@
   "Ui.UpdateCheck.NewVersionTitle": "MedReminder — nuova versione disponibile",
   "Ui.UpdateCheck.NewVersionPrompt": "MedReminder {0} è disponibile su GitHub.\n\nAprire ora la pagina della release nel browser?\n\n{1}",
   "Ui.MainForm.GuideOpenError": "Impossibile aprire la guida",
-
   "Ui.MainForm.LoadBanner.Failure": "Impossibile caricare le medicine: {0}",
   "Ui.MainForm.Deactivate.Confirm": "Disattivare '{0}'?\nI dati storici verranno preservati; la medicina non genererà più avvisi.",
   "Ui.MainForm.Deactivate.Confirm.Title": "Conferma disattivazione",
   "Ui.MainForm.Delete.Title": "Elimina medicina",
   "Ui.MainForm.Delete.Confirm": "Eliminare '{0}'?\nLa medicina e il suo schema posologico vengono rimossi definitivamente. Con la sincronizzazione attiva viene rimossa anche dagli altri dispositivi, insieme a quanto vi è stato registrato nel frattempo.",
   "Ui.MainForm.Delete.HasFacts": "'{0}' non può essere eliminata: ha carichi di scorta, assunzioni, conteggi o sospensioni registrati.\nDisattivala per fermare gli avvisi e conservarne lo storico, oppure ritira prima le registrazioni da Scorte > Storico.",
-
   "Ui.MainForm.Error.CreateMedicine": "Errore creazione medicina",
   "Ui.MainForm.Error.ReadMedicine": "Errore lettura medicina",
   "Ui.MainForm.Error.UpdateMedicine": "Errore aggiornamento",
@@ -160,12 +150,10 @@
   "Ui.MainForm.Error.OpenDeadlines": "Errore apertura scadenze",
   "Ui.MainForm.CollectPrescription": "Una ricetta di {0} emessa il {1} è ancora da ritirare. Questa confezione viene da lì? Segnarla come ritirata oggi?",
   "Ui.MainForm.CollectPrescription.Title": "Ricetta ritirata?",
-
   "Ui.Tray.Open": "Apri MedReminder",
   "Ui.Tray.CheckNow": "Controlla ora",
   "Ui.Tray.Settings": "Impostazioni…",
   "Ui.Tray.Exit": "Esci",
-
   "Ui.MedicineEditDialog.Title.New": "Nuova medicina",
   "Ui.MedicineEditDialog.Title.Edit": "Modifica medicina",
   "Ui.MedicineEditDialog.Field.Name": "Nome*",
@@ -282,7 +270,6 @@
   "Ui.MedicineEditDialog.Validation.FreqPositive": "Le somministrazioni al giorno devono essere maggiori di 0.",
   "Ui.MedicineEditDialog.Validation.EndBeforeStart": "La data di fine non può essere prima di quella di inizio.",
   "Ui.MedicineEditDialog.Validation.ThresholdNonNegative": "La soglia di avviso non può essere negativa.",
-
   "Ui.Schedule.Mode.Label": "Schema",
   "Ui.Schedule.Mode.Simple": "Semplice",
   "Ui.Schedule.Mode.Advanced": "Avanzato",
@@ -326,7 +313,6 @@
   "Ui.Schedule.Tapering.Stepped.Validation.DurationMin": "Ogni fase deve durare almeno un giorno.",
   "Ui.Schedule.Prn.Help": "Farmaco al bisogno: l'app tiene traccia della scorta ma non pianifica consumi automatici. I giorni residui restano vuoti finché non cambi il tipo di schema.",
   "Ui.Schedule.Validation.Generic": "Lo schema non è valido.",
-
   "Ui.AdministrationSlotDialog.Title": "Slot di somministrazione",
   "Ui.AdministrationSlotDialog.Field.Dose": "Dose*",
   "Ui.AdministrationSlotDialog.Field.Time": "Orario (opzionale)",
@@ -356,7 +342,6 @@
   "Ui.AdministrationSlotDialog.Note": "È sufficiente specificare orario, descrizione, oppure entrambi. La descrizione può essere scelta dai preset o digitata liberamente (es. \"prima di dormire\", \"a stomaco vuoto con acqua\").",
   "Ui.AdministrationSlotDialog.Validation.NeedOne": "Specifica almeno un orario o una descrizione.",
   "Ui.AdministrationSlotDialog.Save": "Salva",
-
   "Ui.ChangeScheduleDialog.Title": "Cambio dose / frequenza",
   "Ui.ChangeScheduleDialog.Header": "{0} — dose corrente: {1} × {2} al giorno",
   "Ui.ChangeScheduleDialog.Field.EffectiveFrom": "Effettiva dal",
@@ -365,7 +350,6 @@
   "Ui.ChangeScheduleDialog.Note": "I giorni precedenti alla data di decorrenza continueranno a usare la dose e la frequenza correnti; da quella data in poi verranno usati i nuovi valori.",
   "Ui.ChangeScheduleDialog.Apply": "Applica",
   "Ui.ChangeScheduleDialog.Save": "Salva modifica",
-
   "Ui.IntakeDialog.Title": "Registra assunzione",
   "Ui.IntakeDialog.Header": "{0} — dose suggerita: {1} {2}",
   "Ui.IntakeDialog.Field.When": "Giorno",
@@ -378,7 +362,6 @@
   "Ui.IntakeDialog.Extra": "Dose extra al bisogno (le dosi programmate del giorno restano)",
   "Ui.IntakeDialog.Note": "Assunta: la scorta scende di Quantità.\nSaltata: nessuna variazione di scorta; il consumo automatico salta questa giornata.\nAnnullata: audit trail, nessuna variazione di scorta.",
   "Ui.IntakeDialog.Save": "Registra",
-
   "Ui.StockAdjustmentDialog.Title": "Movimento di magazzino",
   "Ui.StockAdjustmentDialog.Header": "{0} — scorta corrente: {1} {2}",
   "Ui.StockAdjustmentDialog.Field.Quantity": "Quantità",
@@ -429,7 +412,6 @@
   "Ui.FactHistoryDialog.Confirm": "Eliminare questa voce? Scorte e consumi vengono ricalcolati.",
   "Ui.FactHistoryDialog.Confirm.Title": "Elimina voce",
   "Ui.FactHistoryDialog.Error.Delete": "Errore nell'eliminazione della voce",
-
   "Ui.TherapyReportDialog.Title": "Scheda terapia",
   "Ui.TherapyReportDialog.Copy": "Copia negli appunti",
   "Ui.TherapyReportDialog.Save": "Salva su file…",
@@ -599,7 +581,6 @@
   "Calendar.Deadline.Generic": "MedReminder: scadenza",
   "Calendar.Deadline.Named": "Scadenza: {0}",
   "Calendar.Description": "Dettagli in MedReminder.",
-
   "Ui.TherapyTimeline.Title": "Linea del tempo della terapia",
   "Ui.TherapyTimeline.Nav.Earlier": "◀ &Prima",
   "Ui.TherapyTimeline.Nav.Today": "&Oggi",
@@ -676,7 +657,6 @@
   "Ui.PrescriptionRequestDialog.SendError": "Impossibile inviare la richiesta.\n\n{0}",
   "Ui.PrescriptionRequestDialog.MarkRequested": "Segna come richiesta",
   "Ui.PrescriptionRequestDialog.MarkedRequested": "Registrata come richiesta",
-
   "Ui.SettingsDialog.Title": "Impostazioni MedReminder",
   "Ui.SettingsDialog.Tab.General": "Generale",
   "Ui.SettingsDialog.Tab.Email": "Email SMTP",
@@ -684,7 +664,6 @@
   "Ui.SettingsDialog.Tab.Backup": "Backup / Ripristino",
   "Ui.SettingsDialog.Unsaved.Title": "Modifiche non salvate",
   "Ui.SettingsDialog.Unsaved.Prompt": "Alcune modifiche non sono state salvate: {0}.\n\nSalvarle prima di chiudere?",
-
   "Ui.SettingsDialog.General.Language": "Lingua interfaccia",
   "Ui.SettingsDialog.General.Save": "Salva",
   "Ui.SettingsDialog.General.RestartPrompt": "La lingua verrà cambiata al riavvio. Riavviare MedReminder adesso?",
@@ -706,7 +685,6 @@
   "Ui.SettingsDialog.General.Appearance.Dark": "Scuro",
   "Ui.SettingsDialog.General.Appearance.Help": "Vale per questo profilo su questo computer. Con un tema a contrasto elevato di Windows si usano i colori del tema. Su Windows 10 «Come Windows» resta chiaro. Si applica al riavvio.",
   "Ui.SettingsDialog.General.RestartPrompt.Changes": "Le modifiche si applicano al riavvio. Riavviare MedReminder adesso?",
-
   "Ui.SettingsDialog.Email.Host": "Host",
   "Ui.SettingsDialog.Email.Port": "Porta",
   "Ui.SettingsDialog.Email.UseTls": "Usa StartTLS",
@@ -727,11 +705,9 @@
   "Ui.SettingsDialog.Email.TestFailed": "Connessione SMTP fallita. Verifica configurazione e log.",
   "Ui.SettingsDialog.Email.TestTitle": "Test SMTP",
   "Ui.SettingsDialog.Email.SaveError": "Errore salvataggio SMTP",
-
   "Ui.SettingsDialog.Startup.AutoStart": "Avvia MedReminder all'accesso a Windows (--minimized)",
   "Ui.SettingsDialog.Startup.Note": "L'avvio è per-utente (HKCU\\...\\Run). Non richiede privilegi amministrativi.",
   "Ui.SettingsDialog.Startup.Error": "Errore auto-start",
-
   "Ui.SettingsDialog.Backup.DbPath": "File database corrente:\n{0}",
   "Ui.SettingsDialog.Backup.Enable": "Backup automatico giornaliero",
   "Ui.SettingsDialog.Backup.Directory": "Cartella backup",
@@ -768,7 +744,6 @@
   "Ui.SettingsDialog.Backup.ExportDialog.Title": "Seleziona la cartella di destinazione",
   "Ui.SettingsDialog.Backup.FileDialog.Title": "Seleziona il file di backup",
   "Ui.SettingsDialog.Backup.FileDialog.Filter": "Database SQLite (*.db)|*.db|Tutti i file (*.*)|*.*",
-
   "Ui.SettingsDialog.Tooltip.Host": "Server SMTP del tuo provider email.\nEsempi: smtp.gmail.com, smtp-mail.outlook.com, smtp.mail.yahoo.com",
   "Ui.SettingsDialog.Tooltip.Port": "Porta TCP del server SMTP.\n• 587: submission con StartTLS (raccomandata)\n• 465: SMTPS legacy\n• 25: outbound relay senza TLS (sconsigliata)",
   "Ui.SettingsDialog.Tooltip.UseTls": "Attiva la cifratura StartTLS sulla connessione SMTP.\nRichiesta praticamente da ogni provider moderno.",
@@ -786,7 +761,6 @@
   "Ui.SettingsDialog.Tooltip.BackupBrowse": "Apri Esplora file per scegliere la cartella dei backup.",
   "Ui.SettingsDialog.Tooltip.Language": "Lingua dell'interfaccia utente e delle notifiche email.\nLe notifiche toast di Windows seguono sempre la lingua di sistema.",
   "Ui.SettingsDialog.Tooltip.CheckUpdates": "Se abilitato, all'avvio MedReminder interroga le GitHub Releases API pubbliche e mostra un messaggio se è disponibile una nuova versione stabile; la nuova versione non viene mai scaricata né installata automaticamente. All'avvio, e una volta al giorno finché l'app resta aperta, scarica inoltre il catalogo dei medicinali del Paese di riferimento, più quello UE per i Paesi dell'UE, quando ne è pubblicata un'edizione più recente (solo dati); dopo un cambio del Paese di riferimento scarica subito il nuovo catalogo. Con l'Italia come Paese di riferimento scarica anche l'elenco AIFA dei farmaci carenti.",
-
   "Ui.HelpViewer.Title": "Guida utente — MedReminder",
   "Ui.HelpViewer.Back": "Indietro",
   "Ui.HelpViewer.Forward": "Avanti",
@@ -796,7 +770,6 @@
   "Ui.HelpViewer.LoadError": "Impossibile mostrare la guida integrata: {0}\n\nProva ad aprire la versione online cliccando \"Apri su GitHub\".",
   "Ui.HelpViewer.NoResource": "# Guida non disponibile\n\nLa risorsa `USER_GUIDE.md` non è embedded in questa build. Apri la versione online cliccando \"Apri su GitHub\".",
   "Ui.HelpViewer.BrowserError": "Impossibile aprire il browser: {0}",
-
   "Ui.MenuHelp.SupportDevelopment": "Sostieni lo sviluppo…",
   "Ui.Donate.Title": "Sostieni lo sviluppo",
   "Ui.Donate.Intro": "Ti piace questa applicazione? Se vuoi, puoi sostenerne volontariamente lo sviluppo con un piccolo contributo. È del tutto facoltativo e non è necessario per usare l'app.",
@@ -817,7 +790,6 @@
   "Ui.Donate.Error.LaunchFailed": "Impossibile aprire la pagina di sostegno. Riprova più tardi.",
   "Ui.Donate.Error.IncompleteConfig": "La funzione di sostegno non è configurata completamente. Riprova più tardi.",
   "Ui.Donate.Error.CustomAmountUnavailable": "Un importo personalizzato non è disponibile per questo metodo di pagamento. Scegli uno degli importi proposti.",
-
   "Notifications.Email.Subject": "MedReminder — {0} in esaurimento ({1} gg)",
   "Notifications.Email.Header": "Promemoria MedReminder.",
   "Notifications.Email.SubjectSecond": "MedReminder — secondo avviso: {0} in esaurimento ({1} gg)",
@@ -832,7 +804,6 @@
   "Notifications.Email.CallToAction": "È consigliabile richiedere per tempo una nuova prescrizione al proprio medico.",
   "Notifications.Email.Footer": "— MedReminder (promemoria organizzativo, non è un dispositivo medico).",
   "Notifications.Email.CallToActionRepeatable": "La tua ricetta ripetibile ha ancora {0} erogazione/i da ritirare: ritira la prossima in farmacia.",
-
   "PrescriptionRequest.Subject": "Richiesta di ricetta: {0}",
   "PrescriptionRequest.Greeting": "Gentile Dottore/Dottoressa,",
   "PrescriptionRequest.Greeting.Named": "Gentile {0},",
@@ -841,7 +812,6 @@
   "PrescriptionRequest.Package": "Confezione: {0}",
   "PrescriptionRequest.NationalCode": "Codice AIC: {0}",
   "PrescriptionRequest.Closing": "La ringrazio.\nCordiali saluti,",
-
   "Notifications.Toast.Title": "{0}: {1} giorni residui",
   "Notifications.Toast.Body": "Quantità stimata per {0} giorni. È consigliabile richiedere una nuova prescrizione.",
   "Notifications.Toast.TitleSecond": "Secondo avviso — {0}: {1} giorni residui",
@@ -887,7 +857,6 @@
   "Notifications.Shortage.Body.Expected": "AIFA annuncia una carenza di {0} dal {1}. Chiedi al medico o al farmacista e richiedi la ricetta per tempo.",
   "Notifications.DoseReminder.Title": "È ora di prendere {0}",
   "Notifications.DoseReminder.Body": "{0} — dose programmata alle {1}",
-
   "Reports.Therapy.Header": "Scheda terapia — MedReminder",
   "Reports.Therapy.AsNeeded": "al bisogno",
   "Reports.Therapy.Date": "Data: {0}",
@@ -923,7 +892,6 @@
   "Reports.Coverage.Packages": "{0} × {1} {2}",
   "Reports.Coverage.Summary.AllCovered": "La scorta copre tutto il periodo.",
   "Reports.Coverage.Summary.Short": "Medicine non coperte per il periodo: {0} su {1}.",
-
   "medicine.field.commercialName": "Nome commerciale",
   "medicine.field.activeIngredient": "Principio attivo",
   "medicine.field.atcCode": "Codice ATC",
@@ -1055,11 +1023,9 @@
   "Ui.SettingsDialog.Backup.RestoreInto.FilenameHint": "Il nome del backup fa riferimento al profilo: {0}",
   "Ui.SettingsDialog.Backup.RestoreInto.NoFilenameHint": "Il nome file non identifica un profilo — scegline uno manualmente.",
   "Ui.SettingsDialog.Backup.RestoreDoneInactive": "Ripristino nel profilo inattivo completato. Il profilo attivo non è cambiato.",
-
   "Ui.SettingsDialog.File.ExportData": "Esporta tutti i dati (crittografati)…",
   "Ui.SettingsDialog.File.ImportData": "Importa da un export…",
   "Ui.SettingsDialog.File.RestoreFromCloud": "Ripristina da cartella cloud…",
-
   "Ui.SettingsDialog.CloudBackup.Section.Title": "Backup su cartella sincronizzata (cifrato)",
   "Ui.SettingsDialog.CloudBackup.Enabled": "Scrivi anche uno snapshot cifrato giornaliero in una cartella sincronizzata da OneDrive / iCloud / Dropbox / Google Drive",
   "Ui.SettingsDialog.CloudBackup.Provider.Label": "Archivio",
@@ -1080,7 +1046,6 @@
   "Ui.SettingsDialog.CloudBackup.Passphrase.NotSet": "Nessuna passphrase impostata su questo computer.",
   "Ui.SettingsDialog.CloudBackup.Warning.NotSync": "Questa non è sincronizzazione in tempo reale. Due dispositivi modificati tra due snapshot divergono; vince l'ultimo ripristino.",
   "Ui.SettingsDialog.CloudBackup.Warning.LostPassphrase": "La passphrase non lascia mai questo computer. Perderla significa perdere la possibilità di ripristinare.",
-
   "Ui.CloudBackup.Passphrase.SetTitle": "Passphrase di backup",
   "Ui.CloudBackup.Passphrase.Intro": "Questa passphrase cifra lo snapshot giornaliero. Immetti la stessa passphrase su ogni dispositivo che deve poter ripristinare dalla cartella cloud.",
   "Ui.CloudBackup.Passphrase.Confirm.Label": "Conferma passphrase",
@@ -1088,7 +1053,6 @@
   "Ui.CloudBackup.Passphrase.Mismatch": "Le due passphrase non coincidono.",
   "Ui.CloudBackup.Error.FolderMissing": "Seleziona una cartella cloud prima di abilitare il backup su cloud.",
   "Ui.CloudBackup.Error.PassphraseMissing": "Imposta una passphrase di backup prima di abilitare il backup su cloud.",
-
   "Ui.RestoreCloudDialog.Title": "Ripristino da cartella cloud",
   "Ui.RestoreCloudDialog.Intro": "Ripristina uno snapshot cifrato prodotto dal backup automatico su cloud. Sovrascrive i dati del profilo corrente e non è annullabile.",
   "Ui.RestoreCloudDialog.Folder.Label": "Cartella cloud",
@@ -1163,7 +1127,6 @@
   "Ui.Import.Error.UnsupportedVersion": "Questo export è stato prodotto da una versione più recente di MedReminder. Aggiorna l'app e riprova.",
   "Ui.Import.OtherProfile.Title": "Archivio di un altro profilo",
   "Ui.Import.OtherProfile.Body": "Questo archivio appartiene al profilo \"{0}\". Importandolo, tutti i dati del profilo attivo \"{1}\" verranno sostituiti con quelli di \"{0}\". Vuoi continuare?",
-
   "Ui.MainForm.Menu.Tools.Sync": "S&incronizzazione…",
   "Ui.MainForm.Error.Sync": "Impossibile aprire la finestra di sincronizzazione.",
   "Ui.SyncDialog.Title": "Sincronizzazione tra dispositivi",
@@ -1382,16 +1345,19 @@
   "Ui.SettingsDialog.Email.NotMaster": "Le impostazioni sono salvate e arrivano a ogni dispositivo. Le email vengono inviate solo dal dispositivo master: verifica la connessione lì (Strumenti → Installazione indica quale dispositivo è).",
   "Ui.PrescriptionRequestDialog.Hint.NotMaster": "Questo dispositivo non è il master, che invia le email dell'installazione: apri la richiesta nel programma di posta per inviarla da qui.",
   "Ui.HouseholdDialog.RemoveDevice": "Rimuovi dispositivo…",
-  "Ui.HouseholdDialog.RemoveDevice.Confirm": "Rimuovere {0} dall'installazione? Conserva ciò che ha già ma non riceve più nulla di nuovo. L'installazione riceve una nuova chiave e una nuova passphrase: ogni altro dispositivo avrà bisogno, una volta, della nuova passphrase o di un codice mostrato da questo dispositivo.",
+  "Ui.HouseholdDialog.RemoveDevice.Confirm": "Rimuovere {0} dall'installazione? Conserva ciò che ha già ma non riceve più dati nuovi. L'installazione passa a una nuova chiave. Gli altri dispositivi avranno bisogno della passphrase scelta o di un codice da questo dispositivo.",
   "Ui.HouseholdDialog.RemoveDevice.Title": "Nuova passphrase dell'installazione",
-  "Ui.HouseholdDialog.RemoveDevice.Hint": "Scegli una nuova passphrase per l'installazione. Il dispositivo rimosso non deve conoscerla. Riservala agli amministratori: aggiunge dispositivi e recupera i profili. Non può essere recuperata.",
+  "Ui.HouseholdDialog.RemoveDevice.Hint": "Scegli una nuova passphrase per l'installazione. Il dispositivo rimosso non deve conoscerla.",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Heading": "Scegli come gestire la passphrase dell'installazione",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Text": "Le chiavi dell'installazione e dei profili ruotano in entrambi i casi. Se mantieni la passphrase, il dispositivo rimosso continuerà a conoscerla, ma non potrà aprire le nuove chiavi. I dispositivi rimasti ricevono le chiavi individualmente; per aggiungere dispositivi serve un codice da uno di essi. Aggiorna prima tutti i dispositivi rimasti.",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Change": "Cambia passphrase",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.ChangeNote": "Imposta una nuova passphrase. Gli altri dispositivi potranno usare questa o un codice di abbinamento.",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.Keep": "Mantieni la passphrase attuale",
+  "Ui.HouseholdDialog.RemoveDevice.PassphraseChoice.KeepNote": "Mantiene invariata la passphrase. Non serve inserirla; le nuove chiavi saranno disponibili solo sui dispositivi rimasti.",
+  "Ui.HouseholdDialog.RemoveDevice.CurrentPassphrase.Title": "Passphrase attuale dell'installazione",
+  "Ui.HouseholdDialog.RemoveDevice.CurrentPassphrase.Hint": "Inserisci la passphrase attuale dell'installazione. Verrà verificata prima di apportare modifiche. La nuova chiave di recupero sarà protetta per i dispositivi rimasti, non dalla passphrase condivisa.",
   "Ui.HouseholdDialog.RemoveDevice.Done": "Il dispositivo è stato rimosso. Gli altri dispositivi si fermano finché non ricevono la nuova chiave. Mostrare ora un codice da inserire su ciascuno di essi?",
-  "Ui.HouseholdDialog.RemoveDevice.ChangePassphrase": "Dopo la rimozione e la rotazione delle chiavi, vuoi cambiare ancora la passphrase dell’installazione? Rifiutare o annullare non modifica la rimozione.",
-  "Ui.HouseholdDialog.RemoveDevice.ChangePassphrase.Title": "Cambiare la passphrase dell’installazione?",
-  "Ui.HouseholdDialog.ChangePassphrase.Title": "Nuova passphrase dell’installazione",
-  "Ui.HouseholdDialog.ChangePassphrase.Hint": "Scegli una nuova passphrase per l’installazione. Gli altri dispositivi avranno bisogno della nuova passphrase o di un codice di abbinamento.",
-  "Ui.HouseholdDialog.ChangePassphrase.Done": "La passphrase dell’installazione è stata cambiata. Gli altri dispositivi hanno bisogno della nuova chiave.",
-  "Ui.HouseholdDialog.Status.NewKey": "La chiave dell'installazione è stata cambiata su un altro dispositivo (un dispositivo è stato rimosso). Questo dispositivo non invia né riceve nulla finché un amministratore non inserisce la nuova chiave: Strumenti → Installazione → Inserisci la nuova chiave.",
+  "Ui.HouseholdDialog.Status.NewKey": "La chiave dell'installazione è cambiata. Questo dispositivo non invia né riceve dati finché un amministratore non inserisce la nuova chiave.",
   "Ui.HouseholdDialog.Status.Removed": "Questo dispositivo è stato rimosso dall'installazione. Conserva i suoi dati ma non riceve nulla di nuovo.",
   "Ui.HouseholdDialog.NewKey": "Inserisci la nuova chiave…",
   "Ui.HouseholdDialog.NewKey.Heading": "Come vuoi inserire la nuova chiave?",
@@ -1489,7 +1455,6 @@
   "Ui.DispensationDialog.Title.Edit": "Modifica erogazione",
   "Ui.DispensationDialog.CollectedOn": "Ritirata il:",
   "Ui.DispensationDialog.Packages": "Confezioni (0 = non noto):",
-
   "Ui.RegionalService.Button": "Servizio regionale delle ricette",
   "Ui.RegionalService.OpenBrowser": "Apri nel browser",
   "Ui.RegionalService.OpenPhone": "Apri sul telefono",
@@ -1515,7 +1480,6 @@
   "Ui.SettingsDialog.Notifications.Region.Label": "Regione:",
   "Ui.SettingsDialog.Notifications.Region.None": "Non impostata",
   "Ui.SettingsDialog.Notifications.Region.Help": "La regione il cui servizio delle ricette si apre da Terapia → Ricette…. Copiata sugli altri PC di un profilo sincronizzato.",
-
   "Regions.IT.01": "Piemonte",
   "Regions.IT.02": "Valle d'Aosta",
   "Regions.IT.03": "Lombardia",
@@ -1602,5 +1566,7 @@
   "Ui.GuidedSetup.Channel.Windows": "su Windows",
   "Ui.GuidedSetup.Channel.Email": "per e-mail",
   "Ui.GuidedSetup.Channel.Both": "su Windows e per e-mail",
-  "Ui.GuidedSetup.Error.Save": "Impossibile salvare la modifica."
+  "Ui.GuidedSetup.Error.Save": "Impossibile salvare la modifica.",
+  "Ui.HouseholdDialog.NewKey.DeviceGrant": "Use key delivered to this device",
+  "Ui.HouseholdDialog.NewKey.DeviceGrantNote": "This device was retained and received its key securely."
 }

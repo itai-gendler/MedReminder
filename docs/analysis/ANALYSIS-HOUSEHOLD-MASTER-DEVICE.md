@@ -491,9 +491,21 @@ the election and the first one holds.
 
 An admin removes device D:
 
-1. New household key, new household passphrase, new recovery key
-   (the removed device holds the old household key; B.1 §6.2 explains
-   why the passphrase changes).
+1. New household key and recovery key. The admin chooses either a new
+   installation passphrase or keeps the current one; no passphrase is
+   needed when keeping it.
+   - With a new passphrase, the new household key and recovery private
+     key are wrapped with it, as before.
+   - With the current passphrase, no passphrase-wrapped household or
+     recovery key is written. The key version marker only tells clients a
+     rotation happened; each retained device receives the new household
+     key and recovery private key separately, wrapped to its ECDH public
+     key. A removed device that still knows the passphrase cannot open the
+     new generation. New devices must pair from a retained device, and
+     losing all retained devices makes the new generation unrecoverable
+     from the unchanged passphrase alone.
+   These device grants use household operation schema 2; update all
+   retained devices before using this option.
 2. Rotation of the key of every profile group D held (B.1 Phase 4c,
    per group); profiles D never held are not rotated.
 3. The new profile keys are granted to the remaining devices that hold

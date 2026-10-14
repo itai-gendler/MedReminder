@@ -66,6 +66,16 @@ public sealed record DeviceKeyPublished(Guid DeviceId, string PublicKey)
 public sealed record RecoveryKeyPublished(int KeyVersion, string PublicKey)
     : HouseholdOperationBody(HouseholdRegisters.Recovery);
 
+// The recovery private key for a generation, wrapped to a retained device
+// key. Used when the installation passphrase is retained during removal.
+public sealed record RecoveryKeyGranted(int KeyVersion, Guid DeviceId, string WrappedKey)
+    : HouseholdOperationBody(HouseholdRegisters.Recovery);
+
+// A new household key, wrapped to a retained device so removal can keep the
+// user's passphrase without leaving the new generation readable with it.
+public sealed record HouseholdKeyGranted(int KeyVersion, Guid DeviceId, string WrappedKey)
+    : HouseholdOperationBody(HouseholdRegisters.HouseholdKey);
+
 // The key of the profile's sync group, wrapped for one device.
 public sealed record ProfileKeyGranted(
     string ProfileId,

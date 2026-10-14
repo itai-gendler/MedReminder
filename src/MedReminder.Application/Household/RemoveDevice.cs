@@ -52,7 +52,7 @@ public sealed class RemoveDevice
     // before anything changes; the exceptions of RemoveDeviceAsync. Returns
     // the number of profile groups rotated.
     public async Task<int> ExecuteAsync(Guid deviceId, char[] passphrase, CancellationToken cancellationToken,
-        Argon2Params? kdf = null)
+        Argon2Params? kdf = null, bool keepCurrentPassphrase = false)
     {
         ProfileAdministration.RequireAdmin(_current);
         var keys = await _keyring.KeysAsync(cancellationToken);
@@ -63,7 +63,8 @@ public sealed class RemoveDevice
         var holders = held.ToDictionary(p => p, p => keys.Grants.Keys
             .Where(g => g.ProfileId == p && g.DeviceId != deviceId).Select(g => g.DeviceId).ToList());
 
-        await _sync.RemoveDeviceAsync(deviceId, passphrase, _current.Id, cancellationToken, kdf);
+        await _sync.RemoveDeviceAsync(deviceId, passphrase, _current.Id, cancellationToken, kdf,
+            keepCurrentPassphrase);
         var active = (await _keyring.KeysAsync(cancellationToken)).DevicePublicKeys;
         foreach (var profileId in held)
         {

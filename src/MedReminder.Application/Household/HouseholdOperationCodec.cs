@@ -8,7 +8,7 @@ namespace MedReminder.Application.Household;
 // Schema version 1 is the original catalogue.
 public static class HouseholdOperationCodec
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     private static readonly (string Name, Type Type)[] Catalogue =
     [
@@ -20,6 +20,8 @@ public static class HouseholdOperationCodec
         ("HouseholdSettingChanged", typeof(HouseholdSettingChanged)),
         ("DeviceKeyPublished", typeof(DeviceKeyPublished)),
         ("RecoveryKeyPublished", typeof(RecoveryKeyPublished)),
+        ("RecoveryKeyGranted", typeof(RecoveryKeyGranted)),
+        ("HouseholdKeyGranted", typeof(HouseholdKeyGranted)),
         ("ProfileKeyGranted", typeof(ProfileKeyGranted)),
         ("ProfileKeyRevoked", typeof(ProfileKeyRevoked)),
         ("ProfileKeyEscrowed", typeof(ProfileKeyEscrowed)),
@@ -43,7 +45,7 @@ public static class HouseholdOperationCodec
 
     public static IReadOnlyCollection<string> TypeNames => TypeByName.Keys;
 
-    public static int SchemaVersionOf(HouseholdOperationBody body) => 1;
+    public static int SchemaVersionOf(HouseholdOperationBody body) => body is RecoveryKeyGranted or HouseholdKeyGranted ? 2 : 1;
 
     public static (string Type, string Payload) Serialize(HouseholdOperationBody body)
     {
