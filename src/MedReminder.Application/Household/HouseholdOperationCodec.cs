@@ -45,7 +45,12 @@ public static class HouseholdOperationCodec
 
     public static IReadOnlyCollection<string> TypeNames => TypeByName.Keys;
 
-    public static int SchemaVersionOf(HouseholdOperationBody body) => body is RecoveryKeyGranted or HouseholdKeyGranted ? 2 : 1;
+    public static int SchemaVersionOf(HouseholdOperationBody body) => SchemaVersionOfType(body.GetType());
+
+    // Schema 2 introduced the device-key-wrapped grants used when a removal
+    // keeps the shared passphrase; every other operation stays at schema 1.
+    private static int SchemaVersionOfType(Type type)
+        => type == typeof(RecoveryKeyGranted) || type == typeof(HouseholdKeyGranted) ? 2 : 1;
 
     public static (string Type, string Payload) Serialize(HouseholdOperationBody body)
     {
@@ -63,8 +68,7 @@ public static class HouseholdOperationCodec
         ArgumentNullException.ThrowIfNull(payload);
         if (!TypeByName.TryGetValue(type, out var clr))
             throw new NotSupportedException($"Unknown household operation type '{type}'.");
-        var supportedVersion = clr == typeof(RecoveryKeyGranted) || clr == typeof(HouseholdKeyGranted) ? 2 : 1;
-        if (schemaVersion != supportedVersion)
+        if (schemaVersion != SchemaVersionOfType(clr))
             throw new NotSupportedException($"Household operation schema version {schemaVersion} is not supported for '{type}'.");
         return (HouseholdOperationBody)(JsonSerializer.Deserialize(payload, clr, Options)
             ?? throw new JsonException($"Empty payload for household operation type '{type}'."));

@@ -53,9 +53,10 @@ public static class SyncKeys
     public static async Task<(int KeyVersion, int Generation)?> LatestUsableAsync(ISyncTransport transport,
         Guid groupId, CancellationToken cancellationToken)
     {
+        var cache = new Dictionary<int, int?>();
         foreach (var version in await KeyVersionsAsync(transport, groupId, cancellationToken))
         {
-            var generation = await CurrentGenerationAsync(transport, groupId, version, cancellationToken);
+            var generation = await CurrentGenerationAsync(transport, groupId, version, cancellationToken, cache);
             if (generation > 0) return (version, generation);
         }
         return null;

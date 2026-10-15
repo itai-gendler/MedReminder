@@ -261,16 +261,6 @@ public sealed class HouseholdKeyring
         finally { CryptographicOperations.ZeroMemory(bytes); }
     }
 
-    public Task<bool> HasRecoveryGrantAsync(int keyVersion, CancellationToken cancellationToken)
-        => HasGrantCoreAsync(keyVersion, cancellationToken);
-
-    private async Task<bool> HasGrantCoreAsync(int keyVersion, CancellationToken cancellationToken)
-    {
-        var identity = await _store.EnsureCreatedAsync(cancellationToken);
-        var keys = await _household.KeysAsync(cancellationToken);
-        return keys.RecoveryGrants.TryGetValue(identity.DeviceId, out var grant) && grant.KeyVersion == keyVersion;
-    }
-
     public Task RevokeAsync(string profileId, Guid deviceId, CancellationToken cancellationToken)
         => _household.AppendAsync([new ProfileKeyRevoked(profileId, deviceId)], cancellationToken);
 
