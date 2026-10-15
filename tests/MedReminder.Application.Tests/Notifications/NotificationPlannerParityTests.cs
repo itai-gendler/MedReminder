@@ -72,6 +72,53 @@ public sealed class NotificationPlannerParityTests
     }
 
     [Fact]
+    public async Task Valid_until_reminders_only_while_the_prescription_is_to_collect()
+    {
+        // Backlog B3-02. Single prescription valid until day 6: reminded on
+        // day 3 (ReminderLeadDays before), once. Collected one: never. A
+        // repeatable one with every dispensation collected: never; with
+        // dispensations left: reminded too. One already reminded on this
+        // device before the plan: not again.
+        var scope = new ApplicationTestScope(StartInstant);
+        var id = await AddAsync(scope, quantity: 100m, dose: 1m, perDay: 1, remindOnDose: false);
+        var single = await SavePrescriptionAsync(scope, id, Start.AddDays(6));
+        await SavePrescriptionAsync(scope, id, Start.AddDays(4), collectedOn: Start);
+        var used = await SavePrescriptionAsync(scope, id, Start.AddDays(5), dispensations: 2);
+        await scope.RecordDispensation.ExecuteAsync(used, Start, null, default);
+        await scope.RecordDispensation.ExecuteAsync(used, Start, null, default);
+        var repeatable = await SavePrescriptionAsync(scope, id, Start.AddDays(9), dispensations: 3);
+        await scope.RecordDispensation.ExecuteAsync(repeatable, Start, null, default);
+        var shown = await SavePrescriptionAsync(scope, id, Start.AddDays(1));
+        await scope.PrescriptionReminders.RunAsync(Start, sendsEmail: false, default);
+        scope.Windows.Targets.Clear();
+
+        var (planned, actual) = await RunAsync(scope, days: 12);
+
+        AssertParity(planned, actual);
+        var reminders = planned.Where(p => p.Kind == PlannedNotificationKind.PrescriptionValidity).ToList();
+        reminders.Select(p => (p.PrescriptionId, p.Day)).Should().Equal(
+            (single, Start.AddDays(3)), (repeatable, Start.AddDays(6)));
+        reminders.Should().NotContain(p => p.PrescriptionId == shown);
+        reminders.Select(p => p.Key).Should().OnlyHaveUniqueItems();
+        NotificationActionArguments.Parse(NotificationActionArguments.ForBody(reminders[0].Target, "p"))!.Kind
+            .Should().Be(NotificationActionKind.OpenPrescriptions);
+    }
+
+    [Fact]
+    public async Task No_valid_until_reminder_for_an_inactive_medicine()
+    {
+        var scope = new ApplicationTestScope(StartInstant);
+        var id = await AddAsync(scope, quantity: 100m, dose: 1m, perDay: 1, remindOnDose: false);
+        await SavePrescriptionAsync(scope, id, Start.AddDays(2));
+        await scope.DeactivateMedicine.ExecuteAsync(new DeactivateMedicineCommand(id), default);
+
+        var (planned, shown) = await RunAsync(scope, days: 5);
+
+        AssertParity(planned, shown);
+        planned.Should().NotContain(p => p.Kind == PlannedNotificationKind.PrescriptionValidity);
+    }
+
+    [Fact]
     public async Task A_suspension_and_a_schedule_change_move_the_low_stock_days()
     {
         var scope = new ApplicationTestScope(StartInstant);
@@ -255,13 +302,12 @@ public sealed class NotificationPlannerParityTests
             seenEvents += events.Count;
             foreach (var target in scope.Windows.Targets.Skip(before))
             {
-                // "Valid until" reminders are not planned (B3-02).
-                if (target.Kind == NotificationKind.Prescription) continue;
                 var kind = target.Kind switch
                 {
                     NotificationKind.DoseReminder => PlannedNotificationKind.DoseReminder,
                     NotificationKind.LowStock => PlannedNotificationKind.LowStock,
                     NotificationKind.PackageExpiry => PlannedNotificationKind.PackageExpiry,
+                    NotificationKind.Prescription => PlannedNotificationKind.PrescriptionValidity,
                     _ => throw new InvalidOperationException($"Unexpected notification {target.Kind}."),
                 };
                 var stage = kind == PlannedNotificationKind.LowStock
@@ -294,6 +340,12 @@ public sealed class NotificationPlannerParityTests
             match.At.Should().BeOnOrAfter(dose.FireAt).And.BeBefore(dose.FireAt + Tick);
         }
     }
+
+    private static Task<Guid> SavePrescriptionAsync(ApplicationTestScope scope, Guid medicineId, DateOnly validUntil,
+        DateOnly? collectedOn = null, int? dispensations = null)
+        => scope.SavePrescription.ExecuteAsync(new SavePrescriptionCommand(
+            null, medicineId, RequestedOn: null, IssuedOn: Start, Code: null, Packages: 1,
+            ValidUntil: validUntil, CollectedOn: collectedOn, Dispensations: dispensations), default);
 
     private static Task<Guid> AddAsync(
         ApplicationTestScope scope,

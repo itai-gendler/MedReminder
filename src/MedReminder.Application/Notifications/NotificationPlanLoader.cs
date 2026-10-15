@@ -10,8 +10,9 @@ namespace MedReminder.Application.Notifications;
 // and plans (backlog B0-02). The ledger must be current: the host runs
 // ConsumptionCatchUp first, as the desktop runs it before the monitor.
 // Every medicine is read, inactive ones included, for their packages.
-// With the prescription repositories, the repeatable prescriptions too,
-// for the low-stock action (backlog B3-01).
+// With the prescription repositories, the prescriptions too, for the
+// low-stock action (backlog B3-01) and, with the reminder events, the
+// "valid until" reminders (backlog B3-02).
 public sealed class NotificationPlanLoader
 {
     private readonly IMedicineRepository _medicines;
@@ -29,6 +30,7 @@ public sealed class NotificationPlanLoader
     private readonly IProfileSettingsStore? _settings;
     private readonly IPrescriptionRepository? _prescriptions;
     private readonly IPrescriptionDispensationRepository? _dispensations;
+    private readonly IPrescriptionReminderEventRepository? _prescriptionEvents;
 
     public NotificationPlanLoader(
         IMedicineRepository medicines,
@@ -45,8 +47,10 @@ public sealed class NotificationPlanLoader
         TimeProvider clock,
         IProfileSettingsStore? settings = null,
         IPrescriptionRepository? prescriptions = null,
-        IPrescriptionDispensationRepository? dispensations = null)
+        IPrescriptionDispensationRepository? dispensations = null,
+        IPrescriptionReminderEventRepository? prescriptionEvents = null)
     {
+        _prescriptionEvents = prescriptionEvents;
         _prescriptions = prescriptions;
         _dispensations = dispensations;
         _medicines = medicines;
@@ -100,12 +104,27 @@ public sealed class NotificationPlanLoader
                 }
             }
 
-            // Only a repeatable prescription changes a low-stock notice.
+            // A repeatable prescription changes a low-stock notice; with the
+            // reminder events, any prescription may be reminded before it
+            // lapses.
             IReadOnlyList<Domain.Prescriptions.Prescription>? prescriptions = null;
+            HashSet<PrescriptionReminderKey>? prescriptionsReminded = null;
             if (_prescriptions is not null && _dispensations is not null)
             {
-                prescriptions = [.. (await _prescriptions.ListForMedicineAsync(medicine.Id, cancellationToken))
-                    .Where(p => p.IsRepeatable)];
+                var all = await _prescriptions.ListForMedicineAsync(medicine.Id, cancellationToken);
+                prescriptions = _prescriptionEvents is null ? [.. all.Where(p => p.IsRepeatable)] : all;
+                if (_prescriptionEvents is not null)
+                {
+                    prescriptionsReminded = [];
+                    foreach (var p in all)
+                    {
+                        if (p.ValidUntil is { } until
+                            && await _prescriptionEvents.ExistsAsync(p.Id, until, cancellationToken))
+                        {
+                            prescriptionsReminded.Add(new PrescriptionReminderKey(p.Id, until));
+                        }
+                    }
+                }
             }
 
             var packages = await _packages.ListForMedicineAsync(medicine.Id, cancellationToken);
@@ -137,7 +156,8 @@ public sealed class NotificationPlanLoader
                 prescriptions,
                 prescriptions is { Count: > 0 } && _dispensations is not null
                     ? await _dispensations.CountByPrescriptionAsync(medicine.Id, cancellationToken)
-                    : null));
+                    : null,
+                prescriptionsReminded));
         }
         return result;
     }

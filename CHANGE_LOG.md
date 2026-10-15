@@ -30,7 +30,34 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #252 — B3-02: plan prescription "valid until" reminders on the device
+
+Link: [vger70/MedReminder#252](https://github.com/vger70/MedReminder/pull/252)
+
+Shared-core side of Android backlog B3-02. The phone wakes only at the
+instants the planner computes, so the "valid until" reminder is now
+planned with the desktop's rules.
+
+**Added**
+- `src/MedReminder.Application/Notifications/NotificationPlanner.cs`:
+  `PlannedNotificationKind.PrescriptionValidity`, planned like
+  `PrescriptionReminders` (issued, not collected, dispensations left,
+  from `ReminderLeadDays` before "valid until", once per prescription
+  and date); it opens the prescriptions. `PrescriptionReminderKey`.
+
+**Changed**
+- `NotificationPlanLoader`: optional `IPrescriptionReminderEventRepository`;
+  with it, every prescription and the reminders already shown are read.
+
+**Docs**
+- Backlog B3-02 row: shared-core side recorded.
+
+**Tests**
+- Parity harness compares prescription reminders; two new cases.
+
 ## PR #251 — B3-01: plan the prescription action on device low-stock notices
+
+**Status:** merged (2026-10-15)
 
 Link: [vger70/MedReminder#251](https://github.com/vger70/MedReminder/pull/251)
 
