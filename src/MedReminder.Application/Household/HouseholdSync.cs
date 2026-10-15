@@ -9,6 +9,12 @@ using MedReminder.Domain.Sync;
 
 namespace MedReminder.Application.Household;
 
+// The selected cloud account is accessible, but it does not contain the
+// installation named by the pairing code. Keep this distinct so clients
+// can tell the user to sign in to the account that owns the installation.
+public sealed class HouseholdNotFoundException()
+    : InvalidOperationException("Household not found in this cloud account.");
+
 public sealed record HouseholdSyncResult(
     int OperationsPublished,
     int SegmentsApplied,
@@ -173,7 +179,7 @@ public sealed class HouseholdSync
         ArgumentNullException.ThrowIfNull(passphrase);
         var transport = _transports.Create(target);
         HouseholdFile.Parse(await transport.ReadAsync(HouseholdFile.PathOf(householdId), cancellationToken)
-            ?? throw new InvalidOperationException("Household not found."));
+            ?? throw new HouseholdNotFoundException());
 
         var obtained = await SyncKeys.ObtainAsync(transport, _cipher, householdId,
             new SyncKeySource.Passphrase(passphrase), _clock, cancellationToken);
@@ -194,7 +200,7 @@ public sealed class HouseholdSync
         ArgumentNullException.ThrowIfNull(code);
         var transport = _transports.Create(target);
         HouseholdFile.Parse(await transport.ReadAsync(HouseholdFile.PathOf(code.HouseholdId), cancellationToken)
-            ?? throw new InvalidOperationException("Household not found."));
+            ?? throw new HouseholdNotFoundException());
         var file = await transport.ReadAsync(SyncLayout.Pairing(code.HouseholdId, code.DeviceId), cancellationToken)
             ?? throw new SyncPairingExpiredException();
         var offer = HouseholdPairingFile.Parse(file).Open(_cipher, code, _clock.GetUtcNow());
