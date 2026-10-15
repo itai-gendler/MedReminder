@@ -82,7 +82,7 @@ $StoreMsiName = "MedReminder-win-x64-net10.msi"
 $StoreBranch  = "store"
 # Versions kept on the store branch: the new one and the previous one,
 # whose URL may still be in a submission under certification.
-$StoreKeep    = 2
+$StoreKeep    = 4
 $Assets       = @(
     "MedReminder-win-x64-net10.zip",
     "MedReminder-win-x64.zip",
