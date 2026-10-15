@@ -327,15 +327,7 @@ public sealed class MedicationMonitor
             .Where(p => p.IsRepeatable).ToList();
         if (repeatable.Count == 0) return null;
         var collected = await _dispensations.CountByPrescriptionAsync(medicineId, cancellationToken);
-        var open = repeatable
-            .Select(p => (p, count: collected.GetValueOrDefault(p.Id)))
-            .Where(x => x.p.StatusOn(today, x.count) == Domain.Prescriptions.PrescriptionStatus.ToCollect)
-            .OrderBy(x => x.p.ValidUntil ?? DateOnly.MaxValue)
-            .FirstOrDefault();
-        return open.p is null
-            ? null
-            : new RepeatablePrescriptionNotice(
-                Domain.Prescriptions.PrescriptionRules.DispensationsLeft(open.p, open.count), open.p.ValidUntil);
+        return RepeatablePrescriptionNotices.Select(repeatable, collected, today);
     }
 
     private DateOnly LocalToday()

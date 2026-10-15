@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MedReminder.Application.Notifications;
+using MedReminder.Application.Prescriptions;
 using MedReminder.Application.Tests.Support;
 using MedReminder.Application.UseCases;
 using MedReminder.Domain.Medicines;
@@ -25,7 +26,7 @@ public sealed class NotificationPlannerParityTests
     private static readonly DateTimeOffset StartInstant = new(2026, 9, 13, 7, 0, 0, TimeSpan.Zero);
 
     private sealed record Shown(PlannedNotificationKind Kind, Guid MedicineId, DateOnly Day, int Stage,
-        TimeOnly? SlotTime, DateTimeOffset At);
+        TimeOnly? SlotTime, DateTimeOffset At, NotificationTarget Target);
 
     [Fact]
     public async Task Low_stock_stages_and_dose_reminders_until_the_stock_runs_out()
@@ -40,6 +41,34 @@ public sealed class NotificationPlannerParityTests
         AssertParity(planned, shown);
         planned.Where(p => p.Kind == PlannedNotificationKind.LowStock).Select(p => p.Stage).Should().Equal(1, 2);
         planned.Should().Contain(p => p.Kind == PlannedNotificationKind.DoseReminder);
+    }
+
+    [Fact]
+    public async Task Low_stock_offers_the_repeatable_prescription_only_while_it_is_valid()
+    {
+        // Backlog B3-01. Stage 1 (day 3) falls before the repeatable
+        // prescription lapses (day 5): the notice names it and opens the
+        // prescriptions; stage 2 (day 7) comes after: it offers to prepare
+        // a new request, as the desktop toast does.
+        var scope = new ApplicationTestScope(StartInstant);
+        var id = await AddAsync(scope, quantity: 20m,
+            slots: [new(1m, new TimeOnly(8, 0), null), new(1m, new TimeOnly(20, 0), null)]);
+        var prescription = await scope.SavePrescription.ExecuteAsync(new SavePrescriptionCommand(
+            null, id, RequestedOn: null, IssuedOn: Start, Code: null, Packages: 1,
+            ValidUntil: Start.AddDays(5), CollectedOn: null, Dispensations: 3), default);
+        await scope.RecordDispensation.ExecuteAsync(prescription, Start, null, default);
+
+        var (planned, shown) = await RunAsync(scope, days: 12);
+
+        AssertParity(planned, shown);
+        var lowStock = planned.Where(p => p.Kind == PlannedNotificationKind.LowStock).ToList();
+        lowStock.Select(p => p.Stage).Should().Equal(1, 2);
+        lowStock[0].RepeatablePrescription.Should().Be(new RepeatablePrescriptionNotice(2, Start.AddDays(5)));
+        lowStock[1].RepeatablePrescription.Should().BeNull();
+        NotificationActionArguments.ButtonsFor(lowStock[0].Target, "p").Select(a => a.Kind)
+            .Should().Equal(NotificationActionKind.OpenPrescriptions);
+        NotificationActionArguments.ButtonsFor(lowStock[1].Target, "p").Select(a => a.Kind)
+            .Should().Equal(NotificationActionKind.RequestPrescription);
     }
 
     [Fact]
@@ -226,6 +255,8 @@ public sealed class NotificationPlannerParityTests
             seenEvents += events.Count;
             foreach (var target in scope.Windows.Targets.Skip(before))
             {
+                // "Valid until" reminders are not planned (B3-02).
+                if (target.Kind == NotificationKind.Prescription) continue;
                 var kind = target.Kind switch
                 {
                     NotificationKind.DoseReminder => PlannedNotificationKind.DoseReminder,
@@ -236,7 +267,7 @@ public sealed class NotificationPlannerParityTests
                 var stage = kind == PlannedNotificationKind.LowStock
                     ? events.Single(e => e.MedicineId == target.MedicineId).Stage
                     : 0;
-                shown.Add(new Shown(kind, target.MedicineId, day, stage, target.SlotTime, at));
+                shown.Add(new Shown(kind, target.MedicineId, day, stage, target.SlotTime, at, target));
             }
             scope.Clock.AdvanceBy(Tick);
         }
@@ -245,12 +276,16 @@ public sealed class NotificationPlannerParityTests
 
     private static void AssertParity(IReadOnlyList<PlannedNotification> planned, IReadOnlyList<Shown> shown)
     {
-        static string Describe(PlannedNotificationKind kind, Guid medicine, DateOnly day, int stage, TimeOnly? slot)
-            => $"{kind} {medicine:N} {day:yyyy-MM-dd} stage {stage} slot {slot}";
+        // The target decides the actions (NotificationActionArguments), so
+        // it must be the one the desktop toast carries.
+        static string Describe(PlannedNotificationKind kind, Guid medicine, DateOnly day, int stage, TimeOnly? slot,
+            NotificationTarget target)
+            => $"{kind} {medicine:N} {day:yyyy-MM-dd} stage {stage} slot {slot} target {target}";
 
         planned.Select(p => Describe(p.Kind, p.MedicineId, p.Day,
-                p.Kind == PlannedNotificationKind.LowStock ? p.Stage : 0, p.SlotTime))
-            .Should().BeEquivalentTo(shown.Select(s => Describe(s.Kind, s.MedicineId, s.Day, s.Stage, s.SlotTime)));
+                p.Kind == PlannedNotificationKind.LowStock ? p.Stage : 0, p.SlotTime, p.Target))
+            .Should().BeEquivalentTo(shown.Select(s => Describe(s.Kind, s.MedicineId, s.Day, s.Stage, s.SlotTime,
+                s.Target)));
 
         foreach (var dose in planned.Where(p => p.Kind == PlannedNotificationKind.DoseReminder))
         {

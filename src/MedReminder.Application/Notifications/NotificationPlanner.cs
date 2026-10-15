@@ -1,7 +1,9 @@
 using MedReminder.Application.Packages;
+using MedReminder.Application.Prescriptions;
 using MedReminder.Domain.Calculations;
 using MedReminder.Domain.Medicines;
 using MedReminder.Domain.Notifications;
+using MedReminder.Domain.Prescriptions;
 using MedReminder.Domain.Stock;
 
 namespace MedReminder.Application.Notifications;
@@ -16,6 +18,9 @@ public enum PlannedNotificationKind
 // One notification the device should show at FireAt. Stage is the
 // low-stock stage (NotificationCycle) or the package expiry stage
 // (PackageExpiryNoticeEvent); 0 for a dose reminder.
+// RepeatablePrescription (low stock only): the repeatable prescription
+// with dispensations left on Day, for the text (NotificationTexts) and
+// the action (Target).
 public sealed record PlannedNotification(
     PlannedNotificationKind Kind,
     Guid MedicineId,
@@ -24,8 +29,22 @@ public sealed record PlannedNotification(
     int Stage = 0,
     Guid? SlotId = null,
     TimeOnly? SlotTime = null,
-    IReadOnlyList<Guid>? PackageIds = null)
+    IReadOnlyList<Guid>? PackageIds = null,
+    RepeatablePrescriptionNotice? RepeatablePrescription = null)
 {
+    // What the notification is about, for its actions
+    // (NotificationActionArguments.ForBody and ButtonsFor), as the desktop
+    // toast builds it. A low-stock notice offers to prepare a prescription
+    // request, or to open the prescriptions when a repeatable one has
+    // dispensations left (backlog B3-01): both only open a screen, neither
+    // sends nor records a request.
+    public NotificationTarget Target => Kind switch
+    {
+        PlannedNotificationKind.DoseReminder => NotificationTarget.DoseReminder(MedicineId, SlotTime!.Value),
+        PlannedNotificationKind.LowStock => NotificationTarget.LowStock(MedicineId, RepeatablePrescription is not null),
+        _ => NotificationTarget.PackageExpiry(MedicineId),
+    };
+
     // Stable identity across re-plans, so the platform adapter can keep an
     // alarm that is planned again and cancel the ones no longer planned.
     public string Key => Kind switch
@@ -67,6 +86,10 @@ public sealed record NotificationPlanOptions
 //  - LatestLowStockEvent: INotificationEventRepository.GetLatestForMedicineAsync.
 //  - SlotsRemindedToday: slots with a DoseReminderEvent for today.
 //  - PackageNoticesShown: package notices already shown on this device.
+//  - Prescriptions: IPrescriptionRepository.ListForMedicineAsync; null
+//    for none.
+//  - DispensationsCollected: IPrescriptionDispensationRepository
+//    .CountByPrescriptionAsync for the medicine; null for none.
 public sealed record MedicinePlanState(
     Medicine Medicine,
     decimal CurrentStock,
@@ -77,7 +100,9 @@ public sealed record MedicinePlanState(
     NotificationEvent? LatestLowStockEvent,
     IReadOnlySet<Guid> SlotsRemindedToday,
     IReadOnlyList<StockPackage> Packages,
-    IReadOnlySet<PackageNoticeKey> PackageNoticesShown);
+    IReadOnlySet<PackageNoticeKey> PackageNoticesShown,
+    IReadOnlyList<Prescription>? Prescriptions = null,
+    IReadOnlyDictionary<Guid, int>? DispensationsCollected = null);
 
 public readonly record struct PackageNoticeKey(Guid PackageId, DateOnly EffectiveExpiry, int Stage);
 
@@ -99,10 +124,14 @@ public readonly record struct PackageNoticeKey(Guid PackageId, DateOnly Effectiv
 //
 // Only the device notification is planned (the Windows channel of
 // NotificationChannels); email stays with the household master
-// (ANALYSIS-B1-MOBILE-SYNC.md §8.4). Prescriptions and deadlines (premium,
-// M2) and shortages (an event of the feed refresh) are not planned here.
+// (ANALYSIS-B1-MOBILE-SYNC.md §8.4). A low-stock notice carries the
+// repeatable prescription the desktop toast names (backlog B3-01).
+// Prescription "valid until" reminders and deadlines (M3) and shortages
+// (an event of the feed refresh) are not planned here.
 public static class NotificationPlanner
 {
+    private static readonly IReadOnlyDictionary<Guid, int> NoDispensations = new Dictionary<Guid, int>();
+
     public static IReadOnlyList<PlannedNotification> Plan(
         IEnumerable<MedicinePlanState> medicines,
         DateTimeOffset now,
@@ -177,8 +206,14 @@ public static class NotificationPlanner
                 continue;
             }
 
+            // The prescription as the desktop pass of that day would see
+            // it; a dispensation recorded later re-plans (host).
+            var repeatable = state.Prescriptions is { Count: > 0 } prescriptions
+                ? RepeatablePrescriptionNotices.Select(prescriptions,
+                    state.DispensationsCollected ?? NoDispensations, day)
+                : null;
             result.Add(new PlannedNotification(PlannedNotificationKind.LowStock, medicine.Id, day,
-                DailyFireAt(day, i, localNow, zone, options), stage));
+                DailyFireAt(day, i, localNow, zone, options), stage, RepeatablePrescription: repeatable));
             // The event the desktop records after a shown toast.
             latest = new NotificationEvent
             {

@@ -30,6 +30,37 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #251 — B3-01: plan the prescription action on device low-stock notices
+
+Link: [vger70/MedReminder#251](https://github.com/vger70/MedReminder/pull/251)
+
+Shared-core side of Android backlog B3-01. A low-stock notice planned for
+the phone now carries the repeatable prescription the desktop toast names.
+The phone can then offer the same actions: open the prescriptions, or open
+the request draft. Neither action sends or records a request.
+
+**Added**
+- `src/MedReminder.Application/Prescriptions/RepeatablePrescriptionNotices.cs`:
+  pure choice of the repeatable prescription to collect, shared by the
+  desktop monitor and the device planner.
+- `PlannedNotification.RepeatablePrescription` and `PlannedNotification.Target`
+  in `src/MedReminder.Application/Notifications/NotificationPlanner.cs`.
+
+**Changed**
+- `MedicinePlanState` takes the medicine's prescriptions and dispensation
+  counts; `NotificationPlanLoader` reads them when the prescription
+  repositories are registered.
+- `MedicationMonitor` uses `RepeatablePrescriptionNotices`. Desktop
+  behaviour is unchanged.
+- Planner parity tests also compare the notification target with the
+  desktop toast.
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B3-01
+  shared-core status.
+
+---
+
 ## PR #250 — Code-review cleanups for the retain-passphrase device removal
 
 Link: [vger70/MedReminder#250](https://github.com/vger70/MedReminder/pull/250)
