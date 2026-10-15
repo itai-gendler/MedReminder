@@ -175,7 +175,8 @@ queued work “sent”; no public store release occurs before M5 exits.
 | B5-02 | Recipients and message categories | Configure caregiver copies, low-stock emails and weekly digest separately; review recipients/content before save. | UI-16 |
 | B5-03 | Master as the sending device and master transfer | Email is sent only by the household master, for every profile of the installation; show which device is master and its last-seen state; on a non-master, explain that the master sends and offer user-initiated `mailto:`; explain the handoff to a PC and the effect when the master is unavailable. | Household R5, C4, C5, C8; UI-16 |
 | B5-04 | Best-effort delivery | State sends may be delayed; show queued/attempted/failed/accepted-by-server states. | Planner; UI-16 |
-| B5-05 | Public Play Store launch | Publish to production only after M5 exit, a closed test that meets the Play production-access rule (plan §5.0), and final store/privacy/legal/release checks; M1–M5 artifacts before then are pre-release builds only. | M5 exit; D13 validation; privacy/legal and Play release gates |
+| B5-06 | App bundle obfuscation | App bundle obfuscation | B5-04 |
+| B5-05 | Public Play Store launch | Publish to production only after M5 exit, a closed test that meets the Play production-access rule (plan §5.0), and final store/privacy/legal/release checks; M1–M5 artifacts before then are pre-release builds only. | B5-06; M5 exit; D13 validation; privacy/legal and Play release gates |
 
 ## 4. Cross-cutting definition of done
 
