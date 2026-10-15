@@ -10,6 +10,8 @@ namespace MedReminder.Application.Notifications;
 // and plans (backlog B0-02). The ledger must be current: the host runs
 // ConsumptionCatchUp first, as the desktop runs it before the monitor.
 // Every medicine is read, inactive ones included, for their packages.
+// With the prescription repositories, the repeatable prescriptions too,
+// for the low-stock action (backlog B3-01).
 public sealed class NotificationPlanLoader
 {
     private readonly IMedicineRepository _medicines;
@@ -25,6 +27,8 @@ public sealed class NotificationPlanLoader
     private readonly IPackageExpiryNoticeEventRepository _packageNotices;
     private readonly TimeProvider _clock;
     private readonly IProfileSettingsStore? _settings;
+    private readonly IPrescriptionRepository? _prescriptions;
+    private readonly IPrescriptionDispensationRepository? _dispensations;
 
     public NotificationPlanLoader(
         IMedicineRepository medicines,
@@ -39,8 +43,12 @@ public sealed class NotificationPlanLoader
         IStockPackageRepository packages,
         IPackageExpiryNoticeEventRepository packageNotices,
         TimeProvider clock,
-        IProfileSettingsStore? settings = null)
+        IProfileSettingsStore? settings = null,
+        IPrescriptionRepository? prescriptions = null,
+        IPrescriptionDispensationRepository? dispensations = null)
     {
+        _prescriptions = prescriptions;
+        _dispensations = dispensations;
         _medicines = medicines;
         _stock = stock;
         _schedules = schedules;
@@ -92,6 +100,14 @@ public sealed class NotificationPlanLoader
                 }
             }
 
+            // Only a repeatable prescription changes a low-stock notice.
+            IReadOnlyList<Domain.Prescriptions.Prescription>? prescriptions = null;
+            if (_prescriptions is not null && _dispensations is not null)
+            {
+                prescriptions = [.. (await _prescriptions.ListForMedicineAsync(medicine.Id, cancellationToken))
+                    .Where(p => p.IsRepeatable)];
+            }
+
             var packages = await _packages.ListForMedicineAsync(medicine.Id, cancellationToken);
             var shown = new HashSet<PackageNoticeKey>();
             foreach (var package in packages)
@@ -117,7 +133,11 @@ public sealed class NotificationPlanLoader
                 await _notifications.GetLatestForMedicineAsync(medicine.Id, cancellationToken),
                 reminded,
                 packages,
-                shown));
+                shown,
+                prescriptions,
+                prescriptions is { Count: > 0 } && _dispensations is not null
+                    ? await _dispensations.CountByPrescriptionAsync(medicine.Id, cancellationToken)
+                    : null));
         }
         return result;
     }
