@@ -58,12 +58,28 @@ efficiency fixes in the touched code paths.
 - `src/MedReminder.Application/Sync/SyncKeys.cs`: `LatestUsableAsync` now shares
   a genesis-lookup cache across the key-version loop (matching
   `ObtainAsync`), avoiding repeated genesis reads on the hot sync paths.
+## PR #249 — Fix corrupted B2-12 backlog row from PR #246
+
+Branch: `claude/fix-b2-12-backlog-corruption`
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: repair the
+  B2-12 implementation note merged in PR #246. All backtick-quoted code
+  identifiers had been stripped to blank gaps and the note had landed in the
+  "Depends on / UX" column instead of "Acceptance / done when". Restored the
+  identifiers, moved the note to the correct column, and reconciled two points
+  that contradicted the row's acceptance text: identity is read client-side so
+  no shared-core PR was needed, and the passphrase offer updates the cloud
+  backup passphrase (the domain has no API to rekey the installation passphrase
+  without a device removal).
+- `CHANGE_LOG.md`: add the missing `Branch:` line to the PR #246 entry.
 
 ---
 
 ## PR #246 — Mark B2-12 implemented in the Android backlog
 
 Link: [vger70/MedReminder#246](https://github.com/vger70/MedReminder/pull/246)
+Branch: `claude/agitated-davinci-6d2e77`
 
 **Docs**
 - `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B2-12 row
@@ -92,7 +108,7 @@ Branch: `claude/battery-restriction-sync-c79755`
 
 ---
 
-## PR #244 — Add three minor requirements to Android M2 (B2-07, B2-12, B2-13)
+## PR #244 — Add three minor UX requirements to Android M2 (B2-12)
 
 Link: [vger70/MedReminder#244](https://github.com/vger70/MedReminder/pull/244)
 Branch: `claude/minor-requirements-phases-0eb6e6`
