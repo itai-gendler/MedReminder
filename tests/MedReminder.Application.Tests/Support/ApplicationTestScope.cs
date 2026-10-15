@@ -231,7 +231,8 @@ internal sealed class ApplicationTestScope
     // in-memory dependencies.
     public NotificationPlanLoader BuildPlanLoader()
         => new(Medicines, Stock, Schedules, Suspensions, Slots, Notifications, DoseEvents, Intakes, Counts,
-            Packages, PackageNoticeEvents, Clock, ProfileSettings, Prescriptions, Dispensations);
+            Packages, PackageNoticeEvents, Clock, ProfileSettings, Prescriptions, Dispensations,
+            PrescriptionReminderEvents);
 
     // Builds a DoseReminderService (A5) wired to the same in-memory
     // dependencies. graceWindow is optional so tests can exercise the

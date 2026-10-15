@@ -13,6 +13,8 @@ public enum PlannedNotificationKind
     LowStock,
     DoseReminder,
     PackageExpiry,
+    // "Valid until" reminder of an issued prescription (backlog B3-02).
+    PrescriptionValidity,
 }
 
 // One notification the device should show at FireAt. Stage is the
@@ -20,7 +22,9 @@ public enum PlannedNotificationKind
 // (PackageExpiryNoticeEvent); 0 for a dose reminder.
 // RepeatablePrescription (low stock only): the repeatable prescription
 // with dispensations left on Day, for the text (NotificationTexts) and
-// the action (Target).
+// the action (Target). PrescriptionId and ValidUntil ("valid until"
+// reminder only): the prescription and the last valid day it is reminded
+// for (PrescriptionReminderEvent).
 public sealed record PlannedNotification(
     PlannedNotificationKind Kind,
     Guid MedicineId,
@@ -30,18 +34,22 @@ public sealed record PlannedNotification(
     Guid? SlotId = null,
     TimeOnly? SlotTime = null,
     IReadOnlyList<Guid>? PackageIds = null,
-    RepeatablePrescriptionNotice? RepeatablePrescription = null)
+    RepeatablePrescriptionNotice? RepeatablePrescription = null,
+    Guid? PrescriptionId = null,
+    DateOnly? ValidUntil = null)
 {
     // What the notification is about, for its actions
     // (NotificationActionArguments.ForBody and ButtonsFor), as the desktop
     // toast builds it. A low-stock notice offers to prepare a prescription
     // request, or to open the prescriptions when a repeatable one has
     // dispensations left (backlog B3-01): both only open a screen, neither
-    // sends nor records a request.
+    // sends nor records a request. A "valid until" reminder opens the
+    // prescriptions (backlog B3-02).
     public NotificationTarget Target => Kind switch
     {
         PlannedNotificationKind.DoseReminder => NotificationTarget.DoseReminder(MedicineId, SlotTime!.Value),
         PlannedNotificationKind.LowStock => NotificationTarget.LowStock(MedicineId, RepeatablePrescription is not null),
+        PlannedNotificationKind.PrescriptionValidity => NotificationTarget.Prescription(MedicineId),
         _ => NotificationTarget.PackageExpiry(MedicineId),
     };
 
@@ -51,6 +59,7 @@ public sealed record PlannedNotification(
     {
         PlannedNotificationKind.DoseReminder => $"dose:{MedicineId:N}:{SlotId:N}:{Day:yyyy-MM-dd}",
         PlannedNotificationKind.LowStock => $"stock:{MedicineId:N}:{Stage}:{Day:yyyy-MM-dd}",
+        PlannedNotificationKind.PrescriptionValidity => $"prescription:{PrescriptionId:N}:{ValidUntil:yyyy-MM-dd}",
         _ => $"expiry:{MedicineId:N}:{Stage}:{Day:yyyy-MM-dd}",
     };
 }
@@ -90,6 +99,8 @@ public sealed record NotificationPlanOptions
 //    for none.
 //  - DispensationsCollected: IPrescriptionDispensationRepository
 //    .CountByPrescriptionAsync for the medicine; null for none.
+//  - PrescriptionsReminded: "valid until" reminders already shown on this
+//    device (IPrescriptionReminderEventRepository); null for none.
 public sealed record MedicinePlanState(
     Medicine Medicine,
     decimal CurrentStock,
@@ -102,9 +113,12 @@ public sealed record MedicinePlanState(
     IReadOnlyList<StockPackage> Packages,
     IReadOnlySet<PackageNoticeKey> PackageNoticesShown,
     IReadOnlyList<Prescription>? Prescriptions = null,
-    IReadOnlyDictionary<Guid, int>? DispensationsCollected = null);
+    IReadOnlyDictionary<Guid, int>? DispensationsCollected = null,
+    IReadOnlySet<PrescriptionReminderKey>? PrescriptionsReminded = null);
 
 public readonly record struct PackageNoticeKey(Guid PackageId, DateOnly EffectiveExpiry, int Stage);
+
+public readonly record struct PrescriptionReminderKey(Guid PrescriptionId, DateOnly ValidUntil);
 
 // Notification planner (docs/analysis/ANALYSIS-B1-ANDROID-PLAN.md §4.2,
 // ANALYSIS-B1-MOBILE-SYNC.md §8.1, backlog B0-02). The desktop polls
@@ -125,9 +139,10 @@ public readonly record struct PackageNoticeKey(Guid PackageId, DateOnly Effectiv
 // Only the device notification is planned (the Windows channel of
 // NotificationChannels); email stays with the household master
 // (ANALYSIS-B1-MOBILE-SYNC.md §8.4). A low-stock notice carries the
-// repeatable prescription the desktop toast names (backlog B3-01).
-// Prescription "valid until" reminders and deadlines (M3) and shortages
-// (an event of the feed refresh) are not planned here.
+// repeatable prescription the desktop toast names (backlog B3-01); the
+// "valid until" reminders follow PrescriptionReminders (backlog B3-02).
+// Deadlines (M3) and shortages (an event of the feed refresh) are not
+// planned here.
 public static class NotificationPlanner
 {
     private static readonly IReadOnlyDictionary<Guid, int> NoDispensations = new Dictionary<Guid, int>();
@@ -159,6 +174,7 @@ public static class NotificationPlanner
             {
                 PlanLowStock(state, stock, today, localNow, zone, options, result);
                 if (state.Medicine.RemindOnDose) PlanDoses(state, stock, today, localNow, zone, options, result);
+                PlanPrescriptions(state, today, localNow, zone, options, result);
             }
             // Inactive medicines included: their packages stay in the
             // cabinet (PackageExpiryNotices).
@@ -295,6 +311,34 @@ public static class NotificationPlanner
             result.Add(new PlannedNotification(PlannedNotificationKind.PackageExpiry, state.Medicine.Id, day,
                 DailyFireAt(day, i, localNow, zone, options), pending[0].Stage,
                 PackageIds: [.. pending.Select(k => k.PackageId)]));
+        }
+    }
+
+    // PrescriptionReminders for the device channel: an active medicine's
+    // issued prescription not collected yet (a repeatable one with
+    // dispensations left), from PrescriptionRules.ReminderLeadDays before
+    // "valid until" to the day itself, once per prescription and date. A
+    // collection or dispensation recorded later re-plans (host).
+    private static void PlanPrescriptions(MedicinePlanState state, DateOnly today, DateTimeOffset localNow,
+        TimeZoneInfo zone, NotificationPlanOptions options, List<PlannedNotification> result)
+    {
+        if (state.Prescriptions is not { Count: > 0 } prescriptions) return;
+        var collected = state.DispensationsCollected ?? NoDispensations;
+        foreach (var prescription in prescriptions)
+        {
+            if (prescription.ValidUntil is not { } until) continue;
+            if (state.PrescriptionsReminded?.Contains(new PrescriptionReminderKey(prescription.Id, until)) == true)
+                continue;
+            var count = prescription.IsRepeatable ? collected.GetValueOrDefault(prescription.Id) : 0;
+            for (var i = 0; i < options.DailyHorizonDays; i++)
+            {
+                var day = today.AddDays(i);
+                if (!PrescriptionRules.ReminderDue(prescription, day, count)) continue;
+                result.Add(new PlannedNotification(PlannedNotificationKind.PrescriptionValidity, state.Medicine.Id,
+                    day, DailyFireAt(day, i, localNow, zone, options),
+                    PrescriptionId: prescription.Id, ValidUntil: until));
+                break;
+            }
         }
     }
 
