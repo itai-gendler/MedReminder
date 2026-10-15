@@ -61,7 +61,7 @@ Branch: `claude/battery-restriction-sync-c79755`
 
 ---
 
-## PR #244 — Add three minor requirements to Android M2 (B2-07, B2-12, B2-13)
+## PR #244 — Add three minor UX requirements to Android M2 (B2-12)
 
 Link: [vger70/MedReminder#244](https://github.com/vger70/MedReminder/pull/244)
 Branch: `claude/minor-requirements-phases-0eb6e6`

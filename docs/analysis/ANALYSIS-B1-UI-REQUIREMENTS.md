@@ -425,7 +425,7 @@ Use stable, named groups under **More → Settings**:
 |---|---|
 | Profile and security | Active profile and switch (M2); roles/PIN (M2); biometric app lock (M1) |
 | Reminders | Per-device, per-kind notification preferences (M2; dose on phone, low-stock on every device by default); lock-screen detail visibility (hidden by default); notification and exact-alarm permission status; Android settings route; contextual battery-restriction guidance |
-| Appearance and language | Follow system light/dark appearance and text scaling (M1; no own override). In-app theme selector (system / light / dark) with a representative icon per option, in M2 (B2-13); applies immediately, device-local, not synced. Language selector (M1, five supported languages; default system language, English otherwise) |
+| Appearance and language | Follow system light/dark appearance and text scaling (M1; no own override). In-app theme selector (system / light / dark) with a representative icon per option, in M2 (B2-12); applies immediately, device-local, not synced. Language selector (M1, five supported languages; default system language, English otherwise) |
 | Backup and sync | `.mrz` export/import (M1); provider, sync, conflicts and devices (M2); cloud backup and restore (M2) |
 | Privacy and data | UI-17 privacy summary, data routes and local data deletion (M2) |
 | Email | SMTP and recipient settings (M5) |
