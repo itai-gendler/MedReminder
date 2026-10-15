@@ -370,9 +370,19 @@ internal sealed class HouseholdDialog : MedReminderFormBase
     {
         const int passphraseChoice = 0, codeChoice = 1, grantChoice = 2;
         bool hasGrant;
-        try { hasGrant = await _household.WhileIdleAsync(async () =>
-        { await using var scope = _scopes.CreateAsyncScope(); return await scope.ServiceProvider.GetRequiredService<HouseholdSync>().HasDeviceKeyGrantAsync(CancellationToken.None); }); }
-        catch { hasGrant = false; }
+        try
+        {
+            hasGrant = await _household.WhileIdleAsync(async () =>
+            {
+                await using var scope = _scopes.CreateAsyncScope();
+                return await scope.ServiceProvider.GetRequiredService<HouseholdSync>()
+                    .HasDeviceKeyGrantAsync(CancellationToken.None);
+            });
+        }
+        catch
+        {
+            hasGrant = false;
+        }
         var choice = ChoiceDialog.Show(this, _loc, Text, _loc.Get("Ui.HouseholdDialog.NewKey.Heading"), null,
         hasGrant ? [
             (_loc.Get("Ui.HouseholdDialog.NewKey.Passphrase"), _loc.Get("Ui.HouseholdDialog.NewKey.PassphraseNote")),

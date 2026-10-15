@@ -159,8 +159,8 @@ public static class HouseholdRegisters
         {
             devices.Remove(gone);
             recoveryGrants.Remove(gone);
+            householdKeyGrants.Remove(gone);
         }
-        foreach (var gone in removed) { devices.Remove(gone); recoveryGrants.Remove(gone); householdKeyGrants.Remove(gone); }
         return new HouseholdKeys(devices, recovery, escrows, grants, removed)
             { RecoveryGrants = recoveryGrants, HouseholdKeyGrants = householdKeyGrants };
     }

@@ -30,6 +30,34 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #250 — Code-review cleanups for the retain-passphrase device removal
+
+Link: [vger70/MedReminder#250](https://github.com/vger70/MedReminder/pull/250)
+
+Follow-up cleanups from a review of PR #247 (optional passphrase change on
+device removal). Behaviour is unchanged; these are maintainability and
+efficiency fixes in the touched code paths.
+
+**Changed**
+- `src/MedReminder.Domain/Household/HouseholdRegisters.cs`: collapse the two
+  back-to-back removed-device cleanup loops into one that also prunes
+  `householdKeyGrants`, removing the redundant first pass.
+- `src/MedReminder.Application/Household/HouseholdOperationCodec.cs`: derive
+  the per-type schema version from a single `SchemaVersionOfType` helper used
+  by both `SchemaVersionOf` and `Deserialize`, so serialize/deserialize can
+  no longer disagree on which types are schema 2.
+- `src/MedReminder.UI/Forms/HouseholdDialog.cs`: reformat the device-key-grant
+  probe in `NewKeyAsync` to the surrounding scope-block style.
+
+**Removed**
+- `src/MedReminder.Application/Household/HouseholdKeyring.cs`: drop the unused
+  `HasRecoveryGrantAsync`/`HasGrantCoreAsync` methods (no callers; the live
+  path uses `HouseholdSync.HasDeviceKeyGrantAsync`).
+
+**Fixed**
+- `src/MedReminder.Application/Sync/SyncKeys.cs`: `LatestUsableAsync` now shares
+  a genesis-lookup cache across the key-version loop (matching
+  `ObtainAsync`), avoiding repeated genesis reads on the hot sync paths.
 ## PR #249 — Fix corrupted B2-12 backlog row from PR #246
 
 Branch: `claude/fix-b2-12-backlog-corruption`
