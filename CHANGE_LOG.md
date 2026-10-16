@@ -30,7 +30,18 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #279 — B5-04 and B5-06: record the Android delivery states and R8 build in the backlog
+
+Link: [vger70/MedReminder#279](https://github.com/vger70/MedReminder/pull/279)
+Branch: `claude/b5-04-b5-06-m5-1tkmfo`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B5-04 records PR #278 (`core-v0.16.0`) and the private repository PR #67 (Recent emails: queued, attempted or unknown, failed with guidance, accepted by the server); B5-06 records the R8 release build of PR #67 (Java shrinking, private-member obfuscation where the SDK supports it, mapping file required in the bundle, .NET assemblies not obfuscated).
+
 ## PR #278 — B5-04: portable email delivery journal
+
+**Status:** merged (2026-10-16)
 
 Link: [vger70/MedReminder#278](https://github.com/vger70/MedReminder/pull/278)
 Branch: `claude/b5-04-b5-06-m5-1tkmfo`
