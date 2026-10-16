@@ -30,7 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #278 — B5-04: portable email delivery journal
+
+Link: [vger70/MedReminder#278](https://github.com/vger70/MedReminder/pull/278)
+Branch: `claude/b5-04-b5-06-m5-1tkmfo`
+
+### Added
+
+- `JournalingEmailNotificationService` and `JsonFileEmailDeliveryJournal` (`Infrastructure.Portable`), with `EmailDeliveryState`, `EmailDeliveryProblem`, `EmailDeliveryEntry` and `IEmailDeliveryJournal` (`Application`): each email is recorded as queued (no network), attempted, failed (with a category) or accepted by the server, so the Android app can show the UI-16 states without claiming delivery. The journal (`email-deliveries.json`, newest 50 entries of 30 days) stores no subject, body or address. The desktop does not record deliveries yet.
+
+### Changed
+
+- `MailKitEmailNotificationService` throws `EmailNotSentException` (an `InvalidOperationException`, same messages) for a missing configuration, recipient or password, so these failures get their own category.
+
 ## PR #277 — B5-03: record the Android master email in the backlog
+
+**Status:** merged (2026-10-16)
 
 Link: [vger70/MedReminder#277](https://github.com/vger70/MedReminder/pull/277)
 Branch: `claude/keen-cori-5cfqp3`
