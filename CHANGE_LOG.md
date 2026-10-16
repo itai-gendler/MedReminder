@@ -30,10 +30,34 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #266 — B4-03: shared catalogue entry fill
+
+Link: [vger70/MedReminder#266](https://github.com/vger70/MedReminder/pull/266)
+Branch: `claude/b4-03-catalogue-entry-fill`
+
+Shared-core side of Android backlog B4-03 (M4): what a medicine form
+takes from a picked catalogue entry, so a medicine linked on the phone
+gets the same values as on the desktop.
+
+### Added
+
+- `CatalogueEntryFill` (`MedReminder.Application/Catalogue`): the name with strength and form, the active ingredients, the package, the unit (dictionary key for a known form, the raw form otherwise) and the catalogue link (national code, first ATC code, row id).
+
+### Changed
+
+- The desktop medicine form (autocomplete pick and barcode scan) uses `CatalogueEntryFill` instead of its private copies; same results.
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-03 shared-core side.
+
+---
+
 ## PR #265 — B4-02: record the Android catalogue refresh in the backlog
 
 Link: [vger70/MedReminder#265](https://github.com/vger70/MedReminder/pull/265)
 Branch: `claude/b4-02-backlog`
+**Status:** merged (2026-10-16)
 
 ### Docs
 
