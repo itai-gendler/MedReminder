@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using MedReminder.Application.Abstractions;
 using MedReminder.Application.DoseTimes;
 using MedReminder.Application.Catalogue;
@@ -588,7 +587,7 @@ internal sealed class MedicineEditDialog : MedReminderFormBase
         // form when we can compose them from the AIFA row — leaves
         // enough context in the saved Name to distinguish, e.g., a
         // 500 mg Tachipirina from a 1000 mg one.
-        _nameBox.InputText = BuildExtendedCommercialName(reference);
+        _nameBox.InputText = CatalogueEntryFill.Name(reference);
 
         // Active ingredient side: mirror the reference row.
         _ingredientBox.InputText = reference.ActiveIngredients.Count == 0
@@ -607,7 +606,7 @@ internal sealed class MedicineEditDialog : MedReminderFormBase
         // knows it; otherwise put the raw FORMA verbatim (the combo is
         // free-text, so any string is legal). Never overwrite an
         // existing unit with an empty value.
-        var unitLabel = MapPharmaceuticalFormToUnit(reference.PharmaceuticalForm, _loc);
+        var unitLabel = CatalogueEntryFill.Unit(reference.PharmaceuticalForm, key => _loc.Get(key));
         if (!string.IsNullOrEmpty(unitLabel))
         {
             _unitBox.Text = unitLabel;
@@ -622,71 +621,10 @@ internal sealed class MedicineEditDialog : MedReminderFormBase
         UpdateDocumentLinks(reference.LinkLeaflet, reference.LinkSummaryOfProductCharacteristics);
     }
 
-    // "TACHIPIRINA" + " 500 MG" + " compresse" → "TACHIPIRINA 500 MG compresse".
-    // Falls back to just CommercialName when neither strength nor form
-    // is available.
-    private static string BuildExtendedCommercialName(ReferenceMedicine reference)
-    {
-        var parts = new List<string>(3) { reference.CommercialName };
-        var strength = ExtractStrengthToken(reference.Dosage);
-        if (!string.IsNullOrEmpty(strength))
-        {
-            parts.Add(strength);
-        }
-        if (!string.IsNullOrWhiteSpace(reference.PharmaceuticalForm))
-        {
-            parts.Add(reference.PharmaceuticalForm.Trim().ToLowerInvariant());
-        }
-        return string.Join(" ", parts);
-    }
-
-    // Extracts the first strength token from an AIFA DESCRIZIONE
-    // string ("500 MG COMPRESSE 20 …" → "500 MG"). Matches an integer
-    // or decimal number followed by a common pharmaceutical unit.
-    // Deliberately conservative: on no match, returns null so the
-    // extended name stays clean rather than picking up garbage.
-    private static readonly Regex StrengthRegex = new(
-        @"\b\d+([.,]\d+)?\s*(mg|g|mcg|µg|ug|ml|l|ui|iu|%)\b",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static string? ExtractStrengthToken(string? dosage)
-    {
-        if (string.IsNullOrWhiteSpace(dosage)) return null;
-        var match = StrengthRegex.Match(dosage);
-        return match.Success ? match.Value : null;
-    }
-
-    // AIFA FORMA is a free-text column with many variants. We match
-    // by contains on lowercased text against a short list of stems
-    // that cover the common cases; anything else falls through to
-    // returning the raw FORMA (the combo is DropDown, so free text
-    // is fine).
-    private static string? MapPharmaceuticalFormToUnit(string? forma, ILocalizationService loc)
-    {
-        if (string.IsNullOrWhiteSpace(forma)) return null;
-        var lower = forma.ToLowerInvariant();
-
-        static bool Has(string haystack, string needle) => haystack.Contains(needle, StringComparison.Ordinal);
-
-        if (Has(lower, "compress")) return loc.Get("Ui.MedicineEditDialog.Unit.Tablets");
-        if (Has(lower, "capsul")) return loc.Get("Ui.MedicineEditDialog.Unit.Capsules");
-        if (Has(lower, "bustin")) return loc.Get("Ui.MedicineEditDialog.Unit.Sachets");
-        if (Has(lower, "granulat")) return loc.Get("Ui.MedicineEditDialog.Unit.Granules");
-        if (Has(lower, "gocce") || Has(lower, "collir")) return loc.Get("Ui.MedicineEditDialog.Unit.Drops");
-        if (Has(lower, "sciropp") || Has(lower, "sospension") || Has(lower, "soluzion") || Has(lower, "sospens"))
-            return loc.Get("Ui.MedicineEditDialog.Unit.Ml");
-        if (Has(lower, "supposte") || Has(lower, "supposta")) return loc.Get("Ui.MedicineEditDialog.Unit.Suppositories");
-        if (Has(lower, "cerott")) return loc.Get("Ui.MedicineEditDialog.Unit.Patches");
-        if (Has(lower, "crema") || Has(lower, "unguent") || Has(lower, "pomata") || Has(lower, "gel"))
-            return loc.Get("Ui.MedicineEditDialog.Unit.Grams");
-        if (Has(lower, "spray") || Has(lower, "erogazion") || Has(lower, "polvere per inalazion"))
-            return loc.Get("Ui.MedicineEditDialog.Unit.Puffs");
-        if (Has(lower, "fiala") || Has(lower, "fiale")) return loc.Get("Ui.MedicineEditDialog.Unit.Ampoules");
-        if (Has(lower, "flacon")) return loc.Get("Ui.MedicineEditDialog.Unit.Vials");
-        if (Has(lower, "polvere")) return loc.Get("Ui.MedicineEditDialog.Unit.Sachets");
-
-        // Unknown FORMA: keep the AIFA text as-is so nothing is lost.
-        return forma.Trim();
-    }
+    // The commercial name with strength and form, the active ingredient,
+    // the package and the unit come from the shared CatalogueEntryFill
+    // (also used by the Android app, backlog B4-03), so a medicine linked
+    // on either device is filled the same way.
 
     // Commercial-name box, plus the "Scan barcode" button when a scan
     // context is available.
