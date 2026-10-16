@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MedReminder.Application.Abstractions;
+using MedReminder.Application.Catalogue;
 using MedReminder.Application.Household;
 using MedReminder.Application.Tests.Support;
 using MedReminder.Application.UseCases;
@@ -118,6 +119,58 @@ public class InstallationSettingsTests
             .ExecuteAsync(new UserSettings { ReferenceCountry = "FR" }, CancellationToken.None);
 
         (await HeldAsync())[HouseholdSetting.ReferenceCountry].Should().Be("FR");
+    }
+
+    [Fact]
+    public async Task A_country_change_without_a_catalogue_stores_the_DA3_default()
+    {
+        await new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { ReferenceCountry = "JP" }, CancellationToken.None);
+
+        _settings.User.ReferenceCatalogue.Should().Be(CatalogueDefaults.NoCatalogue);
+        (await HeldAsync())[HouseholdSetting.ReferenceCatalogue].Should().Be("none");
+
+        await new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { ReferenceCountry = "DE" }, CancellationToken.None);
+
+        _settings.User.ReferenceCatalogue.Should().Be("EU");
+        (await HeldAsync())[HouseholdSetting.ReferenceCatalogue].Should().Be("EU");
+    }
+
+    [Fact]
+    public async Task A_save_without_a_catalogue_keeps_the_stored_choice_while_the_country_is_unchanged()
+    {
+        await new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { ReferenceCountry = "JP", ReferenceCatalogue = "US" }, CancellationToken.None);
+
+        await new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { Language = "it", ReferenceCountry = "JP" }, CancellationToken.None);
+
+        _settings.User.ReferenceCatalogue.Should().Be("US");
+        (await HeldAsync())[HouseholdSetting.ReferenceCatalogue].Should().Be("US");
+    }
+
+    [Fact]
+    public async Task Only_an_admin_changes_the_catalogue_and_only_to_a_valid_one()
+    {
+        var byUser = () => new UpdateGeneralSettings(_settings, User, Log)
+            .ExecuteAsync(new UserSettings { ReferenceCountry = "IT", ReferenceCatalogue = "none" }, CancellationToken.None);
+        await byUser.Should().ThrowAsync<ProfileAdministrationException>();
+
+        var invalid = () => new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { ReferenceCountry = "IT", ReferenceCatalogue = "DE" }, CancellationToken.None);
+        await invalid.Should().ThrowAsync<ArgumentException>();
+        _settings.User.ReferenceCatalogue.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task An_installation_from_before_the_setting_records_no_catalogue()
+    {
+        await new UpdateGeneralSettings(_settings, Admin, Log)
+            .ExecuteAsync(new UserSettings { Language = "de", ReferenceCountry = "IT" }, CancellationToken.None);
+
+        _settings.User.ReferenceCatalogue.Should().BeEmpty();
+        (await HeldAsync()).Keys.Should().NotContain(HouseholdSetting.ReferenceCatalogue);
     }
 
     [Fact]

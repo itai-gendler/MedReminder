@@ -149,6 +149,7 @@ public static class HouseholdSetting
     public const string CloudBackupProvider = "CloudBackup.Provider";
     public const string CloudBackupAccountId = "CloudBackup.AccountId";
     public const string ReferenceCountry = "ReferenceCountry";
+    public const string ReferenceCatalogue = "ReferenceCatalogue";
 
     public static bool IsSecret(string setting) => setting == SmtpPassword;
 }

@@ -1,4 +1,5 @@
 using MedReminder.Application.Abstractions;
+using MedReminder.Application.Catalogue;
 using MedReminder.Application.Household;
 using MedReminder.Domain.Household;
 
@@ -99,7 +100,9 @@ public sealed class UpdateGeneralSettings
     {
         ArgumentNullException.ThrowIfNull(user);
         var before = _settings.ReadUser();
+        user = WithCatalogue(user, before);
         if (!string.Equals(before.ReferenceCountry, user.ReferenceCountry, StringComparison.Ordinal)
+            || !string.Equals(before.ReferenceCatalogue, user.ReferenceCatalogue, StringComparison.Ordinal)
             || before.LogDatabaseQueries != user.LogDatabaseQueries)
         {
             ProfileAdministration.RequireAdmin(_current);
@@ -108,5 +111,42 @@ public sealed class UpdateGeneralSettings
         var held = await _household.SettingsAsync(cancellationToken);
         await _household.AppendAsync([.. InstallationSettingsMap.Changes(InstallationSettingsMap.Of(user), held)],
             cancellationToken);
+    }
+
+    // The reference catalogue to store (DA3, DD1). A caller that sets it
+    // gets it, if valid. A caller that leaves it empty (the desktop
+    // Settings dialog, which does not offer it yet) keeps the stored
+    // choice while the country is unchanged, and gets the DA3 default of
+    // the new country when the country changes, so that a device reading
+    // the setting follows the country chosen elsewhere.
+    private static UserSettings WithCatalogue(UserSettings user, UserSettings before)
+    {
+        string catalogue;
+        if (!string.IsNullOrEmpty(user.ReferenceCatalogue))
+        {
+            if (!CatalogueDefaults.IsValidSetting(user.ReferenceCatalogue))
+            {
+                throw new ArgumentException(
+                    $"Unknown reference catalogue '{user.ReferenceCatalogue}'.", nameof(user));
+            }
+            catalogue = user.ReferenceCatalogue;
+        }
+        else if (string.Equals(before.ReferenceCountry, user.ReferenceCountry, StringComparison.Ordinal))
+        {
+            catalogue = before.ReferenceCatalogue;
+        }
+        else
+        {
+            catalogue = CatalogueDefaults.ToSetting(CatalogueDefaults.ForCountry(user.ReferenceCountry));
+        }
+
+        return new UserSettings
+        {
+            Language = user.Language,
+            ReferenceCountry = user.ReferenceCountry,
+            ReferenceCatalogue = catalogue,
+            CheckForUpdatesOnStartup = user.CheckForUpdatesOnStartup,
+            LogDatabaseQueries = user.LogDatabaseQueries,
+        };
     }
 }

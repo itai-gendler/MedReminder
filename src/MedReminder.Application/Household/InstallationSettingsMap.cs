@@ -33,10 +33,21 @@ public static class InstallationSettingsMap
         [HouseholdSetting.CloudBackupAccountId] = backup.CloudAccountId,
     };
 
-    public static IReadOnlyDictionary<string, string?> Of(UserSettings user) => new Dictionary<string, string?>
+    // The reference catalogue travels only once stored: an installation
+    // from before the setting records nothing, and the household keeps
+    // what another device stored.
+    public static IReadOnlyDictionary<string, string?> Of(UserSettings user)
     {
-        [HouseholdSetting.ReferenceCountry] = user.ReferenceCountry,
-    };
+        var values = new Dictionary<string, string?>
+        {
+            [HouseholdSetting.ReferenceCountry] = user.ReferenceCountry,
+        };
+        if (!string.IsNullOrEmpty(user.ReferenceCatalogue))
+        {
+            values[HouseholdSetting.ReferenceCatalogue] = user.ReferenceCatalogue;
+        }
+        return values;
+    }
 
     // The settings whose value differs from what the household holds.
     public static IReadOnlyList<HouseholdSettingChanged> Changes(

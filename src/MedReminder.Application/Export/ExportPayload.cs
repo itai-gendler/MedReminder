@@ -289,6 +289,10 @@ public sealed class ExportedUserSettings
 {
     public string Language { get; set; } = "en";
     public string ReferenceCountry { get; set; } = "IT";
+
+    // UserSettings.ReferenceCatalogue; empty in archives from before the
+    // setting, resolved by CatalogueDefaults.Resolve with the earlier rule.
+    public string ReferenceCatalogue { get; set; } = string.Empty;
     public bool CheckForUpdatesOnStartup { get; set; } = true;
 }
 

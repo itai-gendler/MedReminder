@@ -28,6 +28,16 @@ public sealed class UserSettings
     // docs/ANALYSIS-DRUG-CATALOGUE.md §2.2 for the country-scope rule.
     public string ReferenceCountry { get; set; } = "IT";
 
+    // Reference catalogue (decision DA3, DD1): a catalogue code of
+    // CatalogueDefaults.AvailableCatalogues, CatalogueDefaults.NoCatalogue,
+    // or empty when not stored yet (installations from before the
+    // setting). CatalogueDefaults.Resolve gives the catalogue in effect.
+    // An installation setting, replicated with the reference country.
+    // The Android app reads it; the desktop records it (a country change
+    // stores the DA3 default) and does not read it yet
+    // (ANALYSIS-DESKTOP-COUNTRY-CATALOGUE-DEFAULTS.md §3.3).
+    public string ReferenceCatalogue { get; set; } = string.Empty;
+
     // Passive update check: on startup, query the GitHub Releases
     // API for the latest published release and, if the tag is newer
     // than the running assembly version, show a non-modal
