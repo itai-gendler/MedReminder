@@ -30,6 +30,19 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #256 — Docs: record the Android side of B3-02 in the backlog
+
+Link: [vger70/MedReminder#256](https://github.com/vger70/MedReminder/pull/256)
+
+Follow-up to PR #252.
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: the B3-02
+  row records `core-v0.6.5` and the private repository PR #53 ("valid
+  until" reminder on the phone, regional prescription service card shown
+  by device region until B4-01, shipped list until B4-02) and why no
+  submodule bump was needed.
+
 ## PR #255 — Docs: record the Android side of B3-01 in the backlog
 
 Link: [vger70/MedReminder#255](https://github.com/vger70/MedReminder/pull/255)
@@ -45,6 +58,8 @@ Follow-up to PR #251, whose last commit was pushed after the merge.
 ---
 
 ## PR #252 — B3-02: plan prescription "valid until" reminders on the device
+
+**Status:** merged (2026-10-15)
 
 Link: [vger70/MedReminder#252](https://github.com/vger70/MedReminder/pull/252)
 
