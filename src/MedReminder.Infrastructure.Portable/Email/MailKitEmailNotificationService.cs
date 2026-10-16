@@ -1,6 +1,5 @@
 using System.Text;
 using MailKit.Net.Smtp;
-using MailKit.Security;
 using MedReminder.Application.Abstractions;
 using MedReminder.Application.Calendar;
 using MedReminder.Application.Notifications;
@@ -22,28 +21,27 @@ namespace MedReminder.Infrastructure.Email;
 // <DataDirectory>\notifications.settings.json — while everything
 // else stays on SmtpSettings, loaded from the global
 // smtp.settings.json under %LOCALAPPDATA%\MedReminder\.
-internal sealed class MailKitEmailNotificationService : IEmailNotificationService
+//
+// Portable since Android backlog B5-01: the phone sends with this
+// adapter too, the host supplying the options and the credential store.
+public sealed class MailKitEmailNotificationService : IEmailNotificationService
 {
     private readonly IOptionsMonitor<SmtpSettings> _smtpMonitor;
     private readonly IOptionsMonitor<NotificationSettings> _notificationMonitor;
     private readonly ISmtpCredentialStore _credentialStore;
     private readonly ILogger<MailKitEmailNotificationService> _log;
     private readonly TimeProvider _clock;
+    private readonly SmtpConnectionTester _tester = new();
 
-    // MimeKit accepts a bare local part (e.g. "not-an-email") as a
-    // valid mailbox by default (ParserOptions.AllowAddressesWithoutDomain
-    // is true). A caregiver address must be a full mailbox with a
-    // domain, so parse with that leniency turned off: a value without a
-    // domain is treated as malformed and falls back to primary-only
-    // (A3 §4.3). The save-time UI validation in SettingsDialog mirrors
-    // this rule with its own ParserOptions so the dialog accepts exactly
-    // what the adapter accepts.
+    // Every address is parsed as a full mailbox with a domain
+    // (SmtpTransportRules.AddressParserOptions): a caregiver value without
+    // a domain is treated as malformed and falls back to primary-only
+    // (A3 §4.3). The save-time validation of the forms uses the same
+    // rule (SmtpTransportRules.IsMailbox and the desktop dialog's own
+    // ParserOptions), so a form accepts exactly what the adapter accepts.
     internal const string CalendarAttachmentName = "medreminder.ics";
 
-    internal static readonly ParserOptions AddressParserOptions = new()
-    {
-        AllowAddressesWithoutDomain = false,
-    };
+    internal static ParserOptions AddressParserOptions => SmtpTransportRules.AddressParserOptions;
 
     public MailKitEmailNotificationService(
         IOptionsMonitor<SmtpSettings> smtpMonitor,
@@ -85,11 +83,8 @@ internal sealed class MailKitEmailNotificationService : IEmailNotificationServic
             Timeout = settings.TimeoutSeconds * 1000,
         };
 
-        var secureOption = settings.UseStartTls
-            ? SecureSocketOptions.StartTlsWhenAvailable
-            : SecureSocketOptions.Auto;
-
-        await client.ConnectAsync(settings.Host, settings.Port, secureOption, cancellationToken);
+        await client.ConnectAsync(settings.Host, settings.Port,
+            SmtpConnectionTester.SecureOption(settings.UseStartTls), cancellationToken);
         await AuthenticateIfNeededAsync(client, settings, cancellationToken);
         try
         {
@@ -120,25 +115,24 @@ internal sealed class MailKitEmailNotificationService : IEmailNotificationServic
     {
         var settings = _smtpMonitor.CurrentValue;
         if (!settings.IsConfigured) return false;
-        try
+        var result = await TestAsync(settings, cancellationToken);
+        return result.Outcome == SmtpTestOutcome.Accepted;
+    }
+
+    // The saved configuration and the stored password, through the shared
+    // tester (B5-01). The outcome is logged without the server's reply.
+    public async Task<SmtpTestResult> TestAsync(SmtpSettings settings, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        var transport = new SmtpTransport(settings.Host, settings.Port, settings.UseStartTls, settings.Username,
+            settings.FromAddress, settings.FromDisplayName, settings.TimeoutSeconds);
+        var result = await _tester.TestAsync(transport, _credentialStore.GetPassword(), cancellationToken);
+        if (result.Outcome != SmtpTestOutcome.Accepted)
         {
-            using var client = new SmtpClient
-            {
-                Timeout = settings.TimeoutSeconds * 1000,
-            };
-            var secureOption = settings.UseStartTls
-                ? SecureSocketOptions.StartTlsWhenAvailable
-                : SecureSocketOptions.Auto;
-            await client.ConnectAsync(settings.Host, settings.Port, secureOption, cancellationToken);
-            await AuthenticateIfNeededAsync(client, settings, cancellationToken);
-            await client.DisconnectAsync(quit: true, cancellationToken);
-            return true;
+            _log.LogWarning(result.Error, "SMTP connection test failed for {Host}:{Port} ({Outcome})",
+                settings.Host, settings.Port, result.Outcome);
         }
-        catch (Exception ex)
-        {
-            _log.LogWarning(ex, "SMTP connection test failed for {Host}:{Port}", settings.Host, settings.Port);
-            return false;
-        }
+        return result;
     }
 
     private async Task AuthenticateIfNeededAsync(

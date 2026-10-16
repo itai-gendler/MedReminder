@@ -5,6 +5,8 @@ using MedReminder.Infrastructure.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using MedReminder.Infrastructure.Cloud.GoogleDrive;
 using MedReminder.Infrastructure.Cloud.OneDrive;
+using MedReminder.Infrastructure.Credentials;
+using MedReminder.Infrastructure.Email;
 using MedReminder.Infrastructure.Export;
 using MedReminder.Infrastructure.Household;
 using MedReminder.Infrastructure.Localization;
@@ -171,6 +173,26 @@ public static class PortableInfrastructureServiceCollectionExtensions
         services.TryAddSingleton<IProfileSettingsStore, ProfileSettingsStore>();
         services.TryAddSingleton<ISyncProfileStatus>(_ => new SyncProfileStatus(profilesRootDirectory));
         services.TryAddSingleton<IInstallationSettingsStore, InstallationSettingsStore>();
+        return services;
+    }
+
+    // Android backlog B5-01: the SMTP password behind the host's credential
+    // protector, in smtp.protected of the installation's data directory,
+    // and the connection tester for the SMTP form. The Windows host
+    // registers the same store at AppDataPaths.GetCredentialsPath().
+    // Requires ICredentialProtector from the host. The sender itself
+    // (MailKitEmailNotificationService behind
+    // RetryingEmailNotificationService) is registered by the host that
+    // sends.
+    public static IServiceCollection AddMedReminderPortableSmtpSetup(
+        this IServiceCollection services,
+        string dataDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataDirectory);
+
+        services.TryAddSingleton<ISmtpCredentialStore>(sp => SmtpCredentialStore.In(
+            sp.GetRequiredService<ICredentialProtector>(), dataDirectory));
+        services.TryAddSingleton<SmtpConnectionTester>();
         return services;
     }
 

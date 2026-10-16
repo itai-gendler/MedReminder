@@ -25,6 +25,10 @@
          MIT, no native dependency. AES-GCM comes from the in-box
          System.Security.Cryptography.AesGcm. -->
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+    <!-- SMTP sender (docs/ANALYSIS.md §1.1 item 10), portable since
+         Android backlog B5-01 so the phone sends with the desktop's
+         adapter. Managed, MIT; brings MimeKit (MIT). -->
+    <PackageReference Include="MailKit" Version="4.18.1" />
   </ItemGroup>
 
   <ItemGroup>

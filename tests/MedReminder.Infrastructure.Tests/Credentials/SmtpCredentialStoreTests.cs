@@ -4,9 +4,9 @@ using Xunit;
 
 namespace MedReminder.Infrastructure.Tests.Credentials;
 
-// Verifies that the store encrypts the payload before writing it to disk and
-// lo restituisca correttamente in chiaro alla lettura. Usa un file
-// temporary file so we do not touch the user's real configuration.
+// The portable store behind the desktop's DPAPI protector: the payload is
+// encrypted before it is written and read back in clear. Uses a temporary
+// file so the user's real configuration is not touched.
 public class SmtpCredentialStoreTests : IDisposable
 {
     private readonly string _tempFile;

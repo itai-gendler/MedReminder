@@ -30,10 +30,35 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #271 — B5-01: portable SMTP sender, password store and connection test
+
+Link: [vger70/MedReminder#271](https://github.com/vger70/MedReminder/pull/271)
+Branch: `claude/b5-01-portable-smtp`
+
+Shared-core side of Android backlog B5-01 (M5): the phone configures and tests SMTP with the desktop's adapter.
+
+### Added
+
+- `SmtpConnectionTester` (`Infrastructure.Portable/Email`): connects, signs in when a user name is set, and disconnects, on a configuration not saved yet; returns a category (accepted, not configured, password missing, host not found, connection failed, timed out, secure connection failed, authentication failed, sign-in not offered, rejected) and whether the connection was encrypted. Nothing is sent; the server's reply is logged by the host only, never shown.
+- `SmtpTransportRules`: the SMTP form checks (host name or address, port 1-65535, one full sender mailbox, timeout 5-300 s, a password for a user name) and `IsMailbox`, the sender's address rule.
+- `AddMedReminderPortableSmtpSetup(dataDirectory)`: the SMTP password store behind the host's `ICredentialProtector` (`smtp.protected` in the data directory) and the tester.
+
+### Changed
+
+- `MailKitEmailNotificationService`, `RetryingEmailNotificationService` and `SmtpCredentialStore` moved from `Infrastructure` to `Infrastructure.Portable` (public; same namespaces), with the MailKit package. The store takes its path (the desktop passes `AppDataPaths.GetCredentialsPath()`) and writes through a temporary file. `TestConnectionAsync` uses the tester; desktop behaviour unchanged.
+- Tests of the sender and the retry decorator moved to `Infrastructure.Portable.Tests`, which now run in the Linux CI; new tests run the tester against a scripted loopback SMTP server.
+
+### Docs
+
+- `ANALYSIS.md` §2 and README layout: MailKit is portable.
+
+---
+
 ## PR #270 — B4-05: record the Android shortages and equivalents in the backlog
 
 Link: [vger70/MedReminder#270](https://github.com/vger70/MedReminder/pull/270)
 Branch: `claude/b4-05-backlog`
+**Status:** merged (2026-10-16)
 
 ### Docs
 

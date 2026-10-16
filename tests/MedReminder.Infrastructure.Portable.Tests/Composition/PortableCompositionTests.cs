@@ -61,6 +61,31 @@ public sealed class PortableCompositionTests : IDisposable
         plan.Should().BeEmpty();
     }
 
+    // Android backlog B5-01: the SMTP password store behind the host's
+    // protector, in the data directory, and the connection tester.
+    [Fact]
+    public void Portable_host_composes_the_smtp_setup()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ICredentialProtector>(new PlainProtector());
+        services.AddMedReminderPortableSmtpSetup(_root);
+
+        using var provider = services.BuildServiceProvider();
+        var store = provider.GetRequiredService<ISmtpCredentialStore>();
+        store.SetPassword("pw");
+
+        File.Exists(Path.Combine(_root, global::MedReminder.Infrastructure.Credentials.SmtpCredentialStore.FileName)).Should().BeTrue();
+        store.GetPassword().Should().Be("pw");
+        provider.GetRequiredService<SmtpConnectionTester>().Should().NotBeNull();
+    }
+
+    private sealed class PlainProtector : ICredentialProtector
+    {
+        public string Protect(string plaintext) => "x" + plaintext;
+
+        public string Unprotect(string ciphertext) => ciphertext[1..];
+    }
+
     private sealed class Location(string directory) : IAppDataLocation
     {
         public string DataDirectory => directory;
