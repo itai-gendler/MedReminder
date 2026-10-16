@@ -30,9 +30,9 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #NNN — SMTP: never send the password or a message without encryption
+## PR #272 — SMTP: never send the password or a message without encryption
 
-Link: [vger70/MedReminder#NNN](https://github.com/vger70/MedReminder/pull/NNN)
+Link: [vger70/MedReminder#272](https://github.com/vger70/MedReminder/pull/272)
 Branch: `claude/smtp-require-encryption`
 
 Follow-up of Android backlog B5-01, for the desktop and the phone: with *Use StartTLS* on the sender continued in clear when the server did not offer STARTTLS (or an attacker stripped it), and then sent the password and the message unencrypted.
