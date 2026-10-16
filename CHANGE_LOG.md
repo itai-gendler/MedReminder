@@ -30,6 +30,15 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #260 — B3-04: record the merge of the Android side in the backlog
+
+Link: [vger70/MedReminder#260](https://github.com/vger70/MedReminder/pull/260)
+
+**Docs**
+- Backlog B3-04 row: private PR #55 merged on 2026-10-16.
+
+---
+
 ## PR #259 — B3-04: record supply planning and calendar export in the backlog
 
 Link: [vger70/MedReminder#259](https://github.com/vger70/MedReminder/pull/259)
