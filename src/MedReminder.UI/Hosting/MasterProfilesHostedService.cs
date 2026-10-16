@@ -1,12 +1,10 @@
 using MedReminder.Application;
 using MedReminder.Application.Abstractions;
 using MedReminder.Application.Household;
-using MedReminder.Application.Monitoring;
-using MedReminder.Application.Sync;
 using MedReminder.Infrastructure;
 using MedReminder.Infrastructure.Cloud.GoogleDrive;
 using MedReminder.Infrastructure.Cloud.OneDrive;
-using MedReminder.Infrastructure.Persistence;
+using MedReminder.Infrastructure.Household;
 using MedReminder.Infrastructure.Profiles;
 using MedReminder.Infrastructure.Storage;
 using Microsoft.Extensions.Configuration;
@@ -22,15 +20,10 @@ namespace MedReminder.UI.Hosting;
 // the open one. Every Master:ProfilesIntervalMinutes (default 15), for each
 // other profile of this device it builds that profile's services (the same
 // registrations as the application, with that profile's database, sync
-// state and notification recipients), then:
-//
-//   1. applies the schema patches (DatabaseInitializer);
-//   2. syncs the profile's group, so the stock is current;
-//   3. runs the consumption catch-up and the low-stock and dose checks,
-//      email only: an on-screen reminder for a profile nobody opened
-//      would reach the wrong person;
-//   4. syncs again, so the other devices learn the emails sent
-//      (EmailNotificationSent).
+// state and notification recipients, no on-screen notification), adopts a
+// rotated group key, then runs the shared MasterProfileChecks: schema
+// patches, sync, consumption catch-up, low-stock and dose checks (email
+// only), sync again.
 //
 // Idle unless this device is the active master of an election (with no
 // master elected, every device handles its open profile as before). The
@@ -114,38 +107,18 @@ internal sealed class MasterProfilesHostedService : BackgroundService
         // Step H5b: a group rotated after a device removal; the new key comes
         // from the household grant.
         await ProfileServices.AdoptRotatedKeyAsync(provider, current, _log, ct);
-        await Scoped(provider, sp => sp.GetRequiredService<DatabaseInitializer>().InitializeAsync(ct));
-        var synced = provider.GetRequiredService<ISyncSettingsStore>().Load() is not null;
-        if (synced) await SyncAsync(provider, profile, ct);
-
-        var created = await Scoped(provider, sp => sp.GetRequiredService<ConsumptionCatchUp>().RunAsync(ct));
-        var low = await Scoped(provider, sp => sp.GetRequiredService<MedicationMonitor>().RunAsync(ct));
-        var doses = await Scoped(provider, sp => sp.GetRequiredService<DoseReminderService>().RunAsync(ct));
-        if (synced) await SyncAsync(provider, profile, ct);
+        // The steps shared with the Android app (Infrastructure.Portable).
+        var result = await MasterProfileChecks.RunAsync(provider, ct);
+        if (result.SyncProblems > 0)
+        {
+            // The open profile's sync window repairs these; the checks went
+            // on with what the database holds.
+            _log.LogWarning("Master: the sync of profile {ProfileId} needs attention ({Problems} runs).",
+                profile.Id, result.SyncProblems);
+        }
 
         _log.LogInformation(
             "Master: profile {ProfileId} checked; consumption rows={Created}, low-stock notifications={Low}, dose reminders={Doses}.",
-            profile.Id, created, low.NotificationsSent, doses.FiredCount);
+            profile.Id, result.ConsumptionRows, result.LowStockNotifications, result.DoseReminders);
     }
-
-    private async Task SyncAsync(ServiceProvider provider, Profile profile, CancellationToken ct)
-    {
-        var result = await Scoped(provider, sp => sp.GetRequiredService<SyncEngine>().RunAsync(ct));
-        if (result.Problems.Count > 0 || result.RebuildRequired || result.NewKeyRequired || result.NewerGeneration is not null)
-        {
-            // The open profile's sync window repairs these; here the checks
-            // go on with what the database holds.
-            _log.LogWarning("Master: the sync of profile {ProfileId} needs attention ({Problems} problems).",
-                profile.Id, result.Problems.Count);
-        }
-    }
-
-    private static async Task<T> Scoped<T>(IServiceProvider provider, Func<IServiceProvider, Task<T>> action)
-    {
-        await using var scope = provider.CreateAsyncScope();
-        return await action(scope.ServiceProvider);
-    }
-
-    private static Task Scoped(IServiceProvider provider, Func<IServiceProvider, Task> action)
-        => Scoped<bool>(provider, async sp => { await action(sp); return true; });
 }
