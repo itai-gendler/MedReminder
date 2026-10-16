@@ -30,7 +30,19 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #258 — Docs: record the merged Android side of B3-03 in the backlog
+
+Link: [vger70/MedReminder#258](https://github.com/vger70/MedReminder/pull/258)
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: the B3-03
+  row records `core-v0.7.0` and private PR #54 as merged with the
+  submodule on that tag.
+- PR #257 marked merged.
+
 ## PR #257 — B3-03: plan deadline reminders on the device
+
+**Status:** merged (2026-10-16)
 
 Link: [vger70/MedReminder#257](https://github.com/vger70/MedReminder/pull/257)
 
@@ -52,8 +64,7 @@ now planned with the desktop's rules.
   deadlines of the profile apart.
 
 **Docs**
-- Backlog B3-03 row: shared-core side and private PR #54 (draft)
-  recorded; B3-02 row: private PR #53 merged.
+- Backlog B3-03 row: shared-core side and private PR #54 recorded; B3-02 row: private PR #53 merged.
 
 **Tests**
 - Parity harness compares deadline reminders; one new case.
