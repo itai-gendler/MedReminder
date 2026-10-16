@@ -30,6 +30,24 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #261 — B3-05: record therapy timeline and PDF report in the backlog
+
+Link: [vger70/MedReminder#261](https://github.com/vger70/MedReminder/pull/261)
+
+Shared-core side of Android backlog B3-05. The phone's timeline and
+therapy report reuse the existing portable timeline query, card builder
+and pagination, so no code changes.
+
+**Docs**
+- Backlog B3-05 row: `TherapyTimelineQuery`, `TherapyCardBuilder` and
+  `TherapyCardPagination` already portable in `core-v0.7.0`; private PR
+  #56 adds the Agenda screens (read-only timeline with marks in words, PDF
+  drawn with SkiaSharp per DA14, save/share/copy with cancellation
+  recovery, SkiaSharp notices on the licences screen) and records the
+  native library size (plan §4.6).
+
+---
+
 ## PR #260 — B3-04: record the merge of the Android side in the backlog
 
 Link: [vger70/MedReminder#260](https://github.com/vger70/MedReminder/pull/260)
