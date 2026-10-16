@@ -30,6 +30,24 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #274 — B5-02: shared recipient checks and low-stock email switch
+
+Link: [vger70/MedReminder#274](https://github.com/vger70/MedReminder/pull/274)
+Branch: `claude/stoic-lamport-xs1nw1`
+
+### Added
+
+- `NotificationRecipientRules` (`Infrastructure.Portable/Email`): the recipient, caregiver and doctor addresses must each be a full mailbox when set; the caregiver must not be the recipient. Used by the desktop and the Android recipients screen.
+- `UpdateLowStockEmail` (`Application/Notifications`): turns the low-stock email (`NotificationChannels.Email`) of medicines on or off through `UpdateMedicine` with a baseline, so only the channels are written and replicated.
+
+### Changed
+
+- Settings → Notifications and the guided setup use the shared rules; Settings now also refuses a malformed recipient address (`Ui.SettingsDialog.Notifications.ToAddress.Invalid`, five languages).
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B5-02 records the shared-core side.
+
 ## PR #273 — B5-01: record the Android SMTP settings in the backlog
 
 Link: [vger70/MedReminder#273](https://github.com/vger70/MedReminder/pull/273)

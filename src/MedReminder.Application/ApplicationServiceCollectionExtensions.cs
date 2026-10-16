@@ -112,6 +112,8 @@ public static class ApplicationServiceCollectionExtensions
         // through UpdateMedicine and UpdateNotificationSettings.
         services.AddScoped<GuidedSetup.ApplyGuidedSetupWarning>();
         services.AddScoped<GuidedSetup.GuidedSetupEmail>();
+        // Android backlog B5-02: the low-stock email of each medicine.
+        services.AddScoped<Notifications.UpdateLowStockEmail>();
 
         // B.1 ledger derivation (Phase 2c-2).
         services.AddScoped<LedgerFactsLoader>();

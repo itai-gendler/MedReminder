@@ -556,15 +556,10 @@ internal sealed class GuidedSetupForm : MedReminderFormBase
         }
     }
 
-    // The same rule as Settings → Notifications: a full mailbox with a
-    // domain (SettingsDialog._addressParserOptions).
-    private static readonly MimeKit.ParserOptions AddressParserOptions = new()
-    {
-        AllowAddressesWithoutDomain = false,
-    };
-
+    // The same rule as Settings → Notifications and the sender: a full
+    // mailbox with a domain.
     private static bool IsMailbox(string address)
-        => MimeKit.MailboxAddress.TryParse(AddressParserOptions, address, out _);
+        => MedReminder.Infrastructure.Email.SmtpTransportRules.IsMailbox(address);
 
     private async Task AddMedicineAsync()
     {

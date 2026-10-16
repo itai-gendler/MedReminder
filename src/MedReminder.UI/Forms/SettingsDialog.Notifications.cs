@@ -358,40 +358,23 @@ internal sealed partial class SettingsDialog
             var caregiverAddress = _caregiverBox.Text.Trim();
             var doctorAddress = _doctorBox.Text.Trim();
 
-            // A3 (§5.2): a non-empty caregiver address must parse as a
-            // well-formed mailbox and must not equal the primary
-            // (case-insensitive). An empty value is allowed
-            // (unconfigured). On failure, surface an inline error and
-            // abort the save.
-            if (caregiverAddress.Length > 0)
-            {
-                if (!MimeKit.MailboxAddress.TryParse(
-                        _addressParserOptions, caregiverAddress, out _))
-                {
-                    UiMessageBox.Show(this,
-                        _loc.Get("Ui.SettingsDialog.Notifications.CaregiverAddress.Invalid"),
-                        _loc.Get("Ui.SettingsDialog.Notifications.SaveError"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
-
-                if (string.Equals(caregiverAddress, toAddress, StringComparison.OrdinalIgnoreCase))
-                {
-                    UiMessageBox.Show(this,
-                        _loc.Get("Ui.SettingsDialog.Notifications.CaregiverAddress.SameAsPrimary"),
-                        _loc.Get("Ui.SettingsDialog.Notifications.SaveError"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
-            }
-
-            // Doctor address: same well-formedness rule as the
-            // caregiver (a full mailbox with a domain). Empty allowed.
-            if (doctorAddress.Length > 0
-                && !MimeKit.MailboxAddress.TryParse(_addressParserOptions, doctorAddress, out _))
+            // A3 (§5.2) and B5-02: each address that is set must be a
+            // full mailbox with a domain, and the caregiver must not be
+            // the primary (case-insensitive); an empty value is allowed
+            // (unconfigured). The rules are the phone's too
+            // (NotificationRecipientRules). On failure, surface the first
+            // problem and abort the save.
+            var problems = NotificationRecipientRules.Check(toAddress, caregiverAddress, doctorAddress);
+            if (problems.Count > 0)
             {
                 UiMessageBox.Show(this,
-                    _loc.Get("Ui.SettingsDialog.Notifications.DoctorAddress.Invalid"),
+                    _loc.Get(problems[0] switch
+                    {
+                        NotificationRecipientProblem.RecipientInvalid => "Ui.SettingsDialog.Notifications.ToAddress.Invalid",
+                        NotificationRecipientProblem.CaregiverInvalid => "Ui.SettingsDialog.Notifications.CaregiverAddress.Invalid",
+                        NotificationRecipientProblem.CaregiverSameAsRecipient => "Ui.SettingsDialog.Notifications.CaregiverAddress.SameAsPrimary",
+                        _ => "Ui.SettingsDialog.Notifications.DoctorAddress.Invalid",
+                    }),
                     _loc.Get("Ui.SettingsDialog.Notifications.SaveError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
