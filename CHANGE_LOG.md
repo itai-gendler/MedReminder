@@ -30,7 +30,18 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #275 — B5-02: record the Android recipients screen in the backlog
+
+Link: [vger70/MedReminder#275](https://github.com/vger70/MedReminder/pull/275)
+Branch: `claude/stoic-lamport-xs1nw1`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B5-02 records the private repository PR #64 (email recipients screen, low-stock email per medicine, caregiver copies, weekly summary, review before save; `core-v0.14.0`).
+
 ## PR #274 — B5-02: shared recipient checks and low-stock email switch
+
+**Status:** merged (2026-10-16)
 
 Link: [vger70/MedReminder#274](https://github.com/vger70/MedReminder/pull/274)
 Branch: `claude/stoic-lamport-xs1nw1`
