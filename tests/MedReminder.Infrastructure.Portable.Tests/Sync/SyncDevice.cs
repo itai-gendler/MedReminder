@@ -87,6 +87,10 @@ internal sealed class SyncDevice : IDisposable
     // listings. Immediate by default.
     public Func<TimeSpan, CancellationToken, Task> JoinDelay { get; set; } = (_, _) => Task.CompletedTask;
 
+    // The device's services, as a host hands them to a shared pass
+    // (MasterProfileChecks).
+    public IServiceProvider Services => _provider;
+
     public Task<SyncRunResult> SyncAsync()
         => RunAsync(sp => sp.GetRequiredService<SyncEngine>().RunAsync(CancellationToken.None));
 

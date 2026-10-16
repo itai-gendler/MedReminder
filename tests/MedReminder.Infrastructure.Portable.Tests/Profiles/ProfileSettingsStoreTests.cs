@@ -42,6 +42,30 @@ public sealed class ProfileSettingsStoreTests : IDisposable
         current.IsAdmin.Should().BeTrue();
     }
 
+    // Android backlog B5-03: the sender reads the recipients as they are
+    // now, with no reloading configuration.
+    [Fact]
+    public void Notification_settings_monitor_reads_the_current_file()
+    {
+        var profile = _registry.Create("Anna", ProfileRole.Admin);
+        var store = new ProfileSettingsStore(new CurrentProfile(profile, _profilesRoot), _registry);
+        var monitor = new ProfileNotificationSettingsMonitor(store);
+
+        monitor.CurrentValue.ToAddress.Should().BeEmpty();
+        store.Write(new Dictionary<string, string?>
+        {
+            [ProfileSetting.ToAddress] = "anna@example.org",
+            [ProfileSetting.CaregiverAddress] = "carla@example.org",
+            [ProfileSetting.CaregiverDigest] = "Weekly",
+        });
+
+        var current = monitor.CurrentValue;
+        current.ToAddress.Should().Be("anna@example.org");
+        current.CaregiverAddress.Should().Be("carla@example.org");
+        current.CaregiverDigest.Should().Be("Weekly");
+        monitor.Get(null).ToAddress.Should().Be("anna@example.org");
+    }
+
     [Fact]
     public void Write_renames_the_profile_and_writes_the_notifications_section()
     {

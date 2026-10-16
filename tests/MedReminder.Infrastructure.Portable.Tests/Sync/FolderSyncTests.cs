@@ -8,6 +8,7 @@ using MedReminder.Application.Sync;
 using MedReminder.Application.UseCases;
 using MedReminder.Domain.Notifications;
 using MedReminder.Domain.Stock;
+using MedReminder.Infrastructure.Household;
 using MedReminder.Infrastructure.Sync;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -373,6 +374,34 @@ public sealed class FolderSyncTests : IDisposable
 
         result.OperationsApplied.Should().Be(1);
         result.Problems.Should().ContainSingle(p => p.Contains("more than 24 hours ahead", StringComparison.Ordinal));
+    }
+
+    // Household step H4c, Android backlog B5-03: the master's checks of a
+    // profile that is not open on it sync the profile first (the medicine
+    // added elsewhere), send the email, and sync again, so the other
+    // devices do not send it a second time.
+    [Fact]
+    public async Task Master_profile_checks_sync_before_and_after_the_email()
+    {
+        var a = await CreateGroupAsync();
+        var id = await a.RunAsync(sp => sp.GetRequiredService<AddMedicine>().ExecuteAsync(new AddMedicineCommand(
+            "Ramipril", "tablet", 1m, 2, new DateOnly(2026, 9, 10), 7,
+            NotificationChannels.Windows | NotificationChannels.Email, InitialQuantity: 6m), CancellationToken.None));
+        await a.SyncAsync();
+        var master = await JoinAsync(a, "Master");
+
+        var result = await MasterProfileChecks.RunAsync(master.Services, CancellationToken.None);
+
+        result.Synced.Should().BeTrue();
+        result.SyncProblems.Should().Be(0);
+        result.LowStockNotifications.Should().Be(1);
+        master.Emails.Sent.Should().ContainSingle();
+        await a.SyncAsync();
+        await a.RunAsync(sp => sp.GetRequiredService<MedicationMonitor>().RunAsync(CancellationToken.None));
+        a.Emails.Sent.Should().BeEmpty();
+        a.Toasts.Shown.Should().ContainSingle();
+        (await a.RunAsync(sp => sp.GetRequiredService<ISentEmailNotificationRepository>()
+            .GetLatestForMedicineAsync(id, CancellationToken.None))).Should().NotBeNull();
     }
 
     // Household step H1: the low-stock email of an epoch is sent once per

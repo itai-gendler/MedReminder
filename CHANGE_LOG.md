@@ -30,6 +30,19 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #276 — B5-03: shared master profile checks and live recipients monitor
+
+Link: [vger70/MedReminder#276](https://github.com/vger70/MedReminder/pull/276)
+Branch: `claude/keen-cori-5cfqp3`
+
+### Changed
+
+- The master's checks of a profile not open on it (household step H4c: schema patches, sync, consumption catch-up, low-stock and dose checks, sync again) moved from the desktop's `MasterProfilesHostedService` to `MasterProfileChecks` in `Infrastructure.Portable`, so the Android app, master from backlog B5-03, runs the same steps. No behaviour change on the desktop.
+
+### Added
+
+- `ProfileNotificationSettingsMonitor` (`Infrastructure.Portable`): the profile's recipients as `IOptionsMonitor<NotificationSettings>`, read live through `IProfileSettingsStore`, for a host without the desktop's reloading configuration.
+
 ## PR #275 — B5-02: record the Android recipients screen in the backlog
 
 Link: [vger70/MedReminder#275](https://github.com/vger70/MedReminder/pull/275)
