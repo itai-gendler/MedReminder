@@ -127,3 +127,10 @@ describe the country step and the "no catalogue" option.
 - 2026-10-08 — DD1–DD4 decided by the product owner.
 - 2026-10-08 — Compatibility check with older desktops dropped: household
   installations are not yet widespread.
+- 2026-10-16 — §3.2 and §3.4 implemented in the shared core for Android
+  B4-01 (PR #262): `UserSettings.ReferenceCatalogue`, household setting
+  `ReferenceCatalogue`, `.mrz` field `referenceCatalogue`, and
+  `CatalogueDefaults.Resolve`, which keeps the earlier rule for an empty
+  value. `UpdateGeneralSettings` stores the DA3 default when a country
+  change arrives without a catalogue. The desktop does not read the
+  setting yet; §3.3 (first run and Settings) remains to be done.
