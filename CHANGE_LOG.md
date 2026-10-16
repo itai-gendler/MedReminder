@@ -30,10 +30,24 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #268 — B4-04: record the Android barcode scan in the backlog
+
+Link: [vger70/MedReminder#268](https://github.com/vger70/MedReminder/pull/268)
+Branch: `claude/b4-04-backlog`
+
+Shared-core side of Android backlog B4-04: no code change; the parser, the restock query and the link use case were already portable.
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-04 records the private repository PR #60 (barcode scan, restock by scan, scan in the medicine form).
+
+---
+
 ## PR #267 — B4-03: record the Android catalogue search in the backlog
 
 Link: [vger70/MedReminder#267](https://github.com/vger70/MedReminder/pull/267)
 Branch: `claude/b4-03-backlog`
+**Status:** merged (2026-10-16)
 
 ### Docs
 
