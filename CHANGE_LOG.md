@@ -30,6 +30,17 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #280 — Add the Android tablet, iOS and iPad implementation backlog
+
+**Status:** open
+
+Link: [vger70/MedReminder#280](https://github.com/vger70/MedReminder/pull/280)
+Branch: `claude/blissful-feynman-a64yd8`
+
+### Docs
+
+- `docs/analysis/ANALYSIS-B1-TABLET-IOS-IMPLEMENTATION-BACKLOG.md`: new backlog for Android tablets (BT), iOS on iPhone (BI) and iPad (BP), with the open decisions, the Apple account, Mac and device lead-time items, and the iOS spikes to run first. Planning only; it replaces the obsolete Phase 6 estimate of `ANALYSIS-B1-MOBILE-SYNC.md` for iOS.
+
 ## PR #279 — B5-04 and B5-06: record the Android delivery states and R8 build in the backlog
 
 Link: [vger70/MedReminder#279](https://github.com/vger70/MedReminder/pull/279)
