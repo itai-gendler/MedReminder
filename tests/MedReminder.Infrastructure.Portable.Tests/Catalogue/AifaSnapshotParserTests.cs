@@ -3,7 +3,7 @@ using MedReminder.Domain.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Verifies that AifaSnapshotParser honours the import rules in
 // ANALYSIS-DRUG-CATALOGUE.md §3.2 against the M0 fixture.

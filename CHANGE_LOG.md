@@ -30,10 +30,36 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #264 — B4-02: portable reference-catalogue import
+
+Link: [vger70/MedReminder#264](https://github.com/vger70/MedReminder/pull/264)
+Branch: `claude/b4-02-portable-catalogue`
+
+Shared-core side of Android backlog B4-02 (M4): the phone downloads and
+imports the catalogue feeds itself (plan §4.4), so the import path must
+be portable.
+
+### Changed
+
+- **Moved** the snapshot parsers (AIFA, EMA, AEMPS, BDPM, FDA NDC), `CsvReferenceCatalogueImporter`, `SqliteReferenceCatalogueQueryService` and `CatalogueTextNormalizer` from `MedReminder.Infrastructure` to `MedReminder.Infrastructure.Portable`, namespaces unchanged. `AddMedReminderPortableInfrastructure` registers them and the remote feed client; the desktop keeps only the embedded snapshots and binds the feed options. No desktop behavior change.
+- **Moved** their tests and fixtures to `MedReminder.Infrastructure.Portable.Tests`, so the shared-core CI runs them on Linux.
+
+### Added
+
+- `CatalogueFeedSelection.ForCatalogue`: the feeds of an explicit reference catalogue (its search scope: IT, ES and FR with EU, US alone, EU alone), none without a catalogue.
+- `PortableCatalogueRefreshTests`: a portable host downloads, checks and imports a feed, then finds it up to date.
+
+### Docs
+
+- `docs/SHARED-CORE.md` and the Android backlog (B4-02) record the move.
+
+---
+
 ## PR #263 — B4-01: record the Android reference country screen in the backlog
 
 Link: [vger70/MedReminder#263](https://github.com/vger70/MedReminder/pull/263)
 Branch: `claude/b4-01-backlog`
+**Status:** merged (2026-10-16)
 
 ### Docs
 

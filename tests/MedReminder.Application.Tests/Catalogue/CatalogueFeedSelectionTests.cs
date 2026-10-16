@@ -10,6 +10,31 @@ namespace MedReminder.Application.Tests.Catalogue;
 // (ANALYSIS-CATALOGUE-US-GB-SOURCES.md §5.1).
 public class CatalogueFeedSelectionTests
 {
+    // Android backlog B4-02: the feeds of an explicit reference catalogue.
+    [Theory]
+    [InlineData("IT", "IT,EU")]
+    [InlineData("ES", "EU,ES")]
+    [InlineData("FR", "EU,FR")]
+    [InlineData("EU", "EU")]
+    [InlineData("US", "US")]
+    public void ForCatalogue_selects_the_catalogue_search_scope(string catalogue, string expected)
+    {
+        var selected = CatalogueFeedSelection.ForCatalogue(MedReminder.Domain.Catalogue.CountryCode.Parse(catalogue), AllEnabled());
+
+        Codes(selected).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("DE")]
+    [InlineData("JP")]
+    public void ForCatalogue_selects_nothing_without_an_available_catalogue(string? catalogue)
+    {
+        var code = catalogue is null ? (MedReminder.Domain.Catalogue.CountryCode?)null : MedReminder.Domain.Catalogue.CountryCode.Parse(catalogue);
+
+        CatalogueFeedSelection.ForCatalogue(code, AllEnabled()).Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData("IT", "IT,EU")]
     [InlineData("it", "IT,EU")]

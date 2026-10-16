@@ -5,7 +5,7 @@ using MedReminder.Domain.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Exercises the US parser against tests/fixtures/catalogue/fda-ndc-sample.tsv,
 // the file scripts/feeds/fda_ndc.py writes for the synthetic openFDA
