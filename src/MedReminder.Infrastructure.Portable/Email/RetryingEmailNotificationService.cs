@@ -12,11 +12,12 @@ namespace MedReminder.Infrastructure.Email;
 // network, momentary 4xx quota) should be retried before giving up.
 //
 // Fixed back-offs: 5s → 30s → 2m (three retries beyond the first).
-// No random jitter — this is a single-user desktop app, not a
+// No random jitter: one sending device per installation, not a
 // concurrent web client. 5xx errors (authentication, invalid
 // recipient) are NOT retried: they are configuration errors, not
 // transient.
-internal sealed class RetryingEmailNotificationService : IEmailNotificationService
+// Portable since Android backlog B5-01.
+public sealed class RetryingEmailNotificationService : IEmailNotificationService
 {
     private static readonly TimeSpan[] Backoffs =
     {

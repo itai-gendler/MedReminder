@@ -98,7 +98,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddMedReminderPortableProfileSettings(AppDataPaths.GetProfilesRootDirectory());
 
         services.TryAddSingleton<ICredentialProtector, DpapiCredentialProtector>();
-        services.TryAddSingleton<ISmtpCredentialStore, SmtpCredentialStore>();
+        services.TryAddSingleton<ISmtpCredentialStore>(sp => new SmtpCredentialStore(
+            sp.GetRequiredService<ICredentialProtector>(), AppDataPaths.GetCredentialsPath()));
 
         // B.1 Phase 3c: the sync group key, DPAPI-protected next to the
         // profile database.

@@ -80,14 +80,17 @@ UI  ──►  Application  ──►  Domain
 - **Infrastructure.Portable** implements the platform-neutral ports:
   EF Core / SQLite persistence and `DatabaseInitializer`, the archive
   cipher, `ArchiveReader` and `ProfileDatabaseBuilder` (read half of
-  the `.mrz` import), the localization loader. No Windows API, no
+  the `.mrz` import), the localization loader, the MailKit sender with
+  its retry decorator, the SMTP password store behind the host's
+  `ICredentialProtector` and the SMTP connection tester and form rules
+  (Android backlog B5-01). No Windows API, no
   `%LOCALAPPDATA%`: paths come from `IAppDataLocation` or arguments.
   `AddMedReminderPortableInfrastructure` registers it. Namespaces stay
   `MedReminder.Infrastructure.*`. Introduced by Phase 1 of
   [`analysis/ANALYSIS-B1-MOBILE-SYNC.md`](analysis/ANALYSIS-B1-MOBILE-SYNC.md)
   so a mobile host can reuse it.
-- **Infrastructure** implements the Windows-bound ports: MailKit,
-  DPAPI, registry, file-based stores under `%LOCALAPPDATA%`
+- **Infrastructure** implements the Windows-bound ports: DPAPI,
+  registry, file-based stores under `%LOCALAPPDATA%`
   (`AppDataPaths`, `AppDataLocation`), the export / import services
   (Windows shells over the portable reader), catalogue import, GitHub
   update check.
@@ -150,7 +153,7 @@ removed or weakened. Publishing is described in
 | `Microsoft.Extensions.Options.ConfigurationExtensions` | Infrastructure | `IOptions<T>` binding |
 | `Microsoft.EntityFrameworkCore.Sqlite` | Infrastructure.Portable | Persistence |
 | `Microsoft.EntityFrameworkCore.Design` | Infrastructure | Design-time only (`PrivateAssets`) |
-| `MailKit` | Infrastructure | SMTP. `System.Net.Mail.SmtpClient` must not be used |
+| `MailKit` | Infrastructure.Portable | SMTP (portable since Android backlog B5-01). `System.Net.Mail.SmtpClient` must not be used |
 | `Microsoft.Identity.Client` (MSAL) | Infrastructure | OneDrive sign-in, public client, system browser (B.1 Phase 4a). Graph itself is called with plain `HttpClient`. Google Drive (Phase 4b) uses no package: its OAuth flow and the Drive REST API are plain `HttpClient` too |
 | `Konscious.Security.Cryptography.Argon2` | Infrastructure.Portable | Argon2id key derivation for `.mrz` archives |
 | `Microsoft.Toolkit.Uwp.Notifications` | UI | Windows toasts for an unpackaged app |

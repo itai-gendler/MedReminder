@@ -187,8 +187,8 @@ MedReminder.sln
 src/
   MedReminder.Domain/           pure entities and calculations  (net10.0)
   MedReminder.Application/      use cases and ports             (net10.0)
-  MedReminder.Infrastructure.Portable/  SQLite/EF Core, archive cipher, localization (net10.0)
-  MedReminder.Infrastructure/   MailKit/DPAPI/registry/export   (net10.0-windows)
+  MedReminder.Infrastructure.Portable/  SQLite/EF Core, archive cipher, localization, MailKit (net10.0)
+  MedReminder.Infrastructure/   DPAPI/registry/export           (net10.0-windows)
   MedReminder.UI/               WinForms + host                 (net10.0-windows10.0.19041.0)
   MedReminder.DataImporter/     reference-catalogue import tool (net10.0)
 tests/
