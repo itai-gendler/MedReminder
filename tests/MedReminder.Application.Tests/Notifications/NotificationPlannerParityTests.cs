@@ -1,8 +1,10 @@
 using FluentAssertions;
+using MedReminder.Application.Deadlines;
 using MedReminder.Application.Notifications;
 using MedReminder.Application.Prescriptions;
 using MedReminder.Application.Tests.Support;
 using MedReminder.Application.UseCases;
+using MedReminder.Domain.Deadlines;
 using MedReminder.Domain.Medicines;
 using MedReminder.Domain.Notifications;
 using MedReminder.Domain.Stock;
@@ -116,6 +118,45 @@ public sealed class NotificationPlannerParityTests
 
         AssertParity(planned, shown);
         planned.Should().NotContain(p => p.Kind == PlannedNotificationKind.PrescriptionValidity);
+    }
+
+    [Fact]
+    public async Task Deadline_reminders_from_the_lead_days_on_once_per_date()
+    {
+        // Backlog B3-03. A deadline of the profile due on day 9 with 5 lead
+        // days: reminded on day 4. One of an inactive medicine already
+        // overdue: reminded at once. Email only, done, or reminded on this
+        // device before the plan: never. A recurring one reminded before
+        // the plan and then marked done moves to its next date: reminded
+        // again for that date once its 30 lead days start (day 1).
+        var scope = new ApplicationTestScope(StartInstant);
+        var id = await AddAsync(scope, quantity: 100m, dose: 1m, perDay: 1, remindOnDose: false);
+        await scope.DeactivateMedicine.ExecuteAsync(new DeactivateMedicineCommand(id), default);
+        var shown = await SaveDeadlineAsync(scope, null, Start.AddDays(4));
+        var recurring = await SaveDeadlineAsync(scope, null, Start.AddDays(1), leadDays: 30, repeatMonths: 1);
+        await scope.DeadlineReminders.RunAsync(Start, sendsEmail: false, default);
+        await scope.CompleteDeadline.ExecuteAsync(recurring, Start, default);
+        scope.Windows.Targets.Clear();
+        var profile = await SaveDeadlineAsync(scope, null, Start.AddDays(9), leadDays: 5);
+        var overdue = await SaveDeadlineAsync(scope, id, Start.AddDays(-2));
+        await SaveDeadlineAsync(scope, null, Start.AddDays(3), channels: NotificationChannels.Email);
+        await SaveDeadlineAsync(scope, null, Start.AddDays(2), doneOn: Start);
+
+        var (planned, actual) = await RunAsync(scope, days: 12);
+
+        AssertParity(planned, actual);
+        var reminders = planned.Where(p => p.Kind == PlannedNotificationKind.Deadline).ToList();
+        reminders.Select(p => (p.DeadlineId, p.Day)).Should().BeEquivalentTo(new[]
+        {
+            ((Guid?)overdue, Start), (recurring, Start.AddDays(1)), (profile, Start.AddDays(4)),
+        });
+        reminders.Single(p => p.DeadlineId == recurring).DueOn.Should().Be(Start.AddDays(1).AddMonths(1));
+        reminders.Should().NotContain(p => p.DeadlineId == shown);
+        reminders.Single(p => p.DeadlineId == overdue).MedicineId.Should().Be(id);
+        reminders.Single(p => p.DeadlineId == profile).MedicineId.Should().Be(Guid.Empty);
+        reminders.Select(p => p.Key).Should().OnlyHaveUniqueItems();
+        NotificationActionArguments.Parse(NotificationActionArguments.ForBody(reminders[0].Target, "p"))!.Kind
+            .Should().Be(NotificationActionKind.OpenDeadlines);
     }
 
     [Fact]
@@ -308,6 +349,7 @@ public sealed class NotificationPlannerParityTests
                     NotificationKind.LowStock => PlannedNotificationKind.LowStock,
                     NotificationKind.PackageExpiry => PlannedNotificationKind.PackageExpiry,
                     NotificationKind.Prescription => PlannedNotificationKind.PrescriptionValidity,
+                    NotificationKind.Deadline => PlannedNotificationKind.Deadline,
                     _ => throw new InvalidOperationException($"Unexpected notification {target.Kind}."),
                 };
                 var stage = kind == PlannedNotificationKind.LowStock
@@ -346,6 +388,13 @@ public sealed class NotificationPlannerParityTests
         => scope.SavePrescription.ExecuteAsync(new SavePrescriptionCommand(
             null, medicineId, RequestedOn: null, IssuedOn: Start, Code: null, Packages: 1,
             ValidUntil: validUntil, CollectedOn: collectedOn, Dispensations: dispensations), default);
+
+    private static Task<Guid> SaveDeadlineAsync(ApplicationTestScope scope, Guid? medicineId, DateOnly dueOn,
+        int leadDays = DeadlineRules.DefaultLeadDays, int? repeatMonths = null,
+        NotificationChannels channels = NotificationChannels.Windows, DateOnly? doneOn = null)
+        => scope.SaveDeadline.ExecuteAsync(new SaveDeadlineCommand(
+            null, medicineId, DeadlineKind.CheckUp, Label: null, dueOn, leadDays, repeatMonths, channels, doneOn),
+            default);
 
     private static Task<Guid> AddAsync(
         ApplicationTestScope scope,

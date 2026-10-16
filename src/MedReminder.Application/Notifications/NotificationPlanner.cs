@@ -1,6 +1,7 @@
 using MedReminder.Application.Packages;
 using MedReminder.Application.Prescriptions;
 using MedReminder.Domain.Calculations;
+using MedReminder.Domain.Deadlines;
 using MedReminder.Domain.Medicines;
 using MedReminder.Domain.Notifications;
 using MedReminder.Domain.Prescriptions;
@@ -15,6 +16,8 @@ public enum PlannedNotificationKind
     PackageExpiry,
     // "Valid until" reminder of an issued prescription (backlog B3-02).
     PrescriptionValidity,
+    // Administrative deadline reminder (backlog B3-03).
+    Deadline,
 }
 
 // One notification the device should show at FireAt. Stage is the
@@ -24,7 +27,10 @@ public enum PlannedNotificationKind
 // with dispensations left on Day, for the text (NotificationTexts) and
 // the action (Target). PrescriptionId and ValidUntil ("valid until"
 // reminder only): the prescription and the last valid day it is reminded
-// for (PrescriptionReminderEvent).
+// for (PrescriptionReminderEvent). DeadlineId and DueOn (deadline
+// reminder only): the deadline and the date it is reminded for
+// (DeadlineReminderEvent); MedicineId is Guid.Empty for a deadline of the
+// profile.
 public sealed record PlannedNotification(
     PlannedNotificationKind Kind,
     Guid MedicineId,
@@ -36,7 +42,9 @@ public sealed record PlannedNotification(
     IReadOnlyList<Guid>? PackageIds = null,
     RepeatablePrescriptionNotice? RepeatablePrescription = null,
     Guid? PrescriptionId = null,
-    DateOnly? ValidUntil = null)
+    DateOnly? ValidUntil = null,
+    Guid? DeadlineId = null,
+    DateOnly? DueOn = null)
 {
     // What the notification is about, for its actions
     // (NotificationActionArguments.ForBody and ButtonsFor), as the desktop
@@ -44,12 +52,15 @@ public sealed record PlannedNotification(
     // request, or to open the prescriptions when a repeatable one has
     // dispensations left (backlog B3-01): both only open a screen, neither
     // sends nor records a request. A "valid until" reminder opens the
-    // prescriptions (backlog B3-02).
+    // prescriptions (backlog B3-02). A deadline reminder opens the
+    // deadlines (backlog B3-03).
     public NotificationTarget Target => Kind switch
     {
         PlannedNotificationKind.DoseReminder => NotificationTarget.DoseReminder(MedicineId, SlotTime!.Value),
         PlannedNotificationKind.LowStock => NotificationTarget.LowStock(MedicineId, RepeatablePrescription is not null),
         PlannedNotificationKind.PrescriptionValidity => NotificationTarget.Prescription(MedicineId),
+        PlannedNotificationKind.Deadline => NotificationTarget.Deadline(
+            MedicineId == Guid.Empty ? null : MedicineId, DeadlineId),
         _ => NotificationTarget.PackageExpiry(MedicineId),
     };
 
@@ -60,6 +71,7 @@ public sealed record PlannedNotification(
         PlannedNotificationKind.DoseReminder => $"dose:{MedicineId:N}:{SlotId:N}:{Day:yyyy-MM-dd}",
         PlannedNotificationKind.LowStock => $"stock:{MedicineId:N}:{Stage}:{Day:yyyy-MM-dd}",
         PlannedNotificationKind.PrescriptionValidity => $"prescription:{PrescriptionId:N}:{ValidUntil:yyyy-MM-dd}",
+        PlannedNotificationKind.Deadline => $"deadline:{DeadlineId:N}:{DueOn:yyyy-MM-dd}",
         _ => $"expiry:{MedicineId:N}:{Stage}:{Day:yyyy-MM-dd}",
     };
 }
@@ -120,6 +132,15 @@ public readonly record struct PackageNoticeKey(Guid PackageId, DateOnly Effectiv
 
 public readonly record struct PrescriptionReminderKey(Guid PrescriptionId, DateOnly ValidUntil);
 
+// What the planner needs of the administrative deadlines of the profile
+// (NotificationPlanLoader): every deadline, and the reminders already
+// shown on this device (IDeadlineReminderEventRepository).
+public sealed record DeadlinePlanState(
+    IReadOnlyList<Deadline> Deadlines,
+    IReadOnlySet<DeadlineReminderKey> Reminded);
+
+public readonly record struct DeadlineReminderKey(Guid DeadlineId, DateOnly DueOn);
+
 // Notification planner (docs/analysis/ANALYSIS-B1-ANDROID-PLAN.md §4.2,
 // ANALYSIS-B1-MOBILE-SYNC.md §8.1, backlog B0-02). The desktop polls
 // (MedicationMonitor, DoseReminderService); a phone cannot, so this
@@ -140,9 +161,9 @@ public readonly record struct PrescriptionReminderKey(Guid PrescriptionId, DateO
 // NotificationChannels); email stays with the household master
 // (ANALYSIS-B1-MOBILE-SYNC.md §8.4). A low-stock notice carries the
 // repeatable prescription the desktop toast names (backlog B3-01); the
-// "valid until" reminders follow PrescriptionReminders (backlog B3-02).
-// Deadlines (M3) and shortages (an event of the feed refresh) are not
-// planned here.
+// "valid until" reminders follow PrescriptionReminders (backlog B3-02),
+// the deadline reminders DeadlineReminders (backlog B3-03). Shortages (an
+// event of the feed refresh) are not planned here.
 public static class NotificationPlanner
 {
     private static readonly IReadOnlyDictionary<Guid, int> NoDispensations = new Dictionary<Guid, int>();
@@ -151,7 +172,8 @@ public static class NotificationPlanner
         IEnumerable<MedicinePlanState> medicines,
         DateTimeOffset now,
         TimeZoneInfo zone,
-        NotificationPlanOptions? options = null)
+        NotificationPlanOptions? options = null,
+        DeadlinePlanState? deadlines = null)
     {
         ArgumentNullException.ThrowIfNull(medicines);
         ArgumentNullException.ThrowIfNull(zone);
@@ -180,6 +202,7 @@ public static class NotificationPlanner
             // cabinet (PackageExpiryNotices).
             PlanPackages(state, stock, today, localNow, zone, options, result);
         }
+        if (deadlines is not null) PlanDeadlines(deadlines, today, localNow, zone, options, result);
 
         return [.. result.OrderBy(n => n.FireAt).ThenBy(n => n.Key, StringComparer.Ordinal)];
     }
@@ -337,6 +360,30 @@ public static class NotificationPlanner
                 result.Add(new PlannedNotification(PlannedNotificationKind.PrescriptionValidity, state.Medicine.Id,
                     day, DailyFireAt(day, i, localNow, zone, options),
                     PrescriptionId: prescription.Id, ValidUntil: until));
+                break;
+            }
+        }
+    }
+
+    // DeadlineReminders for the device channel: a deadline not done, with
+    // the device channel, from LeadDays before its date on (overdue days
+    // included), once per deadline and date. Not tied to the medicine's
+    // channels or activity, as on the desktop. Marking it done, or a
+    // changed date, re-plans (host).
+    private static void PlanDeadlines(DeadlinePlanState state, DateOnly today, DateTimeOffset localNow,
+        TimeZoneInfo zone, NotificationPlanOptions options, List<PlannedNotification> result)
+    {
+        foreach (var deadline in state.Deadlines)
+        {
+            ArgumentNullException.ThrowIfNull(deadline);
+            if ((deadline.Channels & NotificationChannels.Windows) == 0) continue;
+            if (state.Reminded.Contains(new DeadlineReminderKey(deadline.Id, deadline.DueOn))) continue;
+            for (var i = 0; i < options.DailyHorizonDays; i++)
+            {
+                var day = today.AddDays(i);
+                if (!DeadlineRules.ReminderDue(deadline, day)) continue;
+                result.Add(new PlannedNotification(PlannedNotificationKind.Deadline, deadline.MedicineId ?? Guid.Empty,
+                    day, DailyFireAt(day, i, localNow, zone, options), DeadlineId: deadline.Id, DueOn: deadline.DueOn));
                 break;
             }
         }

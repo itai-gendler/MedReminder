@@ -12,7 +12,8 @@ namespace MedReminder.Application.Notifications;
 // Every medicine is read, inactive ones included, for their packages.
 // With the prescription repositories, the prescriptions too, for the
 // low-stock action (backlog B3-01) and, with the reminder events, the
-// "valid until" reminders (backlog B3-02).
+// "valid until" reminders (backlog B3-02). With the deadline
+// repositories, the administrative deadlines (backlog B3-03).
 public sealed class NotificationPlanLoader
 {
     private readonly IMedicineRepository _medicines;
@@ -31,6 +32,8 @@ public sealed class NotificationPlanLoader
     private readonly IPrescriptionRepository? _prescriptions;
     private readonly IPrescriptionDispensationRepository? _dispensations;
     private readonly IPrescriptionReminderEventRepository? _prescriptionEvents;
+    private readonly IDeadlineRepository? _deadlines;
+    private readonly IDeadlineReminderEventRepository? _deadlineEvents;
 
     public NotificationPlanLoader(
         IMedicineRepository medicines,
@@ -48,8 +51,12 @@ public sealed class NotificationPlanLoader
         IProfileSettingsStore? settings = null,
         IPrescriptionRepository? prescriptions = null,
         IPrescriptionDispensationRepository? dispensations = null,
-        IPrescriptionReminderEventRepository? prescriptionEvents = null)
+        IPrescriptionReminderEventRepository? prescriptionEvents = null,
+        IDeadlineRepository? deadlines = null,
+        IDeadlineReminderEventRepository? deadlineEvents = null)
     {
+        _deadlines = deadlines;
+        _deadlineEvents = deadlineEvents;
         _prescriptionEvents = prescriptionEvents;
         _prescriptions = prescriptions;
         _dispensations = dispensations;
@@ -80,7 +87,24 @@ public sealed class NotificationPlanLoader
         var zone = _clock.LocalTimeZone;
         var states = await LoadAsync(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime),
             cancellationToken);
-        return NotificationPlanner.Plan(states, now, zone, options);
+        return NotificationPlanner.Plan(states, now, zone, options, await LoadDeadlinesAsync(cancellationToken));
+    }
+
+    // Null without the deadline repositories: no deadline is planned.
+    public async Task<DeadlinePlanState?> LoadDeadlinesAsync(CancellationToken cancellationToken)
+    {
+        if (_deadlines is null || _deadlineEvents is null) return null;
+        var deadlines = await _deadlines.ListAllAsync(cancellationToken);
+        var reminded = new HashSet<DeadlineReminderKey>();
+        foreach (var deadline in deadlines)
+        {
+            if (deadline.DoneOn is null
+                && await _deadlineEvents.ExistsAsync(deadline.Id, deadline.DueOn, cancellationToken))
+            {
+                reminded.Add(new DeadlineReminderKey(deadline.Id, deadline.DueOn));
+            }
+        }
+        return new DeadlinePlanState(deadlines, reminded);
     }
 
     public async Task<IReadOnlyList<MedicinePlanState>> LoadAsync(DateOnly today, CancellationToken cancellationToken)

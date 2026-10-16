@@ -30,6 +30,34 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #257 — B3-03: plan deadline reminders on the device
+
+Link: [vger70/MedReminder#257](https://github.com/vger70/MedReminder/pull/257)
+
+Shared-core side of Android backlog B3-03. The phone wakes only at the
+instants the planner computes, so administrative deadline reminders are
+now planned with the desktop's rules.
+
+**Added**
+- `src/MedReminder.Application/Notifications/NotificationPlanner.cs`:
+  `PlannedNotificationKind.Deadline`, planned like `DeadlineReminders`
+  (not done, device channel, from `LeadDays` before the date on, overdue
+  included, once per deadline and date); it opens the deadlines.
+  `DeadlinePlanState`, `DeadlineReminderKey`.
+
+**Changed**
+- `NotificationPlanLoader`: optional deadline repositories;
+  `LoadDeadlinesAsync`.
+- `NotificationTarget`: optional `DeadlineId`, so a device keeps two
+  deadlines of the profile apart.
+
+**Docs**
+- Backlog B3-03 row: shared-core side and private PR #54 (draft)
+  recorded; B3-02 row: private PR #53 merged.
+
+**Tests**
+- Parity harness compares deadline reminders; one new case.
+
 ## PR #256 — Docs: record the Android side of B3-02 in the backlog
 
 Link: [vger70/MedReminder#256](https://github.com/vger70/MedReminder/pull/256)

@@ -71,7 +71,7 @@ public sealed class DeadlineReminders
             {
                 try
                 {
-                    await _windows.ShowAsync(title, body, NotificationTarget.Deadline(deadline.MedicineId),
+                    await _windows.ShowAsync(title, body, NotificationTarget.Deadline(deadline.MedicineId, deadline.Id),
                         cancellationToken);
                     any = true;
                 }
