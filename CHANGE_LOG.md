@@ -30,10 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #265 — B4-02: record the Android catalogue refresh in the backlog
+
+Link: [vger70/MedReminder#265](https://github.com/vger70/MedReminder/pull/265)
+Branch: `claude/b4-02-backlog`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-02 records the private repository PR #58 (catalogue refresh, offline cache and Catalogue data screen) and `core-v0.9.0`.
+
+---
+
 ## PR #264 — B4-02: portable reference-catalogue import
 
 Link: [vger70/MedReminder#264](https://github.com/vger70/MedReminder/pull/264)
 Branch: `claude/b4-02-portable-catalogue`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B4-02 (M4): the phone downloads and
 imports the catalogue feeds itself (plan §4.4), so the import path must
