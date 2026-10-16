@@ -64,16 +64,17 @@ public sealed class MailKitEmailNotificationService : IEmailNotificationService
         var notifications = _notificationMonitor.CurrentValue;
         if (!settings.IsConfigured)
         {
-            throw new InvalidOperationException("SMTP configuration is incomplete.");
+            throw new EmailNotSentException(EmailDeliveryProblem.NotConfigured, "SMTP configuration is incomplete.");
         }
         var isExplicit = message.ExplicitRecipient is not null;
         if (message.Kind == EmailKind.Digest && string.IsNullOrWhiteSpace(notifications.CaregiverAddress))
         {
-            throw new InvalidOperationException("No caregiver is configured for the current profile.");
+            throw new EmailNotSentException(EmailDeliveryProblem.RecipientMissing,
+                "No caregiver is configured for the current profile.");
         }
         if (!isExplicit && message.Kind != EmailKind.Digest && string.IsNullOrWhiteSpace(notifications.ToAddress))
         {
-            throw new InvalidOperationException(
+            throw new EmailNotSentException(EmailDeliveryProblem.RecipientMissing,
                 "Notification recipient is not configured for the current profile.");
         }
 
@@ -145,7 +146,7 @@ public sealed class MailKitEmailNotificationService : IEmailNotificationService
         var password = _credentialStore.GetPassword();
         if (string.IsNullOrEmpty(password))
         {
-            throw new InvalidOperationException(
+            throw new EmailNotSentException(EmailDeliveryProblem.PasswordMissing,
                 "SMTP credentials not present in the encrypted credential store.");
         }
         await client.AuthenticateAsync(settings.Username, password, cancellationToken);
