@@ -105,49 +105,8 @@ internal sealed class EquivalentsDialog : MedReminderFormBase
         _list.EndUpdate();
     }
 
-    private string HeaderText(EquivalentsView view)
-    {
-        var c = _loc.CurrentCulture;
-        switch (view.State)
-        {
-            case EquivalentsState.NoCode:
-                return _loc.Get("Ui.EquivalentsDialog.NoCode");
-            case EquivalentsState.NoList:
-                return _loc.Get("Ui.EquivalentsDialog.NoList");
-            case EquivalentsState.NotListed:
-                return _loc.Get("Ui.EquivalentsDialog.NotListed", view.ListDate!.Value.ToString("d", c));
-        }
-
-        var group = view.Group!;
-        var lines = new List<string>
-        {
-            _loc.Get("Ui.EquivalentsDialog.Group", group.ActiveIngredient, group.Reference),
-            group.ReferencePrice is { } reference
-                ? _loc.Get("Ui.EquivalentsDialog.ReferencePrice", Price(reference))
-                : _loc.Get("Ui.EquivalentsDialog.ReferencePrice", "—"),
-        };
-        // U3: the packages of the group already in stock. A note on
-        // either package can restrict the substitution: it is shown
-        // instead of a plain "equivalent". The medicine's own package, in
-        // stock in another medicine record, needs no note.
-        var currentNote = view.Current?.Package.Note;
-        foreach (var home in view.AtHome)
-        {
-            var names = string.Join(", ", home.AtHome);
-            var notes = home.IsCurrent
-                ? []
-                : new[] { home.Package.Note, currentNote }
-                    .OfType<string>()
-                    .Where(n => !string.IsNullOrWhiteSpace(n))
-                    .Distinct()
-                    .ToList();
-            lines.Add(notes.Count == 0
-                ? _loc.Get("Ui.EquivalentsDialog.AtHome", names, home.Package.Name)
-                : _loc.Get("Ui.EquivalentsDialog.AtHome.Note", names, home.Package.Name, string.Join(" / ", notes)));
-        }
-        lines.Add(_loc.Get("Ui.EquivalentsDialog.Source", view.ListDate!.Value.ToString("d", c)));
-        return string.Join(Environment.NewLine, lines);
-    }
+    // Shared with the Android app (EquivalentsTexts, backlog B4-05).
+    private string HeaderText(EquivalentsView view) => EquivalentsTexts.Header(view, _loc);
 
     private ListViewItem BuildRow(EquivalentRow entry)
     {
@@ -173,5 +132,5 @@ internal sealed class EquivalentsDialog : MedReminderFormBase
     }
 
     // Euros in the user's number format.
-    private string Price(decimal euros) => string.Format(_loc.CurrentCulture, "{0:0.00} €", euros);
+    private string Price(decimal euros) => EquivalentsTexts.Price(euros, _loc.CurrentCulture);
 }

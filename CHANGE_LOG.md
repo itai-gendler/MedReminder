@@ -30,10 +30,32 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #269 — B4-05: shared equivalents wording
+
+Link: [vger70/MedReminder#269](https://github.com/vger70/MedReminder/pull/269)
+Branch: `claude/b4-05-equivalents-texts`
+
+Shared-core side of Android backlog B4-05 (M4): the phone shows the AIFA equivalents with the desktop's wording.
+
+### Added
+
+- `EquivalentsTexts` (`MedReminder.Application/Catalogue`): the header of an equivalents view (state, group, reference price, packages at home with their AIFA note, source and list date) and the euro price format.
+
+### Changed
+
+- The desktop equivalents dialog uses `EquivalentsTexts` instead of its private copy; same text.
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-05 shared-core side.
+
+---
+
 ## PR #268 — B4-04: record the Android barcode scan in the backlog
 
 Link: [vger70/MedReminder#268](https://github.com/vger70/MedReminder/pull/268)
 Branch: `claude/b4-04-backlog`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B4-04: no code change; the parser, the restock query and the link use case were already portable.
 
