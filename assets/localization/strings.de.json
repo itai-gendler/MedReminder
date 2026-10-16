@@ -1012,6 +1012,7 @@
   "Ui.SettingsDialog.Notifications.DoctorAddress.Label": "E-Mail des Arztes (optional)",
   "Ui.SettingsDialog.Notifications.DoctorAddress.Help": "Wird nur als Empfänger der Rezeptanfragen verwendet, die du selbst sendest (Therapie > Rezept anfordern). Automatische Benachrichtigungen werden nie an diese Adresse gesendet.",
   "Ui.SettingsDialog.Notifications.DoctorAddress.Invalid": "Bitte eine gültige E-Mail-Adresse für den Arzt eingeben.",
+  "Ui.SettingsDialog.Notifications.ToAddress.Invalid": "Bitte eine gültige E-Mail-Adresse für den Empfänger eingeben.",
   "Ui.SettingsDialog.Notifications.NoteAdmin": "Sie können den freigegebenen SMTP-Server auch im Bereich E-Mail-SMTP ändern.",
   "Ui.SettingsDialog.Notifications.NoteUser": "Bitten Sie den Profiladministrator, das SMTP-Konto oder die Backup-Konfiguration zu ändern.",
   "Ui.SettingsDialog.Notifications.MyPin": "Meine PIN",

@@ -149,17 +149,6 @@ internal sealed partial class SettingsDialog : MedReminderFormBase
         ShowAlways = true,
     };
 
-    // A3 (§5.2): validate the caregiver address exactly as the MailKit
-    // adapter does. MimeKit accepts a bare local part as a valid mailbox
-    // by default; a caregiver address must carry a domain, so parse with
-    // AllowAddressesWithoutDomain off. Kept in sync with
-    // MailKitEmailNotificationService.AddressParserOptions (the adapter's
-    // copy), which is internal to the Infrastructure assembly.
-    private static readonly MimeKit.ParserOptions _addressParserOptions = new()
-    {
-        AllowAddressesWithoutDomain = false,
-    };
-
     public SettingsDialog(
         IOptionsMonitor<SmtpSettings> smtpMonitor,
         IOptionsMonitor<NotificationSettings> notificationMonitor,
