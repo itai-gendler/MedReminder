@@ -30,10 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #273 — B5-01: record the Android SMTP settings in the backlog
+
+Link: [vger70/MedReminder#273](https://github.com/vger70/MedReminder/pull/273)
+Branch: `claude/b5-01-backlog`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B5-01 records PR #271 and #272 (`core-v0.12.0`, `core-v0.13.0`) and the private repository PR #62 and #63 (email settings screen, connection test, encryption rule).
+
+---
+
 ## PR #272 — SMTP: never send the password or a message without encryption
 
 Link: [vger70/MedReminder#272](https://github.com/vger70/MedReminder/pull/272)
 Branch: `claude/smtp-require-encryption`
+**Status:** merged (2026-10-16)
 
 Follow-up of Android backlog B5-01, for the desktop and the phone: with *Use StartTLS* on the sender continued in clear when the server did not offer STARTTLS (or an attacker stripped it), and then sent the password and the message unencrypted.
 
