@@ -30,9 +30,9 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #NNN — B5-01: portable SMTP sender, password store and connection test
+## PR #271 — B5-01: portable SMTP sender, password store and connection test
 
-Link: [vger70/MedReminder#NNN](https://github.com/vger70/MedReminder/pull/NNN)
+Link: [vger70/MedReminder#271](https://github.com/vger70/MedReminder/pull/271)
 Branch: `claude/b5-01-portable-smtp`
 
 Shared-core side of Android backlog B5-01 (M5): the phone configures and tests SMTP with the desktop's adapter.
