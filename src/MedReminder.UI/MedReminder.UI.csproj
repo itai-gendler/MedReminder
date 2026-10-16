@@ -34,7 +34,7 @@
          Markdig for the Markdown → HTML conversion of USER_GUIDE.md
          embedded as a resource. -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
-    <PackageReference Include="Markdig" Version="1.4.0" />
+    <PackageReference Include="Markdig" Version="1.4.1" />
     <!-- Pairing QR code (B.1 Phase 4c). MIT. PngByteQRCode renders
          without System.Drawing; WinForms loads the PNG. -->
     <PackageReference Include="QRCoder" Version="1.8.1" />
