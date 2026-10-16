@@ -2,6 +2,7 @@ using MedReminder.Application.Abstractions;
 using MedReminder.Application.Catalogue;
 using MedReminder.Application.Export;
 using MedReminder.Infrastructure.Catalogue;
+using MedReminder.Infrastructure.Catalogue.Parsers;
 using MedReminder.Infrastructure.Cloud.GoogleDrive;
 using MedReminder.Infrastructure.Cloud.OneDrive;
 using MedReminder.Infrastructure.Export;
@@ -52,6 +53,23 @@ public static class PortableInfrastructureServiceCollectionExtensions
         services.AddScoped<IStockPackageRepository, StockPackageRepository>();
         services.AddScoped<IPackageExpiryNoticeEventRepository, PackageExpiryNoticeEventRepository>();
         services.AddScoped<IShortageNoticeEventRepository, ShortageNoticeEventRepository>();
+        // Reference catalogue (ANALYSIS-DRUG-CATALOGUE.md §2.3; portable
+        // since Android backlog B4-02): one parser per feed, the importer
+        // and the query service over the open profile's database, and the
+        // remote feed client (the host binds CatalogueFeedOptions).
+        // RemoteCatalogueRefresher comes from AddMedReminderApplication.
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceSnapshotParser, AifaSnapshotParser>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceSnapshotParser, EmaEparParser>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceSnapshotParser, AempsCimaParser>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceSnapshotParser, AnsmBdpmParser>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceSnapshotParser, OpenFdaNdcParser>());
+        services.TryAddScoped<IReferenceCatalogueQueryService, SqliteReferenceCatalogueQueryService>();
+        services.TryAddScoped<IReferenceCatalogueImporter>(sp => new CsvReferenceCatalogueImporter(
+            sp.GetRequiredService<MedReminderDbContext>(),
+            sp.GetServices<IReferenceSnapshotParser>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<IDatabaseExclusiveAccess>()));
+        services.TryAddSingleton<ICatalogueFeedClient, GitHubRawCatalogueFeedClient>();
         // Shortage list (EVOLUTION-PROPOSALS-2 §3.3): one file for every
         // profile, so the store is a singleton like the client.
         services.AddOptions();

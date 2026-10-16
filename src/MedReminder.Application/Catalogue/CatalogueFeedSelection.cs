@@ -32,6 +32,25 @@ public static class CatalogueFeedSelection
             .ToList();
     }
 
+    // Enabled feeds for an explicit reference catalogue (Android backlog
+    // B4-02, decision DA3): the catalogue's search scope, so IT, ES and FR
+    // also select EU, US selects US only and EU selects EU only; no
+    // catalogue (null) selects nothing. CatalogueDefaults.Resolve gives
+    // the catalogue in effect.
+    public static IReadOnlyList<CatalogueFeedDescriptor> ForCatalogue(CountryCode? catalogue, CatalogueFeedOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (catalogue is not { } code || !CatalogueDefaults.IsAvailable(code))
+        {
+            return [];
+        }
+
+        var scope = Profiles.GetSearchScope(code);
+        return CatalogueFeedDescriptor.All
+            .Where(feed => scope.Contains(feed.Country) && options.IsFeedEnabled(feed))
+            .ToList();
+    }
+
     // Whether the shortage list is refreshed with the feeds: it lists
     // Italian package codes, so only with Italy as reference country
     // (an invalid value falls back to IT, as above).

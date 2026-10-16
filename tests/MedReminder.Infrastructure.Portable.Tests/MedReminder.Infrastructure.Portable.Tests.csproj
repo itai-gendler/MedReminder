@@ -35,4 +35,49 @@
     <ProjectReference Include="..\..\src\MedReminder.Infrastructure.Portable\MedReminder.Infrastructure.Portable.csproj" />
   </ItemGroup>
 
+  <!-- Reference-catalogue fixtures for the parser, importer and query
+       tests (portable since Android backlog B4-02). -->
+  <ItemGroup>
+    <Content Include="..\fixtures\catalogue\aifa-confezioni-sample.csv">
+      <Link>fixtures\catalogue\aifa-confezioni-sample.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\aifa-pa-sample.csv">
+      <Link>fixtures\catalogue\aifa-pa-sample.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\aifa-atc-sample.csv">
+      <Link>fixtures\catalogue\aifa-atc-sample.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\ema-epar-sample.csv">
+      <Link>fixtures\catalogue\ema-epar-sample.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\ema-epar-from-xlsx.csv">
+      <Link>fixtures\catalogue\ema-epar-from-xlsx.csv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\aemps-cima-sample.xlsx">
+      <Link>fixtures\catalogue\aemps-cima-sample.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\bdpm-cis-sample.txt">
+      <Link>fixtures\catalogue\bdpm-cis-sample.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\bdpm-compo-sample.txt">
+      <Link>fixtures\catalogue\bdpm-compo-sample.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\bdpm-cip-sample.txt">
+      <Link>fixtures\catalogue\bdpm-cip-sample.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\fixtures\catalogue\fda-ndc-sample.tsv">
+      <Link>fixtures\catalogue\fda-ndc-sample.tsv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

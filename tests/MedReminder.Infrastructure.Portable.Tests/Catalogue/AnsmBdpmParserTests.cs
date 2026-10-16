@@ -3,7 +3,7 @@ using MedReminder.Domain.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Exercises the ANSM/BDPM parser against the 100-row curated fixture
 // under tests/fixtures/catalogue/bdpm-cis-sample.txt (+ COMPO). The

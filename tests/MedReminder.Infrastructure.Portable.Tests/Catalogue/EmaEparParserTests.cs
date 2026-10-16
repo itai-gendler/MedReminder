@@ -3,7 +3,7 @@ using MedReminder.Domain.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Exercises the EPAR parser against the 73-row curated fixture
 // under tests/fixtures/catalogue/ema-epar-sample.csv (3 Veterinary

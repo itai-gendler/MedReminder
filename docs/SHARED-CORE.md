@@ -30,7 +30,8 @@ keeps the Windows projects (`MedReminder.Infrastructure`,
 
 A shared-core pull request merges only with this check green. The
 Windows suites (`Infrastructure.Tests`, `UI.Tests`) still run locally
-on Windows (CLAUDE.md §3).
+on Windows (CLAUDE.md §3). The reference-catalogue parser, importer and
+query tests are portable since Android backlog B4-02 and run here.
 
 ## Versions and tags
 

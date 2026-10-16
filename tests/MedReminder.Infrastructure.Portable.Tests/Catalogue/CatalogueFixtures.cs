@@ -1,6 +1,6 @@
 using System.IO.Compression;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Repackages the fixture CSVs into the ZIP layout the parsers
 // expect. Tests call one of the Build*SnapshotStream() helpers to

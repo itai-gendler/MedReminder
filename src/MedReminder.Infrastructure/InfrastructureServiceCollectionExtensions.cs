@@ -6,7 +6,6 @@ using MedReminder.Infrastructure.AutoStart;
 using MedReminder.Infrastructure.Backup;
 using MedReminder.Infrastructure.Catalogue;
 using MedReminder.Infrastructure.Donations;
-using MedReminder.Infrastructure.Catalogue.Parsers;
 using MedReminder.Infrastructure.Credentials;
 using MedReminder.Infrastructure.Cloud;
 using MedReminder.Infrastructure.Cloud.GoogleDrive;
@@ -184,25 +183,15 @@ public static class InfrastructureServiceCollectionExtensions
         // registration has no runtime effect.
         services.Configure<CatalogueFeatureOptions>(
             configuration.GetSection(CatalogueFeatureOptions.SectionName));
+        // The parsers, the importer, the query service and the remote feed
+        // client are portable (AddMedReminderPortableInfrastructure, Android
+        // backlog B4-02); the embedded snapshots stay with the desktop.
         services.AddSingleton<EmbeddedSnapshotProvider>();
-        services.AddScoped<IReferenceSnapshotParser, AifaSnapshotParser>();
-        services.AddScoped<IReferenceSnapshotParser, EmaEparParser>();
-        services.AddScoped<IReferenceSnapshotParser, AempsCimaParser>();
-        services.AddScoped<IReferenceSnapshotParser, AnsmBdpmParser>();
-        services.AddScoped<IReferenceSnapshotParser, OpenFdaNdcParser>();
-        services.AddScoped<IReferenceCatalogueQueryService, SqliteReferenceCatalogueQueryService>();
-        services.AddScoped<IReferenceCatalogueImporter>(sp => new CsvReferenceCatalogueImporter(
-            sp.GetRequiredService<MedReminderDbContext>(),
-            sp.GetServices<IReferenceSnapshotParser>(),
-            sp.GetRequiredService<TimeProvider>(),
-            sp.GetRequiredService<IDatabaseExclusiveAccess>()));
 
-        // Remote AIFA feed (docs/analysis/ANALYSIS-CATALOGUE-REMOTE-FEED.md).
-        // Singleton client so the HttpClient is reused; the refresher
-        // itself is registered by AddMedReminderApplication.
+        // Remote feeds (docs/analysis/ANALYSIS-CATALOGUE-REMOTE-FEED.md);
+        // the refresher itself is registered by AddMedReminderApplication.
         services.Configure<CatalogueFeedOptions>(
             configuration.GetSection(CatalogueFeedOptions.SectionName));
-        services.TryAddSingleton<ICatalogueFeedClient, GitHubRawCatalogueFeedClient>();
 
         // ------- Barcode scan (A2) -------
         //

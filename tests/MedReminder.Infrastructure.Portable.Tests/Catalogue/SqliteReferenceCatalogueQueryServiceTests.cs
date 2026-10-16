@@ -7,7 +7,7 @@ using MedReminder.Infrastructure.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Exercises the SQLite query service against the fully-imported M0
 // fixture (168 Italian medicines). Because the fixture is 100%

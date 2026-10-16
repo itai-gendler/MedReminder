@@ -782,7 +782,7 @@ with. Differences from the design above, and why:
 |---|---|---|
 | `MedReminder.Domain` | `net10.0` | + `LedgerDeriver`, `StockCount`, HLC value type, merge rules (pure) |
 | `MedReminder.Application` | `net10.0` | + operation model, `IOperationLog`, `ISyncTransport`, `SyncEngine`, `IArchiveReader`, moved `MedicineOverviewLoader`, `NotificationPlanner` |
-| `MedReminder.Infrastructure.Portable` (new) | `net10.0` | EF Core model and repositories, `DatabaseInitializer`, sync tables, `ArchiveCipher`, `ArchiveReader`, segment codec, `LocalFolderSyncTransport`, provider transports, localization loader; since Android M0 (B0-01) `ProfileRegistry`, `CurrentProfile`, `ProfileSettingsStore`, `InstallationSettingsStore` with host-supplied paths |
+| `MedReminder.Infrastructure.Portable` (new) | `net10.0` | EF Core model and repositories, `DatabaseInitializer`, sync tables, `ArchiveCipher`, `ArchiveReader`, segment codec, `LocalFolderSyncTransport`, provider transports, localization loader; since Android M0 (B0-01) `ProfileRegistry`, `CurrentProfile`, `ProfileSettingsStore`, `InstallationSettingsStore` with host-supplied paths; since Android M4 (B4-02) the reference-catalogue parsers, `CsvReferenceCatalogueImporter`, `SqliteReferenceCatalogueQueryService` and `CatalogueTextNormalizer` (the embedded snapshots stay Windows-only) |
 | `MedReminder.Infrastructure` | `net10.0-windows` | DPAPI stores, registry, balloon notifications, `AppDataPaths` (desktop paths of the profile registry and stores), Windows shells of import / export |
 | `MedReminder.UI` | `net10.0-windows10.0.19041.0` | + sync settings, pairing, conflict review, device list; `SyncHostedService` |
 | `MedReminder.Mobile` (new) | `net10.0-android`, then `net10.0-ios` | MAUI app, platform adapters |

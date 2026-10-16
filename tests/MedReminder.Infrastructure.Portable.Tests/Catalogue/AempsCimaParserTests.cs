@@ -5,7 +5,7 @@ using MedReminder.Domain.Catalogue;
 using MedReminder.Infrastructure.Catalogue.Parsers;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // Exercises the AEMPS / CIMA parser against the 145-row curated
 // fixture under tests/fixtures/catalogue/aemps-cima-sample.xlsx.

@@ -10,7 +10,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace MedReminder.Infrastructure.Tests.Catalogue;
+namespace MedReminder.Infrastructure.Portable.Tests.Catalogue;
 
 // End-to-end test for the M1 catalogue import pipeline: the AIFA
 // parser feeds the CsvReferenceCatalogueImporter which upserts into
