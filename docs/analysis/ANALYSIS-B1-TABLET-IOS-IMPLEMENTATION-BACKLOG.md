@@ -25,9 +25,9 @@ on a tablet.
   `ANALYSIS-B1-MOBILE-SYNC.md` (§8 reminders, §9 storage, §16 decisions).
 - The `ANALYSIS-B1-*` documents take precedence over `docs/STATUS.md`
   and `docs/EVOLUTION.md`.
-- Tracks BT, BI and BP start after the Android public launch gate
-  (DA4: M1-M5 as pre-release builds, public launch after M5), except the
-  lead-time items of section 4, which start now. Vital tracking (D.1)
+- Tracks BT, BI and BP, including the lead-time items of section 4,
+  start after the Android public launch gate (DA4: M1-M5 as pre-release
+  builds, public launch after M5; decided 2026-10-16). Vital tracking (D.1)
   stays evolution V and is not part of this backlog.
 - Shared domain, application and portable changes go to this repository
   first, are merged and tagged `core-v*`, then the submodule reference
@@ -72,22 +72,22 @@ Read from `vger70/medreminder-mobile` on 2026-10-16:
 
 | Key | Decision | Recommendation / status | Blocks |
 |---|---|---|---|
-| DT1 | Reverse the non-goal "tablet-specific layouts" (`ANALYSIS-B1-MOBILE-SYNC.md` §15) | Reverse for Android tablets and iPad: one adaptive layer, no separate tablet app. **Open.** | BT-01 |
-| DT2 | Wide-screen navigation | Shell flyout locked open from the medium width class (side rail effect). A custom NavigationRail handler costs more and is not recommended [INFERRED]. **Open.** | BT-03 |
-| DT3 | Adaptive layer lives in shared `Pages/`, not in `Platforms/Android/` | Recommended, so iPad reuses it. **Open.** | BT-01..04, BP-01 |
-| DI1 | Apple Developer Program account type | Individual shows the personal name on the App Store and cannot invite collaborators; organization needs a D-U-N-S number and a legal entity. Same annual fee [UNCERTAIN: third-party sources, check developer.apple.com]. Mirrors DA5 (personal Play account); decide before enrolling because conversion later needs support contact. **Open.** | BI-00 |
-| DI2 | iPad ships with the first iOS release | Recommended: universal binary from BI-02, iPad work is small once BT is done. **Open.** | BP-01 |
-| DI3 | iOS minimum version | iOS 15 is an inferred proposal and unmeasured (`ANALYSIS-B1-MOBILE-SYNC.md` D13); AES-GCM needs iOS 13+. Take the floor of the MAUI 10 iOS workload and verify at BI-01 on the oldest device available; do not claim a floor before TestFlight. **Open.** | BI-01 |
-| DI4 | Bundle identifier | Reuse `com.vger70.medreminder` (the identifier is independent of the Play application ID). **Open.** | BI-00 |
+| DT1 | Reverse the non-goal "tablet-specific layouts" (`ANALYSIS-B1-MOBILE-SYNC.md` §15) | **Decided 2026-10-16**: reversed for Android tablets and iPad; one adaptive layer, no separate tablet app. | BT-01 |
+| DT2 | Wide-screen navigation | **Decided 2026-10-16**: Shell flyout locked open from the medium width class (side rail effect); no custom NavigationRail handler. | BT-03 |
+| DT3 | Adaptive layer lives in shared `Pages/`, not in `Platforms/Android/` | **Decided 2026-10-16**, so iPad reuses it. | BT-01..04, BP-01 |
+| DI1 | Apple Developer Program account type | **Decided 2026-10-16**: individual. The App Store shows the personal name and the account cannot invite collaborators; mirrors DA5 (personal Play account). Conversion to an organization later needs Apple support and a D-U-N-S number [UNCERTAIN: third-party sources, check developer.apple.com]. | BI-00 |
+| DI2 | iPad ships with the first iOS release | **Decided 2026-10-16**: universal binary from BI-02. | BP-01 |
+| DI3 | iOS minimum version | **Decided 2026-10-16**: the floor of the MAUI 10 iOS workload, verified at BI-01 on the oldest device available; no fixed iOS 15 (`ANALYSIS-B1-MOBILE-SYNC.md` D13 stays unmeasured). No floor is claimed before TestFlight. | BI-01 |
+| DI4 | Bundle identifier | **Decided 2026-10-16**: `com.vger70.medreminder` (independent of the Play application ID). | BI-00 |
 | DI5 | Apple-native iCloud transport | Stays excluded (D12). Cloud backup and sync use Google Drive and OneDrive on iOS too. **Decided 2026-10-08.** | - |
 | DI6 | Donation links on iOS | **Decided** (DA9, D14): none. | - |
 | DA3, A6, A7 | Language and catalogue defaults, free apps, private repository | Unchanged; apply to every track. | - |
 
-## 4. Lead-time items (start now, no code)
+## 4. Lead-time items (start after the Android public launch, no code)
 
 | ID | Item | Done when |
 |---|---|---|
-| BI-00a | Apple Developer Program enrollment (DI1); with an organization account, obtain the D-U-N-S number first (free, can take days) | Account active, team ID known |
+| BI-00a | Apple Developer Program enrollment (DI1: individual account, identity document needed) | Account active, team ID known |
 | BI-00b | Build host: Apple-silicon Mac on the macOS version required by the Xcode version that the .NET iOS workload pins. The workload accepts one Xcode version; a newer or older Xcode fails the build, so the pinned pair is written in the private repository's docs | `dotnet workload install maui-ios` and an empty MAUI iOS app run on a simulator |
 | BI-00c | Test devices: one iPhone (oldest supported) and one iPad. Simulators do not validate notification delivery, biometrics or background tasks | Both enrolled in the provisioning profile |
 | BI-00d | Identifiers: App ID with the capabilities of BI-04 to BI-08, certificates, provisioning profiles, App Store Connect API key for CI upload | Signed debug build installs on both devices |
@@ -98,8 +98,8 @@ Read from `vger70/medreminder-mobile` on 2026-10-16:
 
 ### BT - Android tablets
 
-**Entry:** DT1-DT3 decided; the Android public launch gate passed, or the
-tablet work runs on a branch behind it. **Exit:** every screen of M1-M5
+**Entry:** DT1-DT3 decided (done 2026-10-16); the Android public launch
+gate passed. **Exit:** every screen of M1-M5
 is usable and reviewed on compact, medium and expanded widths, in both
 orientations, in split-screen and in a resized window, with no data loss
 on rotation or resize.
@@ -188,8 +188,10 @@ every slice. In addition:
 
 ## 7. Recommended execution order
 
-1. Now: decide DI1 and start BI-00a (enrollment and, if needed, the
-   D-U-N-S number), BI-00b..e and BT-00. Decide DT1-DT3, DI2-DI4.
+1. After the Android public launch gate (decided 2026-10-16): start
+   BI-00a..e and BT-00. All decisions DT1-DT3 and DI1-DI4 are settled.
+   Starting later moves the first iOS spike by the time enrollment and
+   device delivery take [INFERRED: days to weeks].
 2. Run BI-01 as soon as the Mac and devices exist. A failed S3 or S5 on
    iOS changes the iOS estimate and is reported before BI-02.
 3. Deliver BT-01..04 (the shared adaptive layer), then BT-05..07; ship
