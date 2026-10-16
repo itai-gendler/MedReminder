@@ -30,10 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #270 — B4-05: record the Android shortages and equivalents in the backlog
+
+Link: [vger70/MedReminder#270](https://github.com/vger70/MedReminder/pull/270)
+Branch: `claude/b4-05-backlog`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-05 records the private repository PR #61 (AIFA shortages and equivalents, information page, shortage notice) and `core-v0.11.0`; every M4 slice is merged.
+
+---
+
 ## PR #269 — B4-05: shared equivalents wording
 
 Link: [vger70/MedReminder#269](https://github.com/vger70/MedReminder/pull/269)
 Branch: `claude/b4-05-equivalents-texts`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B4-05 (M4): the phone shows the AIFA equivalents with the desktop's wording.
 
