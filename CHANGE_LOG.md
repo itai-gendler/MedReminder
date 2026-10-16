@@ -30,6 +30,20 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #255 — Docs: record the Android side of B3-01 in the backlog
+
+Link: [vger70/MedReminder#255](https://github.com/vger70/MedReminder/pull/255)
+
+Follow-up to PR #251, whose last commit was pushed after the merge.
+
+**Docs**
+- `docs/analysis/ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: the B3-01
+  row records the private repository PR #49 (prescriptions, request draft
+  through the share sheet, low-stock notification actions) and why no
+  submodule bump was needed.
+
+---
+
 ## PR #252 — B3-02: plan prescription "valid until" reminders on the device
 
 Link: [vger70/MedReminder#252](https://github.com/vger70/MedReminder/pull/252)
