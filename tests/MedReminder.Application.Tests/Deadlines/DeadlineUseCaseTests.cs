@@ -190,13 +190,14 @@ public class DeadlineUseCaseTests
     public async Task The_periodic_check_runs_the_reminders()
     {
         var scope = new ApplicationTestScope(Now);
-        await scope.SaveDeadline.ExecuteAsync(Plan(null, Today.AddDays(1), channels: NotificationChannels.Windows), default);
+        var id = await scope.SaveDeadline.ExecuteAsync(
+            Plan(null, Today.AddDays(1), channels: NotificationChannels.Windows), default);
 
         await scope.Monitor.RunAsync(default);
 
         scope.DeadlineReminderEvents.All.Should().ContainSingle();
         scope.Windows.Targets.Should().ContainSingle()
-            .Which.Should().Be(NotificationTarget.Deadline(null));
+            .Which.Should().Be(NotificationTarget.Deadline(null, id));
     }
 
     [Fact]

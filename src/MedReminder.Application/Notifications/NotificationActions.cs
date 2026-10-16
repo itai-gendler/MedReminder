@@ -9,8 +9,12 @@ namespace MedReminder.Application.Notifications;
 // HasRepeatablePrescription (low stock only): the medicine has a
 // repeatable prescription with dispensations left, so the toast offers to
 // open it rather than to prepare a request for a new one.
+// DeadlineId (deadline reminder only): the deadline, so a device that
+// replaces a notification with the same identity keeps two deadlines of
+// the profile apart (MedicineId is Guid.Empty for both).
 public sealed record NotificationTarget(
-    NotificationKind Kind, Guid MedicineId, TimeOnly? SlotTime = null, bool HasRepeatablePrescription = false)
+    NotificationKind Kind, Guid MedicineId, TimeOnly? SlotTime = null, bool HasRepeatablePrescription = false,
+    Guid? DeadlineId = null)
 {
     public static NotificationTarget DoseReminder(Guid medicineId, TimeOnly slotTime)
         => new(NotificationKind.DoseReminder, medicineId, slotTime);
@@ -23,8 +27,8 @@ public sealed record NotificationTarget(
     public static NotificationTarget Shortage(Guid medicineId) => new(NotificationKind.Shortage, medicineId);
 
     // Guid.Empty for a deadline of the profile.
-    public static NotificationTarget Deadline(Guid? medicineId)
-        => new(NotificationKind.Deadline, medicineId ?? Guid.Empty);
+    public static NotificationTarget Deadline(Guid? medicineId, Guid? deadlineId = null)
+        => new(NotificationKind.Deadline, medicineId ?? Guid.Empty, DeadlineId: deadlineId);
 
     public static NotificationTarget PackageExpiry(Guid medicineId) => new(NotificationKind.PackageExpiry, medicineId);
 }
