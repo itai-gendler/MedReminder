@@ -30,9 +30,9 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #NNN — B5-01: record the Android SMTP settings in the backlog
+## PR #273 — B5-01: record the Android SMTP settings in the backlog
 
-Link: [vger70/MedReminder#NNN](https://github.com/vger70/MedReminder/pull/NNN)
+Link: [vger70/MedReminder#273](https://github.com/vger70/MedReminder/pull/273)
 Branch: `claude/b5-01-backlog`
 
 ### Docs
