@@ -30,10 +30,39 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #NNN — SMTP: never send the password or a message without encryption
+
+Link: [vger70/MedReminder#NNN](https://github.com/vger70/MedReminder/pull/NNN)
+Branch: `claude/smtp-require-encryption`
+
+Follow-up of Android backlog B5-01, for the desktop and the phone: with *Use StartTLS* on the sender continued in clear when the server did not offer STARTTLS (or an attacker stripped it), and then sent the password and the message unencrypted.
+
+### Security
+
+- `SmtpSecurity` (`Infrastructure.Portable/Email`): after connecting, the sender and the connection test require an encrypted connection when *Use StartTLS* is on or a username is set; otherwise nothing more is sent and `SmtpEncryptionRequiredException` is raised (not retried). Only with *Use StartTLS* off and no username may a connection stay plain.
+- Port 465 always uses implicit TLS, whatever *Use StartTLS* says (STARTTLS cannot work there).
+
+### Changed
+
+- `SmtpTestOutcome.EncryptionUnavailable`: the connection test reports the refused plain connection.
+- Desktop Settings → Email SMTP, Test connection: specific messages for a refused plain connection and for an accepted but unencrypted one (`Ui.SettingsDialog.Email.TestNotEncrypted`, `TestOkPlain`); the *Use StartTLS* tooltip says encryption is required. Strings in the five dictionaries.
+- Behaviour change: an installation whose server offers no encryption while a username is set stops sending until the configuration is fixed; the test says why.
+
+### Docs
+
+- `ANALYSIS.md` §9.2 transport security; user guides (five languages), Step 1 of the email setup.
+
+### Tests
+
+- The loopback SMTP test server performs a real STARTTLS upgrade on a self-signed certificate; new tests for the refused plain connection (tester and sender, no AUTH reaches the server), STARTTLS sign-in, untrusted certificate, not retried, port 465.
+
+---
+
 ## PR #271 — B5-01: portable SMTP sender, password store and connection test
 
 Link: [vger70/MedReminder#271](https://github.com/vger70/MedReminder/pull/271)
 Branch: `claude/b5-01-portable-smtp`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B5-01 (M5): the phone configures and tests SMTP with the desktop's adapter.
 

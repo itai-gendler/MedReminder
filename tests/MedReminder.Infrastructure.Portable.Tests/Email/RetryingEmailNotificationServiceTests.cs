@@ -39,6 +39,33 @@ public class RetryingEmailNotificationServiceTests
         inner.Sent.Should().ContainSingle().Which.Should().Be(message);
     }
 
+    [Fact]
+    public async Task A_refused_plain_connection_is_not_retried()
+    {
+        var inner = new PlainConnectionEmailService();
+        var sut = new RetryingEmailNotificationService(
+            inner, TimeProvider.System, NullLogger<RetryingEmailNotificationService>.Instance);
+
+        await FluentActions.Awaiting(() => sut.SendAsync(new EmailMessage("s", "b"), CancellationToken.None))
+            .Should().ThrowAsync<SmtpEncryptionRequiredException>();
+
+        inner.Calls.Should().Be(1);
+    }
+
+    private sealed class PlainConnectionEmailService : IEmailNotificationService
+    {
+        public int Calls { get; private set; }
+
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+        {
+            Calls++;
+            throw new SmtpEncryptionRequiredException();
+        }
+
+        public Task<bool> TestConnectionAsync(CancellationToken cancellationToken)
+            => Task.FromResult(false);
+    }
+
     private sealed class TransientFailingEmailService : IEmailNotificationService
     {
         public int Calls { get; private set; }

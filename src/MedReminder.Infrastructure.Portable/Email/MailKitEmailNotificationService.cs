@@ -84,7 +84,10 @@ public sealed class MailKitEmailNotificationService : IEmailNotificationService
         };
 
         await client.ConnectAsync(settings.Host, settings.Port,
-            SmtpConnectionTester.SecureOption(settings.UseStartTls), cancellationToken);
+            SmtpSecurity.SecureOption(settings.UseStartTls, settings.Port), cancellationToken);
+        // Nothing (the password, the message) goes out on a plain
+        // connection where encryption is required.
+        SmtpSecurity.RequireEncrypted(client, settings.UseStartTls, settings.Username);
         await AuthenticateIfNeededAsync(client, settings, cancellationToken);
         try
         {

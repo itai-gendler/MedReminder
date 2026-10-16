@@ -13,17 +13,20 @@ namespace MedReminder.Infrastructure.Tests.Email;
 // scripted loopback server; nothing is sent.
 public class SmtpConnectionTesterTests
 {
-    private readonly SmtpConnectionTester _tester = new();
+    // The loopback server's certificate is self-signed: accepted here,
+    // refused by the default validation (_strict).
+    private readonly SmtpConnectionTester _tester = new() { ServerCertificateValidation = (_, _, _, _) => true };
+    private readonly SmtpConnectionTester _strict = new();
 
     private static SmtpTransport Transport(int port, string username = "", bool startTls = true, int timeout = 5)
         => new("127.0.0.1", port, startTls, username, "home@example.org", "MedReminder", timeout);
 
     [Fact]
-    public async Task A_server_without_sign_in_is_accepted_and_reported_as_not_encrypted()
+    public async Task A_plain_server_without_sign_in_is_accepted_only_with_STARTTLS_off()
     {
         await using var server = new FakeSmtpServer();
 
-        var result = await _tester.TestAsync(Transport(server.Port), password: null, CancellationToken.None);
+        var result = await _tester.TestAsync(Transport(server.Port, startTls: false), password: null, CancellationToken.None);
 
         result.Outcome.Should().Be(SmtpTestOutcome.Accepted);
         result.Encrypted.Should().BeFalse();
@@ -31,20 +34,44 @@ public class SmtpConnectionTesterTests
     }
 
     [Fact]
-    public async Task The_right_credentials_are_accepted()
+    public async Task With_STARTTLS_on_a_server_that_does_not_offer_it_is_refused()
+    {
+        await using var server = new FakeSmtpServer();
+
+        var result = await _tester.TestAsync(Transport(server.Port), password: null, CancellationToken.None);
+
+        result.Outcome.Should().Be(SmtpTestOutcome.EncryptionUnavailable);
+        result.Encrypted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task The_password_is_never_sent_on_a_plain_connection()
     {
         await using var server = new FakeSmtpServer(user: "home", password: "s3cret");
+
+        var result = await _tester.TestAsync(Transport(server.Port, "home", startTls: false), "s3cret", CancellationToken.None);
+
+        result.Outcome.Should().Be(SmtpTestOutcome.EncryptionUnavailable);
+        server.AuthenticationAttempts.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task The_right_credentials_are_accepted_after_STARTTLS()
+    {
+        await using var server = new FakeSmtpServer(offerStartTls: true, user: "home", password: "s3cret");
 
         var result = await _tester.TestAsync(Transport(server.Port, "home"), "s3cret", CancellationToken.None);
 
         result.Outcome.Should().Be(SmtpTestOutcome.Accepted);
+        result.Encrypted.Should().BeTrue();
+        server.Upgraded.Should().BeTrue();
         server.AuthenticationAttempts.Should().Be(1);
     }
 
     [Fact]
     public async Task A_wrong_password_is_an_authentication_failure()
     {
-        await using var server = new FakeSmtpServer(user: "home", password: "s3cret");
+        await using var server = new FakeSmtpServer(offerStartTls: true, user: "home", password: "s3cret");
 
         var result = await _tester.TestAsync(Transport(server.Port, "home"), "wrong", CancellationToken.None);
 
@@ -54,11 +81,22 @@ public class SmtpConnectionTesterTests
     [Fact]
     public async Task A_user_name_on_a_server_without_sign_in_is_reported()
     {
-        await using var server = new FakeSmtpServer(offerAuth: false);
+        await using var server = new FakeSmtpServer(offerAuth: false, offerStartTls: true);
 
         var result = await _tester.TestAsync(Transport(server.Port, "home"), "s3cret", CancellationToken.None);
 
         result.Outcome.Should().Be(SmtpTestOutcome.AuthenticationNotOffered);
+    }
+
+    [Fact]
+    public async Task An_untrusted_certificate_is_a_secure_connection_failure()
+    {
+        await using var server = new FakeSmtpServer(offerStartTls: true, user: "home", password: "s3cret");
+
+        var result = await _strict.TestAsync(Transport(server.Port, "home"), "s3cret", CancellationToken.None);
+
+        result.Outcome.Should().Be(SmtpTestOutcome.SecureConnectionFailed);
+        server.AuthenticationAttempts.Should().Be(0);
     }
 
     [Fact]
@@ -145,12 +183,24 @@ public class SmtpConnectionTesterTests
         SmtpConnectionTester.Classify(new TimeoutException()).Should().Be(SmtpTestOutcome.TimedOut);
         SmtpConnectionTester.Classify(new SmtpProtocolException("bad")).Should().Be(SmtpTestOutcome.Rejected);
         SmtpConnectionTester.Classify(new NotSupportedException()).Should().Be(SmtpTestOutcome.AuthenticationNotOffered);
+        SmtpConnectionTester.Classify(new SmtpEncryptionRequiredException()).Should().Be(SmtpTestOutcome.EncryptionUnavailable);
     }
 
     [Fact]
     public void The_security_option_is_the_senders()
     {
-        SmtpConnectionTester.SecureOption(useStartTls: true).Should().Be(SecureSocketOptions.StartTlsWhenAvailable);
-        SmtpConnectionTester.SecureOption(useStartTls: false).Should().Be(SecureSocketOptions.Auto);
+        SmtpSecurity.SecureOption(useStartTls: true, 587).Should().Be(SecureSocketOptions.StartTlsWhenAvailable);
+        SmtpSecurity.SecureOption(useStartTls: false, 587).Should().Be(SecureSocketOptions.Auto);
+        SmtpSecurity.SecureOption(useStartTls: true, 465).Should().Be(SecureSocketOptions.SslOnConnect);
+        SmtpSecurity.SecureOption(useStartTls: false, 465).Should().Be(SecureSocketOptions.SslOnConnect);
     }
+
+    [Theory]
+    [InlineData(true, "", true)]
+    [InlineData(false, "home", true)]
+    [InlineData(true, "home", true)]
+    [InlineData(false, "", false)]
+    [InlineData(false, "  ", false)]
+    public void Encryption_is_required_with_STARTTLS_or_a_user_name(bool startTls, string username, bool required)
+        => SmtpSecurity.RequiresEncryption(startTls, username).Should().Be(required);
 }
