@@ -30,7 +30,18 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #277 — B5-03: record the Android master email in the backlog
+
+Link: [vger70/MedReminder#277](https://github.com/vger70/MedReminder/pull/277)
+Branch: `claude/keen-cori-5cfqp3`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B5-03 records PR #276 (`core-v0.15.0`) and the private repository PR #65 (the phone sends email as household master, checks its other profiles, shows who sends, opens the prescription request in the email app).
+
 ## PR #276 — B5-03: shared master profile checks and live recipients monitor
+
+**Status:** merged (2026-10-16)
 
 Link: [vger70/MedReminder#276](https://github.com/vger70/MedReminder/pull/276)
 Branch: `claude/keen-cori-5cfqp3`
