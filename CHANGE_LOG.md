@@ -30,10 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #267 — B4-03: record the Android catalogue search in the backlog
+
+Link: [vger70/MedReminder#267](https://github.com/vger70/MedReminder/pull/267)
+Branch: `claude/b4-03-backlog`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-03 records the private repository PR #59 (catalogue search, preview, link and unlink from the medicine form) and `core-v0.10.0`.
+
+---
+
 ## PR #266 — B4-03: shared catalogue entry fill
 
 Link: [vger70/MedReminder#266](https://github.com/vger70/MedReminder/pull/266)
 Branch: `claude/b4-03-catalogue-entry-fill`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B4-03 (M4): what a medicine form
 takes from a picked catalogue entry, so a medicine linked on the phone
