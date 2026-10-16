@@ -824,6 +824,15 @@ language selected in the application. Channels are chosen per
 medicine (`NotificationChannels` flags). A failure on one channel
 does not prevent the other.
 
+Transport security (`SmtpSecurity`, shared by the sender and
+`SmtpConnectionTester`): port 465 uses implicit TLS; otherwise STARTTLS
+is used when the server offers it. After the connection, encryption is
+required when *Use StartTLS* is on or a username is set: on a plain
+connection nothing more is sent, the password and the message included,
+and `SmtpEncryptionRequiredException` (not retried) is raised. Only with
+*Use StartTLS* off and no username may a connection stay plain (a local
+relay without sign-in).
+
 The prescription request (`PrescriptionRequestDialog`,
 `SendPrescriptionRequest`) is the only user-initiated send. It sets
 `EmailMessage.ExplicitRecipient` to the profile's `DoctorAddress`:

@@ -281,6 +281,46 @@ public class MailKitEmailNotificationServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    // B5-01 follow-up (SmtpSecurity): on a plain connection the sender
+    // stops before AUTH and before the message, and does not count it as
+    // transient.
+    [Theory]
+    [InlineData(true, "")]
+    [InlineData(false, "home")]
+    public async Task SendAsync_sends_nothing_on_a_plain_connection_where_encryption_is_required(
+        bool useStartTls, string username)
+    {
+        await using var server = new FakeSmtpServer(user: "home", password: "s3cret");
+        var smtp = new StaticOptionsMonitor<SmtpSettings>(new SmtpSettings
+        {
+            Host = "127.0.0.1",
+            Port = server.Port,
+            UseStartTls = useStartTls,
+            Username = username,
+            FromAddress = "home@example.org",
+            TimeoutSeconds = 5,
+        });
+        var notifications = new StaticOptionsMonitor<NotificationSettings>(new NotificationSettings
+        {
+            ToAddress = "user@example.org",
+        });
+        var sut = new MailKitEmailNotificationService(
+            smtp, notifications, new PasswordStore("s3cret"), NullLogger<MailKitEmailNotificationService>.Instance);
+
+        await FluentActions.Awaiting(() => sut.SendAsync(new EmailMessage("s", "b"), CancellationToken.None))
+            .Should().ThrowAsync<SmtpEncryptionRequiredException>();
+        server.AuthenticationAttempts.Should().Be(0);
+        (await sut.TestConnectionAsync(CancellationToken.None)).Should().BeFalse();
+    }
+
+    private sealed class PasswordStore(string password) : ISmtpCredentialStore
+    {
+        public bool HasPassword => true;
+        public string? GetPassword() => password;
+        public void SetPassword(string value) { }
+        public void Clear() { }
+    }
+
     private sealed class StaticOptionsMonitor<T> : IOptionsMonitor<T>
     {
         private readonly T _value;

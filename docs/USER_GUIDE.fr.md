@@ -918,6 +918,8 @@ Les valeurs pour Gmail et les autres fournisseurs courants, et la façon
 d'obtenir un mot de passe d'application, sont dans
 [Paramètres e-mail des principaux fournisseurs](#smtp-providers).
 
+MedReminder n'envoie jamais le mot de passe, ni un e-mail, sans chiffrement. Avec *Utiliser StartTLS* coché, ou avec un nom d'utilisateur, un serveur qui ne propose pas de connexion chiffrée est refusé, et **Tester la connexion** l'indique. Une connexion non chiffrée n'est utilisée qu'avec *Utiliser StartTLS* non coché et sans nom d'utilisateur (un serveur local sans authentification) ; les e-mails circulent alors en clair.
+
 ### Étape 2 — les destinataires (chaque profil)
 
 **Outils → Paramètres… → Notifications**, pour le profil ouvert :

@@ -160,11 +160,29 @@ internal sealed partial class SettingsDialog
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var ok = await _emailService.TestConnectionAsync(cts.Token);
-            var msg = _loc.Get(ok
-                ? "Ui.SettingsDialog.Email.TestOk"
-                : "Ui.SettingsDialog.Email.TestFailed");
-            var icon = ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning;
+            // The shared tester's outcome when the MailKit adapter is
+            // available (B5-01 follow-up): a refused plain connection and an
+            // accepted but unencrypted one get their own message.
+            SmtpTestResult? result = null;
+            if (_scopes is not null && _smtpMonitor.CurrentValue.IsConfigured)
+            {
+                await using var testScope = _scopes.CreateAsyncScope();
+                if (testScope.ServiceProvider.GetService<MailKitEmailNotificationService>() is { } adapter)
+                {
+                    result = await adapter.TestAsync(_smtpMonitor.CurrentValue, cts.Token);
+                }
+            }
+            var ok = result is null
+                ? await _emailService.TestConnectionAsync(cts.Token)
+                : result.Outcome == SmtpTestOutcome.Accepted;
+            var key = result switch
+            {
+                { Outcome: SmtpTestOutcome.Accepted, Encrypted: false } => "Ui.SettingsDialog.Email.TestOkPlain",
+                { Outcome: SmtpTestOutcome.EncryptionUnavailable } => "Ui.SettingsDialog.Email.TestNotEncrypted",
+                _ => ok ? "Ui.SettingsDialog.Email.TestOk" : "Ui.SettingsDialog.Email.TestFailed",
+            };
+            var icon = key == "Ui.SettingsDialog.Email.TestOk" ? MessageBoxIcon.Information : MessageBoxIcon.Warning;
+            var msg = _loc.Get(key);
             UiMessageBox.Show(this, msg,
                 _loc.Get("Ui.SettingsDialog.Email.TestTitle"),
                 MessageBoxButtons.OK, icon);

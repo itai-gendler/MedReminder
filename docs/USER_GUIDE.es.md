@@ -887,6 +887,8 @@ Los valores para Gmail y los demás proveedores habituales, y cómo
 obtener una contraseña de aplicación, están en
 [Configuración de correo de los principales proveedores](#smtp-providers).
 
+MedReminder nunca envía la contraseña, ni un correo, sin cifrado. Con *Usar StartTLS* marcado, o con un nombre de usuario, se rechaza un servidor que no ofrezca una conexión cifrada, y **Probar conexión** lo indica. Una conexión sin cifrado solo se usa con *Usar StartTLS* sin marcar y sin nombre de usuario (un servidor local que no pide inicio de sesión); los correos viajan entonces en claro.
+
 ### Paso 2 — los destinatarios (cada perfil)
 
 **Herramientas → Configuración… → Notificaciones**, para el perfil

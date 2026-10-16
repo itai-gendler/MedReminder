@@ -13,6 +13,10 @@ public enum SmtpTestOutcome
     // The server accepted the connection and, with a user name, the
     // credentials.
     Accepted,
+    // The connection stayed plain where encryption is required (STARTTLS
+    // on, or a user name set): nothing more was sent, the password
+    // included (SmtpSecurity).
+    EncryptionUnavailable,
     // Host or sender address missing: nothing was tried.
     NotConfigured,
     // A user name without a password: nothing was tried.
@@ -37,7 +41,8 @@ public enum SmtpTestOutcome
 
 // Encrypted: the connection was protected by TLS (implicit or STARTTLS)
 // when the test ended; false on a plain connection or when the test
-// stopped earlier. Error is the cause, for the host's log only: its text
+// stopped earlier. Accepted with Encrypted false happens only without a
+// user name and with STARTTLS off. Error is the cause, for the host's log only: its text
 // can carry server replies and is never shown as is.
 public sealed record SmtpTestResult(SmtpTestOutcome Outcome, bool Encrypted)
 {
@@ -45,7 +50,8 @@ public sealed record SmtpTestResult(SmtpTestOutcome Outcome, bool Encrypted)
 }
 
 // Connects, signs in when a user name is set, and disconnects, with the
-// security option the MailKit sender uses. Works on a configuration not
+// security option and the encryption rule the MailKit sender uses
+// (SmtpSecurity). Works on a configuration not
 // saved yet: the form passes what is typed, and the password typed or
 // the stored one.
 public sealed class SmtpConnectionTester
@@ -54,6 +60,10 @@ public sealed class SmtpConnectionTester
     // timeout from MailKit; this outer bound only covers a stalled step
     // that MailKit's own timeout does not catch.
     private const int OuterBoundFactor = 3;
+
+    // Tests only: accepts the loopback server's self-signed certificate.
+    // Null keeps MailKit's certificate validation.
+    internal System.Net.Security.RemoteCertificateValidationCallback? ServerCertificateValidation { get; init; }
 
     public async Task<SmtpTestResult> TestAsync(SmtpTransport transport, string? password,
         CancellationToken cancellationToken)
@@ -74,10 +84,12 @@ public sealed class SmtpConnectionTester
         using var bound = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         bound.CancelAfter(timeout * OuterBoundFactor);
         using var client = new SmtpClient { Timeout = (int)timeout.TotalMilliseconds };
+        if (ServerCertificateValidation is { } validation) client.ServerCertificateValidationCallback = validation;
         try
         {
-            await client.ConnectAsync(transport.Host.Trim(), transport.Port, SecureOption(transport.UseStartTls),
-                bound.Token);
+            await client.ConnectAsync(transport.Host.Trim(), transport.Port,
+                SmtpSecurity.SecureOption(transport.UseStartTls, transport.Port), bound.Token);
+            SmtpSecurity.RequireEncrypted(client, transport.UseStartTls, username);
             if (username.Length > 0)
             {
                 await client.AuthenticateAsync(username, password!, bound.Token);
@@ -96,13 +108,9 @@ public sealed class SmtpConnectionTester
         }
     }
 
-    // The sender's choice: STARTTLS when the server offers it, else
-    // whatever the port implies (implicit TLS on 465).
-    internal static SecureSocketOptions SecureOption(bool useStartTls)
-        => useStartTls ? SecureSocketOptions.StartTlsWhenAvailable : SecureSocketOptions.Auto;
-
     internal static SmtpTestOutcome Classify(Exception exception) => exception switch
     {
+        SmtpEncryptionRequiredException => SmtpTestOutcome.EncryptionUnavailable,
         AuthenticationException => SmtpTestOutcome.AuthenticationFailed,
         SslHandshakeException => SmtpTestOutcome.SecureConnectionFailed,
         System.Security.Authentication.AuthenticationException => SmtpTestOutcome.SecureConnectionFailed,

@@ -845,6 +845,8 @@ Click **Test connection** (it logs in without sending anything), then
 The values for Gmail and the other common providers, and how to get an
 app password, are in [Email settings for common providers](#smtp-providers).
 
+MedReminder never sends the password, or an email, without encryption. With *Use StartTLS* ticked, or with a username, a server that does not offer an encrypted connection is refused, and **Test connection** says so. A connection without encryption is used only with *Use StartTLS* not ticked and no username (a local server that needs no sign-in); the emails then travel in clear.
+
 ### Step 2 — the recipients (each profile)
 
 **Tools → Settings… → Notifications**, for the open profile:

@@ -913,6 +913,8 @@ Die Werte für Gmail und die anderen gängigen Anbieter und wie du ein
 App-Passwort erhältst, stehen unter
 [E-Mail-Einstellungen gängiger Anbieter](#smtp-providers).
 
+MedReminder sendet das Passwort und E-Mails nie unverschlüsselt. Mit aktiviertem *StartTLS verwenden* oder mit einem Benutzernamen wird ein Server ohne verschlüsselte Verbindung abgelehnt, und **Verbindung testen** meldet es. Eine unverschlüsselte Verbindung wird nur ohne *StartTLS verwenden* und ohne Benutzernamen genutzt (ein lokaler Server ohne Anmeldung); die E-Mails gehen dann im Klartext.
+
 ### Schritt 2 — die Empfänger (jedes Profil)
 
 **Extras → Einstellungen… → Benachrichtigungen**, für das geöffnete
