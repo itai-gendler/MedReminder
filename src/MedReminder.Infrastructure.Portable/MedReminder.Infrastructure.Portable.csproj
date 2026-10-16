@@ -29,6 +29,7 @@
          Android backlog B5-01 so the phone sends with the desktop's
          adapter. Managed, MIT; brings MimeKit (MIT). -->
     <PackageReference Include="MailKit" Version="4.18.1" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
