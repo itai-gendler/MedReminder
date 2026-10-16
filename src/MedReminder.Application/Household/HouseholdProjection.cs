@@ -136,12 +136,15 @@ public sealed class HouseholdProjection
 
         var user = _settings.ReadUser();
         var country = Text(held, HouseholdSetting.ReferenceCountry, user.ReferenceCountry);
-        if (!string.Equals(country, user.ReferenceCountry, StringComparison.Ordinal))
+        var catalogue = Text(held, HouseholdSetting.ReferenceCatalogue, user.ReferenceCatalogue);
+        if (!string.Equals(country, user.ReferenceCountry, StringComparison.Ordinal)
+            || !string.Equals(catalogue, user.ReferenceCatalogue, StringComparison.Ordinal))
         {
             _settings.WriteUser(new UserSettings
             {
                 Language = user.Language,
                 ReferenceCountry = country,
+                ReferenceCatalogue = catalogue,
                 CheckForUpdatesOnStartup = user.CheckForUpdatesOnStartup,
                 LogDatabaseQueries = user.LogDatabaseQueries,
             });

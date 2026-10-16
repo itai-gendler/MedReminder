@@ -30,6 +30,32 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #262 — B4-01: reference catalogue setting (shared core)
+
+Link: [vger70/MedReminder#262](https://github.com/vger70/MedReminder/pull/262)
+Branch: `claude/b4-01-reference-catalogue`
+
+Shared-core side of Android backlog B4-01 (M4, decision DA3). The phone
+stores the user's catalogue choice apart from the reference country,
+which `ReferenceCountry` alone cannot express (decision DD1).
+
+### Added
+
+- `UserSettings.ReferenceCatalogue`: a catalogue code (`IT`, `EU`, `ES`, `FR`, `US`), `none`, or empty when not stored yet. Replicated as the household setting `ReferenceCatalogue` and written to the `.mrz` payload (`referenceCatalogue`).
+- `CatalogueDefaults.Resolve`, `ToSetting`, `IsValidSetting` and `NoCatalogue`: the catalogue in effect. An empty or unknown value keeps the earlier desktop rule (the country when it has a feed, EU otherwise), so existing installations and older archives are unchanged.
+
+### Changed
+
+- `UpdateGeneralSettings` validates the catalogue and requires an admin to change it. A country change saved without a catalogue (the desktop Settings dialog) stores the DA3 default of the new country, so a phone follows a country chosen on the desktop; a save that keeps the country keeps the stored choice. No desktop behavior change: the desktop does not read the setting yet.
+
+### Docs
+
+- `docs/SYNC-FORMAT.md` and `docs/EXPORT-FORMAT.md` list the new setting.
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B3-05 marked merged, M3 exit check recorded with M4, B4-01 shared-core side recorded.
+- `ANALYSIS-DESKTOP-COUNTRY-CATALOGUE-DEFAULTS.md`: §3.2 implemented in the shared core; the desktop UI (§3.3) is still to do.
+
+---
+
 ## PR #261 — B3-05: record therapy timeline and PDF report in the backlog
 
 Link: [vger70/MedReminder#261](https://github.com/vger70/MedReminder/pull/261)

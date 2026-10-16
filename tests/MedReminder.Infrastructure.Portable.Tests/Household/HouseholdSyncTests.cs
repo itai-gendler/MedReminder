@@ -102,6 +102,8 @@ public sealed class HouseholdSyncTests : IDisposable
 
         a.Settings.User.ReferenceCountry.Should().Be("DE");
         b.Settings.User.ReferenceCountry.Should().Be("DE");
+        a.Settings.User.ReferenceCatalogue.Should().Be("EU", "the catalogue travels with the country");
+        b.Settings.User.ReferenceCatalogue.Should().Be("EU");
         (await a.Log.SettingsAsync(CancellationToken.None)).Should().BeEquivalentTo(
             await b.Log.SettingsAsync(CancellationToken.None), "both hold the same versions");
     }

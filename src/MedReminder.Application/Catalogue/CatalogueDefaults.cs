@@ -65,4 +65,45 @@ public static class CatalogueDefaults
 
         return null;
     }
+
+    // Stored value of UserSettings.ReferenceCatalogue for "no catalogue"
+    // (decision DD1). An empty value means "not stored yet": installations
+    // from before the setting, resolved with the earlier rule (§3.4).
+    public const string NoCatalogue = "none";
+
+    // The stored value for `catalogue`: its code, or NoCatalogue for null.
+    public static string ToSetting(CountryCode? catalogue)
+        => catalogue is { } code ? code.Value : NoCatalogue;
+
+    // Whether `value` is a valid stored choice: NoCatalogue or an
+    // available catalogue. Empty is not a choice (it means "not stored").
+    public static bool IsValidSetting(string? value)
+        => string.Equals(value, NoCatalogue, StringComparison.Ordinal)
+           || (CountryCode.TryParse(value, out var code) && IsAvailable(code));
+
+    // The reference catalogue in effect, or null for no catalogue:
+    //   - NoCatalogue gives none;
+    //   - an available catalogue gives that catalogue;
+    //   - anything else (empty: not stored yet; an unknown value) gives
+    //     the rule the desktop applied before the setting existed, so an
+    //     existing installation keeps its catalogue (§3.4): the reference
+    //     country when it has a feed, EU otherwise; an invalid country is
+    //     taken for IT, as CatalogueFeedSelection does.
+    public static CountryCode? Resolve(string? referenceCountry, string? referenceCatalogue)
+    {
+        if (string.Equals(referenceCatalogue?.Trim(), NoCatalogue, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (CountryCode.TryParse(referenceCatalogue, out var stored) && IsAvailable(stored))
+        {
+            return stored;
+        }
+
+        var country = CountryCode.TryParse(referenceCountry, out var parsed)
+            ? parsed
+            : CatalogueFeedDescriptor.Italy.Country;
+        return IsAvailable(country) ? country : CatalogueFeedDescriptor.EuropeanUnion.Country;
+    }
 }

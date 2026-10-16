@@ -105,4 +105,54 @@ public sealed class CatalogueDefaultsTests
             }
         }
     }
+
+    [Theory]
+    [InlineData("IT", "IT")]
+    [InlineData("EU", "EU")]
+    [InlineData(null, "none")]
+    public void ToSetting_stores_the_code_or_none(string? catalogue, string expected)
+    {
+        var code = catalogue is null ? (CountryCode?)null : CountryCode.Parse(catalogue);
+        CatalogueDefaults.ToSetting(code).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("none", true)]
+    [InlineData("IT", true)]
+    [InlineData("EU", true)]
+    [InlineData("US", true)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    [InlineData("DE", false)]
+    [InlineData("NONE", false)]
+    public void IsValidSetting_accepts_none_and_available_catalogues_only(string? value, bool valid)
+    {
+        CatalogueDefaults.IsValidSetting(value).Should().Be(valid);
+    }
+
+    [Theory]
+    [InlineData("JP", "none", null)]
+    [InlineData("IT", "none", null)]
+    [InlineData("JP", "US", "US")]
+    [InlineData("DE", "EU", "EU")]
+    [InlineData("IT", "FR", "FR")]
+    public void Resolve_uses_the_stored_choice(string country, string stored, string? expected)
+    {
+        CatalogueDefaults.Resolve(country, stored)?.Value.Should().Be(expected);
+        if (expected is null) CatalogueDefaults.Resolve(country, stored).Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("IT", "IT")]
+    [InlineData("US", "US")]
+    [InlineData("DE", "EU")]
+    [InlineData("JP", "EU")]
+    [InlineData("", "IT")]
+    [InlineData(null, "IT")]
+    public void Resolve_without_a_stored_choice_keeps_the_earlier_rule(string? country, string expected)
+    {
+        CatalogueDefaults.Resolve(country, string.Empty).Should().Be(CountryCode.Parse(expected));
+        CatalogueDefaults.Resolve(country, "XX").Should().Be(CountryCode.Parse(expected),
+            "an unknown stored value is not a choice");
+    }
 }

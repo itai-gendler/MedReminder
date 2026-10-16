@@ -494,9 +494,13 @@ Settings: `Smtp.Host`, `Smtp.Port`, `Smtp.UseStartTls`,
 `Smtp.Username`, `Smtp.FromAddress`, `Smtp.FromDisplayName`,
 `Smtp.TimeoutSeconds`, `Smtp.Password`, `CloudBackup.Enabled`,
 `CloudBackup.Retention`, `CloudBackup.Provider`,
-`CloudBackup.AccountId`, `ReferenceCountry`. Values are invariant text
-(`true` / `false`, decimal integers, the provider by name). Every
-payload also carries `profileId`.
+`CloudBackup.AccountId`, `ReferenceCountry`, `ReferenceCatalogue`.
+Values are invariant text (`true` / `false`, decimal integers, the
+provider by name). `ReferenceCatalogue` is a catalogue code (`IT`, `EU`,
+`ES`, `FR`, `US`) or `none`; it is recorded only once a device stores
+it, and a device that holds none resolves the catalogue from
+`ReferenceCountry` with the earlier rule (`CatalogueDefaults.Resolve`).
+Every payload also carries `profileId`.
 
 `Smtp.Password` is the only secret: it is in clear inside the encrypted
 segment and nowhere else; each device keeps it protected with its own

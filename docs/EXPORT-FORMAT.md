@@ -296,7 +296,7 @@ numbers.
 Every property is present only when the user opted the corresponding
 item into the export; otherwise it is omitted.
 
-- `userSettings` — `{ language, referenceCountry, checkForUpdatesOnStartup }`
+- `userSettings` — `{ language, referenceCountry, referenceCatalogue, checkForUpdatesOnStartup }`; `referenceCatalogue` (`IT`, `EU`, `ES`, `FR`, `US` or `none`) is absent or empty in archives from before the setting and then resolved from `referenceCountry` with the earlier rule
 - `backupSettings` — `{ enabled, directory, preferredTime, retentionDays }`
 - `smtpSettings` — `{ host, port, useStartTls, username, fromAddress, fromDisplayName, timeoutSeconds }` (never contains the password)
 - `smtpPasswordEncrypted` — the SMTP password re-encrypted with the
