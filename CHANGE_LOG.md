@@ -30,6 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #259 — B3-04: record supply planning and calendar export in the backlog
+
+Link: [vger70/MedReminder#259](https://github.com/vger70/MedReminder/pull/259)
+
+Shared-core side of Android backlog B3-04. The phone's supply plan and
+calendar export reuse the existing portable queries, so no code changes.
+
+**Docs**
+- Backlog B3-04 row: `CoveragePlanQuery` and `CalendarExportQuery`
+  already portable in `core-v0.7.0`; private PR #55 adds the Agenda
+  screens (period and estimates, `.ics` preview, save through the
+  document picker or share, cancellation recovery).
+- Backlog B3-03 row: private PR #54 merged with the submodule on
+  `core-v0.7.0`.
+
+---
 ## PR #258 — Docs: record the merged Android side of B3-03 in the backlog
 
 Link: [vger70/MedReminder#258](https://github.com/vger70/MedReminder/pull/258)
