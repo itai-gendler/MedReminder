@@ -30,10 +30,22 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #263 — B4-01: record the Android reference country screen in the backlog
+
+Link: [vger70/MedReminder#263](https://github.com/vger70/MedReminder/pull/263)
+Branch: `claude/b4-01-backlog`
+
+### Docs
+
+- `ANALYSIS-B1-ANDROID-IMPLEMENTATION-BACKLOG.md`: B4-01 records the private repository PR #57 (onboarding step and Settings screen for the reference country and catalogue) and `core-v0.8.0`.
+
+---
+
 ## PR #262 — B4-01: reference catalogue setting (shared core)
 
 Link: [vger70/MedReminder#262](https://github.com/vger70/MedReminder/pull/262)
 Branch: `claude/b4-01-reference-catalogue`
+**Status:** merged (2026-10-16)
 
 Shared-core side of Android backlog B4-01 (M4, decision DA3). The phone
 stores the user's catalogue choice apart from the reference country,
