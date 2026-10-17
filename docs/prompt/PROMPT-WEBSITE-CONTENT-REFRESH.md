@@ -17,7 +17,7 @@ Read first:
   deploy).
 - `docs/analysis/ANALYSIS-WEBSITE.md` in `vger70/MedReminder` — the
   design authority, especially §6 (sections) and §12 (non-goals).
-- `docs/EVOLUTION-DONE.md` and `docs/USER_GUIDE.en.md` in
+- `docs/analysis/EVOLUTION-DONE.md` and `docs/USER_GUIDE.en.md` in
   `vger70/MedReminder` — what the app does today.
 
 ## 1. Hard boundaries
