@@ -8,7 +8,8 @@ namespace MedReminder.Application.Abstractions;
 // See docs/analysis/ANALYSIS-A2-BARCODE-SCAN.md §5A.
 public interface ICameraCaptureService
 {
-    // Opens the first colour camera, decodes frames until a barcode
+    // Opens the first colour camera, decodes frames of the given
+    // symbologies (the others are ignored) until a barcode
     // passes accept, and releases the camera before returning. accept
     // is called on a worker thread; it runs the parser, so a code the
     // parser rejects (for example an unrelated Code 39 on the box)
@@ -19,6 +20,7 @@ public interface ICameraCaptureService
     // Never throws for a missing, blocked or failing camera: those end
     // as the matching CameraAvailability.
     Task<CameraScanResult> ScanAsync(
+        IReadOnlyCollection<BarcodeSymbology> symbologies,
         Func<RawBarcode, bool> accept,
         Action<CameraFrameStatus>? onFrame,
         CancellationToken cancellationToken);

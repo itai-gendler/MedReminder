@@ -57,6 +57,32 @@ public sealed class FrameBarcodeDecoderTests
     }
 
     [Fact]
+    public void Code128_is_ignored_on_a_pack_scan()
+    {
+        Decode(BarcodeFormat.CODE_128, "T00003548358", width: 480, height: 160).Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(BarcodeFormat.CODE_128, "T00003548358", BarcodeSymbology.Code128)]
+    [InlineData(BarcodeFormat.CODE_39, "1200A", BarcodeSymbology.Code39)]
+    [InlineData(BarcodeFormat.CODE_39, "4970794479", BarcodeSymbology.Code39)]
+    public void Prescription_slip_barcodes_are_read_with_the_slip_symbologies(
+        BarcodeFormat format, string contents, BarcodeSymbology expected)
+    {
+        var writer = new BarcodeWriterPixelData
+        {
+            Format = format,
+            Options = new EncodingOptions { Width = 480, Height = 160, Margin = 10 },
+        };
+        var image = writer.Write(contents);
+
+        var raw = new FrameBarcodeDecoder([BarcodeSymbology.Code39, BarcodeSymbology.Code128])
+            .Decode(image.Pixels, image.Width, image.Height);
+
+        raw.Should().Be(new RawBarcode(expected, contents));
+    }
+
+    [Fact]
     public void Blank_frame_yields_nothing()
     {
         var pixels = new byte[320 * 240 * 4];
@@ -102,14 +128,14 @@ public sealed class FrameBarcodeDecoderTests
     [InlineData(BarcodeFormat.DATA_MATRIX, BarcodeSymbology.DataMatrix)]
     [InlineData(BarcodeFormat.CODE_39, BarcodeSymbology.Code39)]
     [InlineData(BarcodeFormat.EAN_13, BarcodeSymbology.Ean13)]
-    public void Pack_symbologies_are_mapped(BarcodeFormat format, BarcodeSymbology expected)
+    [InlineData(BarcodeFormat.CODE_128, BarcodeSymbology.Code128)]
+    public void Supported_symbologies_are_mapped(BarcodeFormat format, BarcodeSymbology expected)
     {
         FrameBarcodeDecoder.Map(format).Should().Be(expected);
     }
 
     [Theory]
     [InlineData(BarcodeFormat.QR_CODE)]
-    [InlineData(BarcodeFormat.CODE_128)]
     [InlineData(BarcodeFormat.EAN_8)]
     public void Other_symbologies_are_not_mapped(BarcodeFormat format)
     {

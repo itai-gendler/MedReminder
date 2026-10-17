@@ -800,6 +800,16 @@ im regionalen Dienst kopiert hast, ohne Leerzeichen, und füllt ein
 leeres **Ausgestellt am** mit dem heutigen Datum. MedReminder liest
 die Zwischenablage nur, wenn du klickst.
 
+**Scannen** neben **Rezeptcode** liest den Code aus den Barcodes des
+Rezepts, mit einem Barcodescanner oder der Webcam, und füllt ein leeres
+**Ausgestellt am** mit dem heutigen Datum. Mit Italien als
+Referenzland liest es die NRE, gedruckt als ein Barcode oder als zwei,
+die du nacheinander in beliebiger Reihenfolge scannst, und die NRBE
+eines Rezepts außerhalb des nationalen Gesundheitsdienstes (12
+Zeichen); jeder andere Barcode, etwa der der Steuernummer, wird
+abgelehnt. Mit einem anderen Referenzland wird der einzige gelesene
+Barcode als Code übernommen: prüfe ihn vor dem Speichern.
+
 ### Fristen
 
 **Therapie → Fristen…** sammelt die Termine, die nicht den Vorrat

@@ -776,6 +776,16 @@ cifras) que copiaste del servicio regional, sin espacios, y rellena
 **Emitida el** con la fecha de hoy si está vacía. MedReminder lee el
 portapapeles solo cuando haces clic.
 
+**Escanear**, junto a **Código de la receta**, lee el código de los
+códigos de barras de la receta, con un lector de códigos de barras o la
+webcam, y rellena **Emitida el** con la fecha de hoy si está vacía. Con
+Italia como país de referencia lee el NRE, impreso en un solo código de
+barras o en dos que escaneas uno tras otro en cualquier orden, y el
+NRBE de una receta fuera del servicio nacional de salud (12
+caracteres); cualquier otro código de barras, como el del código
+fiscal, se rechaza. Con otro país de referencia toma como código el
+único código de barras leído: revísalo antes de guardar.
+
 ### Vencimientos administrativos
 
 **Terapia → Vencimientos administrativos…** reúne las fechas que no

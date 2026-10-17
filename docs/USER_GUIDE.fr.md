@@ -806,6 +806,16 @@ lettres ou chiffres) copié depuis le service régional, sans espaces, et
 remplit **Émise le** avec la date du jour s'il est vide. MedReminder ne
 lit le presse-papiers que lorsque vous cliquez.
 
+**Scanner**, à côté de **Code de l'ordonnance**, lit le code depuis les
+codes-barres de l'ordonnance, avec un lecteur de codes-barres ou la
+webcam, et remplit **Émise le** avec la date du jour s'il est vide. Avec
+l'Italie comme pays de référence, il lit le NRE, imprimé sur un seul
+code-barres ou sur deux à scanner l'un après l'autre dans n'importe quel
+ordre, et le NRBE d'une ordonnance hors service national de santé (12
+caractères) ; tout autre code-barres, comme celui du code fiscal, est
+refusé. Avec un autre pays de référence, le seul code-barres lu devient
+le code : vérifiez-le avant d'enregistrer.
+
 ### Échéances administratives
 
 **Traitement → Échéances administratives…** regroupe les dates qui ne

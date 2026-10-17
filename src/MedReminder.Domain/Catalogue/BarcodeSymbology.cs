@@ -13,4 +13,7 @@ public enum BarcodeSymbology : int
     DataMatrix = 2,
     // Carries Code 32 (Italian Pharmacode), a Code 39 derivative.
     Code39 = 3,
+    // Prescription slips (the Italian NRBE, for instance); not found on
+    // medicine packs.
+    Code128 = 4,
 }

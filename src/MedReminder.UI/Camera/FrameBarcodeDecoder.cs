@@ -5,31 +5,44 @@ using ZXing.Common;
 
 namespace MedReminder.UI.Camera;
 
-// Decodes one camera frame with ZXing.Net, restricted to the three
-// symbologies found on medicine packs sold in Italy. Not thread-safe:
-// one instance per scan session.
+// Decodes one camera frame with ZXing.Net, restricted to the
+// symbologies of the scan: by default the three found on medicine packs
+// sold in Italy. Not thread-safe: one instance per scan session.
 // See docs/analysis/ANALYSIS-A2-BARCODE-SCAN.md §6.
 internal sealed class FrameBarcodeDecoder
 {
+    // Restricting the formats cuts decode time and ignores marketing QR
+    // codes on the packaging. Code 39 carries Code 32; the parser
+    // converts it (§2.2).
+    public static readonly IReadOnlyCollection<BarcodeSymbology> PackSymbologies =
+        [BarcodeSymbology.Code39, BarcodeSymbology.Ean13, BarcodeSymbology.DataMatrix];
+
     private byte[] _mirrored = [];
     private byte[] _roi = [];
     private byte[] _mirroredRoi = [];
     private byte[] _enhancedRoi = [];
     private byte[] _grayRoi = [];
-    private readonly BarcodeReaderGeneric _reader = new()
+    private readonly BarcodeReaderGeneric _reader;
+
+    public FrameBarcodeDecoder()
+        : this(PackSymbologies)
     {
-        AutoRotate = true,
-        Options = new DecodingOptions
+    }
+
+    public FrameBarcodeDecoder(IReadOnlyCollection<BarcodeSymbology> symbologies)
+    {
+        _reader = new BarcodeReaderGeneric
         {
-            TryHarder = true,
-            // Packaging can be glossy or use light bars on a dark field.
-            TryInverted = true,
-            // Restricting the formats cuts decode time and ignores
-            // marketing QR codes on the packaging. CODE_39 carries
-            // Code 32; the parser converts it (§2.2).
-            PossibleFormats = [BarcodeFormat.CODE_39, BarcodeFormat.EAN_13, BarcodeFormat.DATA_MATRIX],
-        },
-    };
+            AutoRotate = true,
+            Options = new DecodingOptions
+            {
+                TryHarder = true,
+                // Packaging can be glossy or use light bars on a dark field.
+                TryInverted = true,
+                PossibleFormats = [.. symbologies.Select(Format).OfType<BarcodeFormat>().Distinct()],
+            },
+        };
+    }
 
     // Pixels are 32-bit BGRA, top-down, with no row padding
     // (stride = width * 4). Returns null when nothing is decoded.
@@ -223,6 +236,16 @@ internal sealed class FrameBarcodeDecoder
         BarcodeFormat.DATA_MATRIX => BarcodeSymbology.DataMatrix,
         BarcodeFormat.CODE_39 => BarcodeSymbology.Code39,
         BarcodeFormat.EAN_13 => BarcodeSymbology.Ean13,
+        BarcodeFormat.CODE_128 => BarcodeSymbology.Code128,
+        _ => null,
+    };
+
+    private static BarcodeFormat? Format(BarcodeSymbology symbology) => symbology switch
+    {
+        BarcodeSymbology.DataMatrix => BarcodeFormat.DATA_MATRIX,
+        BarcodeSymbology.Code39 => BarcodeFormat.CODE_39,
+        BarcodeSymbology.Ean13 => BarcodeFormat.EAN_13,
+        BarcodeSymbology.Code128 => BarcodeFormat.CODE_128,
         _ => null,
     };
 }

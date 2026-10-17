@@ -11,9 +11,12 @@ using Microsoft.Extensions.Logging;
 
 namespace MedReminder.UI.Forms;
 
-// Modal dialog that reads one medicine barcode and returns it parsed.
-// Two sources feed the same parser: a USB HID scanner (keyboard wedge)
-// or a code typed by hand, which is the default, and the webcam, which
+// Modal dialog that reads one barcode, by default of a medicine pack,
+// returned parsed. A BarcodeScanTarget sets what it reads instead, such
+// as a prescription code, which may be printed in parts read one after
+// the other. Two sources feed the same target: a USB HID scanner
+// (keyboard wedge) or a code typed by hand, which is the default, and
+// the webcam, which
 // starts only when the user asks for it and stops as soon as the user
 // switches back, a code is read, the timeout fires or the dialog
 // closes. See docs/analysis/ANALYSIS-A2-BARCODE-SCAN.md §4.2, §5A, §5B.
@@ -22,19 +25,15 @@ namespace MedReminder.UI.Forms;
 // payload, never press a default button.
 internal sealed class BarcodeScanDialog : MedReminderFormBase
 {
-    // Minimum keystrokes for an unterminated payload to be submitted
-    // on idle: the shortest recognized shape is the 6-character
-    // Code 32 form.
-    private const int MinimumIdleKeystrokes = ItalianPharmacode.Code32Length;
-
     // Client size of the dialog in webcam mode, at 96 DPI and normal
     // text size; scaled like the rest of the layout.
     private static readonly Size WebcamSize = new(640, 580);
 
-    public BarcodeContent? Result { get; private set; }
+    // The parsed medicine barcode, with the default target.
+    public BarcodeContent? Result => (_target as MedicineBarcodeTarget)?.Content;
 
     private readonly ILocalizationService _loc;
-    private readonly IBarcodeParser _parser;
+    private readonly BarcodeScanTarget _target;
     private readonly ICameraCaptureService _camera;
     private readonly BarcodeCaptureOptions _options;
     private readonly ILogger _log;
@@ -50,7 +49,11 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
 
     private CancellationTokenSource? _scanCts;
     private Bitmap? _previewBitmap;
-    private (BarcodeContent Content, RawBarcode Raw)? _webcamRead;
+    private RawBarcode? _webcamRead;
+    // Set once a part of a code printed in parts was read; the int is
+    // the webcam worker's guard against posting it twice.
+    private bool _partShown;
+    private int _partPosted;
     private CameraFrameDiagnostics? _lastFrameDiagnostics;
     private CameraAvailability _failure;
 
@@ -60,14 +63,24 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         ICameraCaptureService camera,
         BarcodeCaptureOptions options,
         ILogger log)
+        : this(localization, new MedicineBarcodeTarget(parser), camera, options, log)
+    {
+    }
+
+    public BarcodeScanDialog(
+        ILocalizationService localization,
+        BarcodeScanTarget target,
+        ICameraCaptureService camera,
+        BarcodeCaptureOptions options,
+        ILogger log)
     {
         _loc = localization;
-        _parser = parser;
+        _target = target;
         _camera = camera;
         _options = options;
         _log = log;
 
-        Text = _loc.Get("Ui.BarcodeScanDialog.Title");
+        Text = _loc.Get(_target.TitleKey);
         ClientSize = new Size(520, 280);
         MinimumSize = new Size(480, 360);
         StartPosition = FormStartPosition.CenterParent;
@@ -76,12 +89,12 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         MaximizeBox = false;
         ShowInTaskbar = false;
 
-        var prompt = NewWrappingLabel(_loc.Get("Ui.BarcodeScanDialog.Prompt"));
+        var prompt = NewWrappingLabel(_loc.Get(_target.PromptKey));
         prompt.Font = new Font(Font, FontStyle.Bold);
         prompt.Margin = new Padding(4, 4, 4, 8);
 
         // Scanner panel: the default mode, holds no resource.
-        var hint = NewWrappingLabel(_loc.Get("Ui.BarcodeScanDialog.ScannerHint"));
+        var hint = NewWrappingLabel(_loc.Get(_target.ScannerHintKey));
         hint.ForeColor = UiColors.Hint;
         _input = new ScannerInputBox { Dock = DockStyle.Fill, Margin = new Padding(4, 0, 4, 8) };
         var useWebcamButton = NewButton(_loc.Get("Ui.BarcodeScanDialog.UseWebcam"));
@@ -91,7 +104,7 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         _scannerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
         // Webcam panel: hidden until the user asks for the camera.
-        var webcamHint = NewWrappingLabel(_loc.Get("Ui.BarcodeScanDialog.WebcamHint"));
+        var webcamHint = NewWrappingLabel(_loc.Get(_target.WebcamHintKey));
         webcamHint.ForeColor = UiColors.Hint;
         _preview = new PictureBox
         {
@@ -207,22 +220,27 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
     {
         _idleTimer.Stop();
         if (_input.TextLength == 0) return;
-        if (!_burst.IsBurst(MinimumIdleKeystrokes, _options.HidBurstMaxAverageIntervalMilliseconds)) return;
+        if (!_burst.IsBurst(_target.MinimumIdleKeystrokes, _options.HidBurstMaxAverageIntervalMilliseconds)) return;
         TrySubmit(_input.Text, onIdle: true);
     }
 
     private void TrySubmit(string payload, bool onIdle)
     {
         _idleTimer.Stop();
-        var content = _parser.Parse(new RawBarcode(BarcodeSymbology.Unknown, payload));
+        var raw = new RawBarcode(BarcodeSymbology.Unknown, payload);
+        var offer = _target.Offer(raw);
 
-        if (content.HasLookupKey)
+        if (offer == BarcodeScanOffer.Accepted)
         {
-            // Never log the payload: it may carry an FMD serial number.
-            _log.LogInformation(
-                "Barcode read: scanner, length {Length}, national code {HasNationalCode}, GTIN {HasGtin}, idle {OnIdle}.",
-                payload.Length, content.NationalCode is not null, content.Gtin is not null, onIdle);
-            Accept(content);
+            _target.LogRead(_log, raw, webcam: false, onIdle, TimeSpan.Zero);
+            Accept();
+            return;
+        }
+        if (offer == BarcodeScanOffer.Partial)
+        {
+            ShowPartRead();
+            _input.Clear();
+            _input.Focus();
             return;
         }
 
@@ -231,17 +249,26 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         if (onIdle) return;
 
         _log.LogWarning("Barcode not recognized: scanner, length {Length}.", payload.Length);
-        _status.Text = _loc.Get("Ui.BarcodeScanDialog.Unrecognized");
+        _status.Text = _loc.Get(_target.UnrecognizedKey);
         _input.Clear();
         _input.Focus();
     }
 
-    private void Accept(BarcodeContent content)
+    private void Accept()
     {
-        Result = content;
         SystemSounds.Asterisk.Play();
         DialogResult = DialogResult.OK;
         Close();
+    }
+
+    // A part of a code printed in parts was read: the dialog stays open
+    // for the others.
+    private void ShowPartRead()
+    {
+        _partShown = true;
+        _partPosted = 1;
+        if (_target.PartReadKey is { } key) _status.Text = _loc.Get(key);
+        SystemSounds.Asterisk.Play();
     }
 
     private void ShowScanner()
@@ -249,7 +276,7 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         StopWebcam();
         _webcamPanel.Visible = false;
         _scannerPanel.Visible = true;
-        _status.Text = _loc.Get("Ui.BarcodeScanDialog.Waiting");
+        if (!_partShown) _status.Text = _loc.Get("Ui.BarcodeScanDialog.Waiting");
         _input.Focus();
     }
 
@@ -275,7 +302,7 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         CameraScanResult result;
         try
         {
-            result = await _camera.ScanAsync(AcceptFromWebcam, OnFrame, scanCts.Token);
+            result = await _camera.ScanAsync(_target.Symbologies, AcceptFromWebcam, OnFrame, scanCts.Token);
         }
         catch (Exception ex)
         {
@@ -294,14 +321,10 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         scanCts.Dispose();
         if (superseded) return;
 
-        var read = _webcamRead;
-        if (result.Barcode is { } raw && read is not null)
+        if (result.Barcode is { } raw && _webcamRead is not null)
         {
-            _log.LogInformation(
-                "Barcode read: webcam, symbology {Symbology}, length {Length}, national code {HasNationalCode}, GTIN {HasGtin}, {Seconds:0.0} s.",
-                raw.Symbology, raw.Payload.Length, read.Value.Content.NationalCode is not null,
-                read.Value.Content.Gtin is not null, started.Elapsed.TotalSeconds);
-            Accept(read.Value.Content);
+            _target.LogRead(_log, raw, webcam: true, onIdle: false, started.Elapsed);
+            Accept();
             return;
         }
 
@@ -327,14 +350,34 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         ShowFailure(result.Availability);
     }
 
-    // Runs on the camera worker thread. The parser is pure and
-    // thread-safe; a code it rejects keeps the camera scanning.
+    // Runs on the camera worker thread. A code the target rejects, or
+    // one part of a code printed in parts, keeps the camera scanning.
     private bool AcceptFromWebcam(RawBarcode raw)
     {
-        var content = _parser.Parse(raw);
-        if (!content.HasLookupKey) return false;
-        _webcamRead = (content, raw);
-        return true;
+        switch (_target.Offer(raw))
+        {
+            case BarcodeScanOffer.Accepted:
+                _webcamRead = raw;
+                return true;
+            case BarcodeScanOffer.Partial:
+                if (Interlocked.Exchange(ref _partPosted, 1) == 0) PostPartRead();
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    // Worker thread: the dialog may be closing meanwhile.
+    private void PostPartRead()
+    {
+        try
+        {
+            if (IsHandleCreated && !IsDisposed) BeginInvoke((Action)ShowPartRead);
+        }
+        catch (InvalidOperationException)
+        {
+            // The handle went away: the dialog closed.
+        }
     }
 
     private void StopWebcam()
@@ -412,7 +455,7 @@ internal sealed class BarcodeScanDialog : MedReminderFormBase
         else _preview.Invalidate();
         if (status.FramesDecoded > 0 && _scanCts is not null)
         {
-            _status.Text = _loc.Get("Ui.BarcodeScanDialog.WebcamScanning");
+            _status.Text = _loc.Get(_partShown && _target.PartReadKey is { } key ? key : "Ui.BarcodeScanDialog.WebcamScanning");
         }
     }
 
