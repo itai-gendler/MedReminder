@@ -740,6 +740,16 @@ digits) you copied from the regional service, without spaces, and
 fills an empty **Issued on** with today. MedReminder reads the
 clipboard only when you click it.
 
+**Scan**, next to **Prescription code**, reads the code from the
+barcodes of the prescription slip, with a barcode scanner or the
+webcam, and fills an empty **Issued on** with today. With Italy as
+reference country it reads the NRE, printed as one barcode or as two
+that you scan one after the other in any order, and the NRBE of a
+prescription outside the national health service (12 characters); any
+other barcode on the slip, such as the tax code, is refused. With
+another reference country it takes the single barcode read as the
+code: check it before saving.
+
 ### Administrative deadlines
 
 **Therapy → Administrative deadlines…** keeps the dates that are not

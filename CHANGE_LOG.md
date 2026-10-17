@@ -30,6 +30,32 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #281 — Read the prescription code from the slip barcodes
+
+**Status:** open
+
+Link: [vger70/MedReminder#281](https://github.com/vger70/MedReminder/pull/281)
+Branch: `claude/prescription-code-barcode-scan`
+
+### Added
+- **Scan** next to **Prescription code** in the prescription editor:
+  reads the code with the barcode scanner or the webcam and fills an
+  empty issue date with today.
+- Italian slips (`PrescriptionBarcodeReader.Italian`): NRE as one
+  barcode or as two (5 letters or digits + 10 digits) read in any order
+  and joined; NRBE (12 characters) as one barcode. Other barcodes on the
+  slip, such as the tax code, are refused. Other reference countries
+  take a single barcode as the code.
+
+### Changed
+- `BarcodeScanDialog` reads through a `BarcodeScanTarget`;
+  `ICameraCaptureService.ScanAsync` takes the symbologies to decode, so
+  the medicine scan still ignores Code 128. `BarcodeSymbology.Code128`
+  added.
+
+### Docs
+- User guides (en, it, fr, es, de) describe **Scan**.
+
 ## PR #280 — Add the Android tablet, iOS and iPad implementation backlog
 
 **Status:** open

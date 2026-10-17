@@ -38,10 +38,12 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
     }
 
     public async Task<CameraScanResult> ScanAsync(
+        IReadOnlyCollection<BarcodeSymbology> symbologies,
         Func<RawBarcode, bool> accept,
         Action<CameraFrameStatus>? onFrame,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(symbologies);
         ArgumentNullException.ThrowIfNull(accept);
         var callerContext = SynchronizationContext.Current;
         try
@@ -55,7 +57,7 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
 
         try
         {
-            return await RunSessionAsync(accept, onFrame, callerContext, cancellationToken);
+            return await RunSessionAsync(symbologies, accept, onFrame, callerContext, cancellationToken);
         }
         finally
         {
@@ -64,6 +66,7 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
     }
 
     private async Task<CameraScanResult> RunSessionAsync(
+        IReadOnlyCollection<BarcodeSymbology> symbologies,
         Func<RawBarcode, bool> accept,
         Action<CameraFrameStatus>? onFrame,
         SynchronizationContext? callerContext,
@@ -104,7 +107,7 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
             var format = PickFormat(source.SupportedFormats, _options.CameraMaxWidthPixels);
             if (format is not null) await source.SetFormatAsync(format);
 
-            session = new Session(this, accept, onFrame, callerContext);
+            session = new Session(this, symbologies, accept, onFrame, callerContext);
             capture.Failed += session.OnCaptureFailed;
 
             // Bgra8 asks the reader to convert whatever the camera
@@ -225,7 +228,7 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
         private readonly Func<RawBarcode, bool> _accept;
         private readonly Action<CameraFrameStatus>? _onFrame;
         private readonly SynchronizationContext? _callerContext;
-        private readonly FrameBarcodeDecoder _decoder = new();
+        private readonly FrameBarcodeDecoder _decoder;
         private readonly TaskCompletionSource<CameraScanResult> _completion =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly long _decodeIntervalMs;
@@ -242,11 +245,13 @@ internal sealed class WindowsCameraCaptureService : ICameraCaptureService
 
         public Session(
             WindowsCameraCaptureService owner,
+            IReadOnlyCollection<BarcodeSymbology> symbologies,
             Func<RawBarcode, bool> accept,
             Action<CameraFrameStatus>? onFrame,
             SynchronizationContext? callerContext)
         {
             _owner = owner;
+            _decoder = new FrameBarcodeDecoder(symbologies);
             _accept = accept;
             _onFrame = onFrame;
             _callerContext = callerContext;

@@ -981,6 +981,20 @@ internal sealed class MainForm : MedReminderFormBase
             .GetRequiredService<IOptionsMonitor<UserSettings>>().CurrentValue.ReferenceCountry);
     }
 
+    // "Scan" in the prescription editor: reads the code from the barcodes
+    // of the slip, with the Italian shapes (NRE in one or two barcodes,
+    // NRBE) when Italy is the reference country, else any single code.
+    // Returns null when the user cancels.
+    private string? ScanPrescriptionCode(IWin32Window owner, bool italianSlips)
+    {
+        var barcode = BuildBarcodeScanContext();
+        var target = new PrescriptionCodeTarget(italianSlips
+            ? PrescriptionBarcodeReader.Italian()
+            : PrescriptionBarcodeReader.Generic());
+        using var dialog = new BarcodeScanDialog(_loc, target, barcode.Camera, barcode.Options, barcode.Logger);
+        return dialog.ShowDialog(owner) == DialogResult.OK ? target.Code : null;
+    }
+
     // Prescription lifecycle (EVOLUTION-PROPOSALS-2 §3.2): a request sent
     // or copied from the draft is recorded as requested today.
     private async Task MarkPrescriptionRequestedAsync(Guid medicineId)
@@ -1026,7 +1040,7 @@ internal sealed class MainForm : MedReminderFormBase
                         ? [.. medicines, (existing.MedicineId, _allRows.FirstOrDefault(r => r.Id == existing.MedicineId)?.Name ?? string.Empty)]
                         : medicines;
                     return new PrescriptionEditDialog(options, selected, existing, item?.Dispensations ?? [], today, _loc,
-                        offerNrePaste);
+                        offerNrePaste, owner => ScanPrescriptionCode(owner, italianSlips: offerNrePaste));
                 },
                 Save: async command =>
                 {

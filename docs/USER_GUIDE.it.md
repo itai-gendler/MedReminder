@@ -768,6 +768,16 @@ cifre) copiato dal servizio regionale, senza spazi, e compila **Emessa
 il** con la data di oggi se è vuota. MedReminder legge gli appunti
 solo quando fai clic.
 
+**Scansiona**, accanto a **Codice ricetta**, legge il codice dai codici
+a barre del promemoria, con il lettore di codici a barre o la webcam, e
+compila **Emessa il** con la data di oggi se è vuota. Con l'Italia come
+paese di riferimento legge l'NRE, stampato su un solo codice a barre o
+su due da scansionare uno dopo l'altro in qualsiasi ordine, e l'NRBE
+della ricetta bianca elettronica (12 caratteri); ogni altro codice a
+barre del promemoria, come quello del codice fiscale, viene rifiutato.
+Con un altro paese di riferimento prende come codice l'unico codice a
+barre letto: controllalo prima di salvare.
+
 ### Scadenze amministrative
 
 **Terapia → Scadenze amministrative…** raccoglie le date che non

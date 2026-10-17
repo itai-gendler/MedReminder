@@ -21,6 +21,11 @@ namespace MedReminder.UI.Forms;
 // §3.3), offered with Italy as reference country: reads the clipboard
 // only when clicked, writes the normalised prescription number when the
 // text is one (NreCode), and fills an empty issue date with today.
+//
+// "Scan", offered when the caller passes scanCode: reads the code from
+// the barcodes of the prescription slip (BarcodeScanDialog with a
+// PrescriptionCodeTarget of the reference country), then fills the code
+// and an empty issue date like "Paste NRE".
 internal sealed class PrescriptionEditDialog : MedReminderFormBase
 {
     private readonly ILocalizationService _loc;
@@ -56,7 +61,8 @@ internal sealed class PrescriptionEditDialog : MedReminderFormBase
         IReadOnlyList<PrescriptionDispensation> dispensations,
         DateOnly today,
         ILocalizationService localization,
-        bool offerNrePaste = false)
+        bool offerNrePaste = false,
+        Func<IWin32Window, string?>? scanCode = null)
     {
         _loc = localization;
         _id = existing?.Id;
@@ -105,23 +111,40 @@ internal sealed class PrescriptionEditDialog : MedReminderFormBase
         };
         _codeError = DialogLayout.ErrorLabel();
         Control codeField = _code;
+        var codeButtons = new List<Button>();
+        if (scanCode is not null)
+        {
+            var scan = DialogLayout.Button(_loc.Get("Ui.PrescriptionEditDialog.ScanCode"));
+            scan.Click += (_, _) =>
+            {
+                if (scanCode(this) is { } scanned) ApplyCode(scanned);
+            };
+            codeButtons.Add(scan);
+        }
         if (offerNrePaste)
         {
             var paste = DialogLayout.Button(_loc.Get("Ui.PrescriptionEditDialog.PasteNre"));
             paste.Click += (_, _) => PasteNre();
+            codeButtons.Add(paste);
+        }
+        if (codeButtons.Count > 0)
+        {
             var row = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
+                ColumnCount = 1 + codeButtons.Count,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Margin = Padding.Empty,
             };
             row.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            row.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             _code.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             row.Controls.Add(_code, 0, 0);
-            row.Controls.Add(paste, 1, 0);
+            for (var i = 0; i < codeButtons.Count; i++)
+            {
+                row.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                row.Controls.Add(codeButtons[i], i + 1, 0);
+            }
             codeField = row;
         }
         _code.TextChanged += (_, _) => DialogLayout.ShowError(_codeError, null);
@@ -338,7 +361,14 @@ internal sealed class PrescriptionEditDialog : MedReminderFormBase
             DialogLayout.ShowError(_codeError, _loc.Get("Ui.PrescriptionEditDialog.Error.NotNre"), _code);
             return;
         }
-        _code.Text = code.Value;
+        ApplyCode(code.Value);
+    }
+
+    // A code read from the slip or the clipboard: the prescription was
+    // issued, so an empty issue date becomes today.
+    private void ApplyCode(string code)
+    {
+        _code.Text = code;
         DialogLayout.ShowError(_codeError, null);
         if (!_issued.Checked)
         {
