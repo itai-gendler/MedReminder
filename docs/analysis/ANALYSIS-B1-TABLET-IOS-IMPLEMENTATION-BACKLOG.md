@@ -172,8 +172,102 @@ everything else needs BI-00a or BI-00b.
 | Step | Detail | Done when |
 |---|---|---|
 | macOS runner | GitHub-hosted `macos-26` images carry Xcode 26.6 as default and 26.5 as well (release notes of 2026-08-05, seen through a mirror [UNCERTAIN]). Select the Xcode pinned in 4.3 with `xcode-select` or `DEVELOPER_DIR`; a runner whose default differs from the workload's Xcode fails the build. macOS minutes cost more than Linux minutes; check the plan quota [UNCERTAIN] | A workflow builds the empty iOS app on the runner |
-| Workflow | A separate `ios.yaml`, not a required check at first (the required `Android build` check stays untouched). Signing material comes from secrets into a temporary keychain; the same submodule-pin check as `android.yaml` applies | Dispatch run produces a signed `.ipa` |
+| Workflow (optional, see 4.8 for the manual route without GitHub) | A separate `ios.yaml`, not a required check at first (the required `Android build` check stays untouched). Signing material comes from secrets into a temporary keychain; the same submodule-pin check as `android.yaml` applies | Dispatch run produces a signed `.ipa` |
 | Package check | A `build/check-ios-package.sh` counterpart of `check-android-package.sh`: no `.pdb`/`.xml`, bundle ID, `PrivacyInfo.xcprivacy` present, Info.plist keys of the slices present | Script passes on the `.ipa` |
+
+### 4.8 Manual build and release without GitHub (optional)
+
+For the cases where GitHub Actions is unavailable, out of quota or not
+wanted, both platforms can be built and uploaded by hand. The result is
+the same artifact as CI produces; the rules of the release guide still
+apply (`docs/RELEASE.md`: version name, version code never reused, record
+what was uploaded). Signing material stays outside the repository and
+the shell history.
+
+**Common to both platforms**
+
+1. Start from a clean checkout of the commit to release, with
+   submodules (`git submodule update --init`).
+2. Check the shared-core pin as the workflow does: `git -C external/MedReminder describe --tags --exact-match` must print a `core-v*` tag.
+3. Run `dotnet test tests/MedReminder.Mobile.Core.Tests`.
+4. Choose the version name and code (RELEASE.md §5.1). Write them, the
+   commit hash and the core tag in the release notes.
+
+**Android (any computer with the SDK of RELEASE.md §2)**
+
+The command below is the one of `android-release.yaml`, with the signing
+values taken from the environment instead of repository secrets.
+
+```bash
+# Passwords typed once, never written to a file or to the history.
+read -rs ANDROID_UPLOAD_STORE_PASSWORD; export ANDROID_UPLOAD_STORE_PASSWORD
+read -rs ANDROID_UPLOAD_KEY_PASSWORD;   export ANDROID_UPLOAD_KEY_PASSWORD
+
+dotnet publish src/MedReminder.Mobile -c Release -f net10.0-android \
+  -p:AndroidSdkDirectory="$ANDROID_HOME" -p:AndroidPackageFormats=aab \
+  -p:ApplicationDisplayVersion=0.2.0 -p:ApplicationVersion=12 \
+  -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=/path/outside/repo/upload.keystore \
+  -p:AndroidSigningKeyAlias=<alias> \
+  -p:AndroidSigningStorePass=env:ANDROID_UPLOAD_STORE_PASSWORD \
+  -p:AndroidSigningKeyPass=env:ANDROID_UPLOAD_KEY_PASSWORD \
+  -o ./package
+
+build/check-android-package.sh ./package/<name>-Signed.aab
+```
+
+Then upload the `.aab` in Play Console as in RELEASE.md §6 (first
+upload) or §9 (next releases). On Windows use PowerShell equivalents
+(`$env:...`, `Read-Host -AsSecureString`) as RELEASE.md §2 does.
+
+**iOS (the Mac of 4.3, signing material of 4.5)**
+
+1. Check the environment: `xcode-select -p` shows the pinned Xcode and
+   `dotnet workload list` shows the workload (4.3). The distribution
+   certificate with its private key is in the login keychain, and the
+   App Store provisioning profile is installed (open its
+   `.mobileprovision` file once).
+2. Build the signed archive. The properties are those of the Microsoft
+   publish guide ([Microsoft](https://github.com/dotnet/docs-maui/blob/main/docs/ios/deployment/publish-cli.md));
+   scope the command to the app project, not to the solution:
+
+   ```bash
+   dotnet publish src/MedReminder.Mobile -f net10.0-ios -c Release \
+     -p:ArchiveOnBuild=true -p:RuntimeIdentifier=ios-arm64 \
+     -p:ApplicationDisplayVersion=0.2.0 -p:ApplicationVersion=12 \
+     -p:CodesignKey="Apple Distribution: <Name> (<TEAMID>)" \
+     -p:CodesignProvision="<profile name>"
+   ```
+
+   Replace `net10.0-ios` with the target of BX-00. The `.ipa` is copied
+   to `src/MedReminder.Mobile/bin/Release/<target>/ios-arm64/publish/`.
+   If `codesign` asks for keychain access, unlock the keychain first
+   (`security unlock-keychain`) or allow it once; a profile name that
+   does not match the App ID or the certificate fails the signing step.
+3. Check the package with `build/check-ios-package.sh <file>.ipa`
+   (BI-00g): no debug files, bundle ID, privacy manifest, Info.plist
+   keys.
+4. Upload to App Store Connect. The Microsoft guide names Transporter,
+   which needs the app record (BI-00f) and an app-specific password
+   created in the Apple Account settings. Apple's `altool` also uploads
+   from the command line, but its `--upload-app` command is marked
+   deprecated in favor of `--upload-package`, and the option to sign in
+   with the App Store Connect API key (BI-00d) is not confirmed by the
+   sources found: read `xcrun altool --help` on the Mac before relying
+   on it [UNCERTAIN]. Apple announced that uploads over the Aspera and
+   Signiant protocols need a newer Transporter later in 2026; uploads
+   over the default HTTPS protocol are not affected ([Apple](https://www.developer.apple.com/help/app-store-connect/manage-builds/upload-builds)).
+5. Wait for processing in App Store Connect (TestFlight tab), answer
+   the export-compliance question if the Info.plist key is not set
+   (BI-00f), add the build to the internal group, and to the external
+   group for the beta review of BI-00c.
+6. Record version, build number, commit and core tag. The build number
+   must be higher than every earlier build of the same version [UNCERTAIN:
+   confirm Apple's rule in App Store Connect]; never reuse one.
+
+Differences from CI to keep in mind: a manual build uses whatever Xcode
+and SDK the Mac has, so the pinned pair of 4.3 is checked by hand each
+time; and the signing key lives on the Mac, so back up the certificate
+and its private key (4.5) before relying on this route.
 
 ## 5. Backlog by track
 
@@ -337,6 +431,7 @@ Sources added by this verification:
 - [.NET MAUI support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)
 - [Apple upcoming requirements](https://developer.apple.com/news/upcoming-requirements/)
 - [Apple DSA trader information](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-compliance-information)
+- [Microsoft: publish an iOS app with the CLI](https://github.com/dotnet/docs-maui/blob/main/docs/ios/deployment/publish-cli.md)
 - [Microsoft MAUI supported platforms and installation](https://github.com/dotnet/docs-maui/blob/main/docs/get-started/installation.md)
 - [Apple developer forum on the 64 pending notifications](https://developer.apple.com/forums/thread/811171)
 - [Microsoft MAUI Apple privacy manifest](https://learn.microsoft.com/dotnet/maui/ios/privacy-manifest)
