@@ -30,6 +30,17 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #282 — Detail the Apple and tablet prerequisites and settle the tablet and iOS decisions
+
+**Status:** open
+
+Link: [vger70/MedReminder#282](https://github.com/vger70/MedReminder/pull/282)
+Branch: `claude/blissful-feynman-a64yd8`
+
+### Docs
+
+- `ANALYSIS-B1-TABLET-IOS-IMPLEMENTATION-BACKLOG.md`: section 4 rewritten as detailed prerequisites (framework baseline, Apple account and App Store Connect, Mac toolset, devices and testers, signing, OAuth clients); the manual build and release on the Mac is the primary iOS route and GitHub Actions is optional; every step of section 5 verified against the code and vendor sources, with the corrections recorded in the new section 9; decisions DT1-DT3 and DI1-DI8 recorded.
+
 ## PR #281 — Read the prescription code from the slip barcodes
 
 **Status:** open
