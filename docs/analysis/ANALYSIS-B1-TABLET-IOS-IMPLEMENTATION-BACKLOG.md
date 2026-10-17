@@ -40,7 +40,7 @@ against the code and the vendor sources on 2026-10-17.
   verification listed in section 6. No later-track control appears
   active early.
 - The required status check `Android build` of the private repository
-  must keep passing. iOS CI starts as a non-required job.
+  must keep passing. iOS CI is optional and never a required check.
 - The apps stay entirely free: no slice adds a purchase, a premium gate
   or a donation link on any platform.
 - Apple review rules for a medicine-related app are checked against the
@@ -138,9 +138,10 @@ everything else needs BI-00a or BI-00b.
 | Xcode | The .NET iOS SDK requires exactly one Xcode version, and a newer or older one fails the build ([dotnet/maui#34295](https://github.com/dotnet/maui/issues/34295)). Read the version from the release notes of the installed workload (github.com/dotnet/macios/releases; the MAUI "Release Versions" wiki points there). Apple requires uploads built with Xcode 26 or later with the iOS 26 SDK since 2026-04-28 ([Apple](https://developer.apple.com/news/upcoming-requirements/)). Record the pair (workload, Xcode) in the private repository's docs and in CI. Do not set `ValidateXcodeVersion=false` | Xcode launched once; license accepted; iOS simulator runtime installed |
 | Command-line tools | `xcode-select --install`; `xcode-select -p` shows the pinned Xcode | Both commands succeed |
 | .NET | The SDK of `global.json` (BX-00); `sudo dotnet workload install maui`; `dotnet workload list` ([Microsoft](https://github.com/dotnet/docs-maui/blob/main/docs/get-started/installation.md)) | Workload listed |
-| IDE | Visual Studio Code with the .NET MAUI extension on the Mac (".NET MAUI: Configure Apple" refreshes the Apple environment), or Visual Studio on Windows with a networked Mac as build host. Which Visual Studio version builds .NET 10 and 11 is not settled by the sources found [UNCERTAIN]; check the current Microsoft page | One IDE chosen and written down |
+| Development tools | **What is installed on the Mac: the .NET SDK of `global.json` (BX-00), the MAUI workload and Xcode with its command-line tools. No Visual Studio.** Visual Studio for Mac was retired on 2024-08-31 ([Microsoft](https://learn.microsoft.com/zh-cn/visualstudio/mac/what-happened-to-vs-for-mac)); Microsoft documents Visual Studio Code with the .NET MAUI extension on macOS, with a Microsoft account connected to C# Dev Kit, and Xcode with simulator runtimes and command-line tools for Apple targets ([Microsoft](https://github.com/dotnet/docs-maui/blob/main/docs/get-started/first-app.md)). The editor is a free choice: VS Code (".NET MAUI: Configure Apple" and ".NET MAUI: Pick iOS Device" in the command palette), JetBrains Rider (third party, not verified here [UNCERTAIN]), or any editor with the `dotnet` CLI. Xcode is always required: it provides the iOS SDK, simulators, device support and the signing tools, even if you never open its window. Visual Studio on Windows is needed only to drive a networked Mac from Windows, which this plan does not use | The chosen editor opens `medreminder-mobile.slnx`, builds `Mobile.Core.Tests` and runs the empty iOS app on a simulator |
 | Repository | Clone with submodules (`external/MedReminder`). The private repository uses CRLF files; set `core.autocrlf` or add `.gitattributes` on the Mac to avoid whole-file diffs [INFERRED] | `git status` is clean after a fresh clone |
 | Smoke test | An empty MAUI app builds and runs on an iOS simulator, then the project's `Mobile.Core.Tests` run with `dotnet test` | Both pass |
+| Where to work | The Mac is the iOS development and release machine. Platform-neutral code (`Mobile.Core`, shared `Pages/`, tests) can still be edited and tested on any computer, as today; anything that touches `Platforms/iOS/`, signing, simulators, devices or the `.ipa` needs the Mac. Android work stays on the existing computers; the Mac can also build Android if the Android SDK is installed there [INFERRED] | Roles agreed |
 
 ### 4.4 Devices and testers (BI-00c, BT-00)
 
@@ -158,7 +159,7 @@ everything else needs BI-00a or BI-00b.
 | App ID | Explicit App ID `com.vger70.medreminder` (DI4) with only the capabilities the slices need: Keychain Sharing (MSAL), Background Modes if the identifiers of BI-08 require them, and Time Sensitive Notifications only if BI-04 uses it. No Push, no Associated Domains | App ID saved |
 | Certificates | Apple Development (debug) and Apple Distribution (App Store). The private keys and the exported `.p12` stay outside the repository, like the Android upload key (`docs/RELEASE.md`) | Both certificates created; backup of the keys stored |
 | Provisioning profiles | One development profile with the registered devices, one App Store distribution profile. Project properties select the signing identity and profile for Release | Signed debug build installs on both devices |
-| App Store Connect API key | Issuer ID, key ID and the `.p8` file, for CI upload to TestFlight | Stored as repository secrets, never in files |
+| App Store Connect API key (optional) | Issuer ID, key ID and the `.p8` file, for an upload from the command line or from the optional CI (4.8). Transporter with an app-specific password is enough for the Mac route | Kept in the password manager or as repository secrets, never in files |
 
 ### 4.6 OAuth clients (BI-00e)
 
@@ -167,24 +168,21 @@ everything else needs BI-00a or BI-00b.
 | Google | iOS client | In the existing Google Cloud project, create an OAuth client of type iOS with the bundle ID. Google iOS clients have no secret; the redirect scheme is the client ID reversed (`com.googleusercontent.apps.<id>`) and is registered in the Info.plist URL types ([AppAuth Google example](https://github.com/valdperformance/AppAuth-iOS/blob/master/Examples/README-Google.md)). Same Drive scopes as Android (`drive.file`, `drive.appdata`); check that the consent screen and its verification cover the new client | Client ID recorded; scheme noted |
 | Microsoft | iOS platform | On the desktop's Entra registration add the iOS/macOS platform with the bundle ID. The redirect has the form `msauth.<bundle id>://auth`; the same scheme goes in the Info.plist; MSAL needs a keychain access group enabled in the entitlements and set with `WithIosKeychainSecurityGroup` ([Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/595849/unable-to-find-keychain-in-entitlements-plist-usin)). MSAL.NET 4.61 and later no longer support Xamarin iOS, so only the MAUI path applies. Registration needs the tenant owner | Redirect URI registered; no secret involved |
 
-### 4.7 Build and release automation (BI-00g)
+### 4.7 Build and release on the Mac (primary route, BI-00g)
 
-| Step | Detail | Done when |
-|---|---|---|
-| macOS runner | GitHub-hosted `macos-26` images carry Xcode 26.6 as default and 26.5 as well (release notes of 2026-08-05, seen through a mirror [UNCERTAIN]). Select the Xcode pinned in 4.3 with `xcode-select` or `DEVELOPER_DIR`; a runner whose default differs from the workload's Xcode fails the build. macOS minutes cost more than Linux minutes; check the plan quota [UNCERTAIN] | A workflow builds the empty iOS app on the runner |
-| Workflow (optional, see 4.8 for the manual route without GitHub) | A separate `ios.yaml`, not a required check at first (the required `Android build` check stays untouched). Signing material comes from secrets into a temporary keychain; the same submodule-pin check as `android.yaml` applies | Dispatch run produces a signed `.ipa` |
-| Package check | A `build/check-ios-package.sh` counterpart of `check-android-package.sh`: no `.pdb`/`.xml`, bundle ID, `PrivacyInfo.xcprivacy` present, Info.plist keys of the slices present | Script passes on the `.ipa` |
+The iOS app is built, signed and uploaded by hand on the Mac of 4.3.
+This is the reference procedure: every iOS slice and the first
+TestFlight rounds rely on it, and GitHub Actions (4.8) is only an
+optional automation of the same steps. The release rules of
+`docs/RELEASE.md` still apply (version name, build number never reused,
+record what was uploaded). Signing material stays outside the
+repository and the shell history.
 
-### 4.8 Manual build and release without GitHub (optional)
+Done when: a signed `.ipa` produced by the steps below installs on the
+test devices (BI-00c), `build/check-ios-package.sh` (written as part of
+BI-00g) passes on it, and the build is processed in App Store Connect.
 
-For the cases where GitHub Actions is unavailable, out of quota or not
-wanted, both platforms can be built and uploaded by hand. The result is
-the same artifact as CI produces; the rules of the release guide still
-apply (`docs/RELEASE.md`: version name, version code never reused, record
-what was uploaded). Signing material stays outside the repository and
-the shell history.
-
-**Common to both platforms**
+**Before every release (all platforms)**
 
 1. Start from a clean checkout of the commit to release, with
    submodules (`git submodule update --init`).
@@ -192,32 +190,6 @@ the shell history.
 3. Run `dotnet test tests/MedReminder.Mobile.Core.Tests`.
 4. Choose the version name and code (RELEASE.md §5.1). Write them, the
    commit hash and the core tag in the release notes.
-
-**Android (any computer with the SDK of RELEASE.md §2)**
-
-The command below is the one of `android-release.yaml`, with the signing
-values taken from the environment instead of repository secrets.
-
-```bash
-# Passwords typed once, never written to a file or to the history.
-read -rs ANDROID_UPLOAD_STORE_PASSWORD; export ANDROID_UPLOAD_STORE_PASSWORD
-read -rs ANDROID_UPLOAD_KEY_PASSWORD;   export ANDROID_UPLOAD_KEY_PASSWORD
-
-dotnet publish src/MedReminder.Mobile -c Release -f net10.0-android \
-  -p:AndroidSdkDirectory="$ANDROID_HOME" -p:AndroidPackageFormats=aab \
-  -p:ApplicationDisplayVersion=0.2.0 -p:ApplicationVersion=12 \
-  -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=/path/outside/repo/upload.keystore \
-  -p:AndroidSigningKeyAlias=<alias> \
-  -p:AndroidSigningStorePass=env:ANDROID_UPLOAD_STORE_PASSWORD \
-  -p:AndroidSigningKeyPass=env:ANDROID_UPLOAD_KEY_PASSWORD \
-  -o ./package
-
-build/check-android-package.sh ./package/<name>-Signed.aab
-```
-
-Then upload the `.aab` in Play Console as in RELEASE.md §6 (first
-upload) or §9 (next releases). On Windows use PowerShell equivalents
-(`$env:...`, `Read-Host -AsSecureString`) as RELEASE.md §2 does.
 
 **iOS (the Mac of 4.3, signing material of 4.5)**
 
@@ -269,6 +241,47 @@ and SDK the Mac has, so the pinned pair of 4.3 is checked by hand each
 time; and the signing key lives on the Mac, so back up the certificate
 and its private key (4.5) before relying on this route.
 
+**Android (optional manual route)**
+
+Android releases normally use the `Android release` workflow
+(`docs/RELEASE.md` §5). Use the commands below only when GitHub Actions
+is unavailable; the Mac can run them if the Android SDK is installed there.
+
+The command below is the one of `android-release.yaml`, with the signing
+values taken from the environment instead of repository secrets.
+
+```bash
+# Passwords typed once, never written to a file or to the history.
+read -rs ANDROID_UPLOAD_STORE_PASSWORD; export ANDROID_UPLOAD_STORE_PASSWORD
+read -rs ANDROID_UPLOAD_KEY_PASSWORD;   export ANDROID_UPLOAD_KEY_PASSWORD
+
+dotnet publish src/MedReminder.Mobile -c Release -f net10.0-android \
+  -p:AndroidSdkDirectory="$ANDROID_HOME" -p:AndroidPackageFormats=aab \
+  -p:ApplicationDisplayVersion=0.2.0 -p:ApplicationVersion=12 \
+  -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=/path/outside/repo/upload.keystore \
+  -p:AndroidSigningKeyAlias=<alias> \
+  -p:AndroidSigningStorePass=env:ANDROID_UPLOAD_STORE_PASSWORD \
+  -p:AndroidSigningKeyPass=env:ANDROID_UPLOAD_KEY_PASSWORD \
+  -o ./package
+
+build/check-android-package.sh ./package/<name>-Signed.aab
+```
+
+Then upload the `.aab` in Play Console as in RELEASE.md §6 (first
+upload) or §9 (next releases). On Windows use PowerShell equivalents
+(`$env:...`, `Read-Host -AsSecureString`) as RELEASE.md §2 does.
+
+### 4.8 GitHub Actions automation (optional, BI-00h)
+
+| Step | Detail | Done when |
+|---|---|---|
+| macOS runner | GitHub-hosted `macos-26` images carry Xcode 26.6 as default and 26.5 as well (release notes of 2026-08-05, seen through a mirror [UNCERTAIN]). Select the Xcode pinned in 4.3 with `xcode-select` or `DEVELOPER_DIR`; a runner whose default differs from the workload's Xcode fails the build. macOS minutes cost more than Linux minutes; check the plan quota [UNCERTAIN] | A workflow builds the empty iOS app on the runner |
+| Workflow | A separate `ios.yaml`, not a required check at first (the required `Android build` check stays untouched). Signing material comes from secrets into a temporary keychain; the same submodule-pin check as `android.yaml` applies | Dispatch run produces a signed `.ipa` |
+
+The workflow repeats the steps of 4.7 on a runner; it is never a
+prerequisite. If it and the manual route disagree, the manual route is
+the reference.
+
 ## 5. Backlog by track
 
 ### BT - Android tablets
@@ -299,7 +312,7 @@ Effort: about 14-22 days [INFERRED]; BT-04 is the largest item.
 
 ### BI - iOS (iPhone)
 
-**Entry:** BI-00a..g, BX-00 and DI8 done; the Android public launch gate passed (DA4).
+**Entry:** BI-00a..g, BX-00 and DI8 done (BI-00h is optional); the Android public launch gate passed (DA4).
 **Exit:** the manual checklist of the B.1 plan passes on a supported
 iPhone from TestFlight, and App Store review passes.
 
@@ -316,7 +329,7 @@ iPhone from TestFlight, and App Store review passes.
 | BI-09 | In-process restart after join | iOS cannot restart the app and terminating it from code is discouraged [UNCERTAIN: confirm in the review guidelines]. The installation join (`IAppRestarter`) therefore tears down the profile-dependent services and rebuilds the shell in process; no singleton keeps the old profile; as `AndroidAppRestarter` does, the notifications of the previous profile are removed (pending and delivered) before the new profile plans its own. Design decided in spike S9 | BI-02, BI-01 (S9) |
 | BI-10 | Camera features | QR pairing and barcode scan through ZXing.Net.Maui on iOS: `NSCameraUsageDescription` in the Info.plist (documented by the library), the runtime request stays in the app's existing `Permissions.Camera` calls; denial and no-camera states; the camera is requested only when a scan page opens. QR generation (`BarcodeGeneratorView`) on iOS is not documented in the sources found and is checked on a device [UNCERTAIN] | BI-02 |
 | BI-11 | Platform polish | System language from `CultureInfo` (already used) and region through an iOS `IDeviceRegion` check (`SystemDeviceRegion` is the default today) for the DA3 preselection; dark mode; Dynamic Type; VoiceOver labels and focus order; the shell's tab bar with the current iOS styling; the PDF (SkiaSharp) renders with the embedded fonts; the unsaved-changes guard (`FormPage.OnBackButtonPressed`) also covers the navigation-bar back button and the swipe-back gesture, which may bypass that override on iOS ([Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/2149971/when-using-navigationpage-as-the-main-page-i-do-no); spike S10) | BI-02, BI-01 (S10) |
-| BI-12 | Store readiness and TestFlight | `PrivacyInfo.xcprivacy` in `Platforms/iOS` (every MAUI iOS app needs one; baseline reasons file timestamp C617.1, system boot time 35F9.1, disk space E174.1, plus user defaults C56D.1 if `Preferences` or `NSUserDefaults` is used; [Microsoft](https://learn.microsoft.com/dotnet/maui/ios/privacy-manifest), lists verified for MAUI 8 and later) with the App Store privacy answers matching the real flows; export compliance decided in BI-00f and `ITSAppUsesNonExemptEncryption` set accordingly; review notes explaining the non-medical-device positioning and giving a way to test without an account; the build uses Xcode 26 or later with the iOS 26 SDK and targets iOS 13 or later (Apple, 2026); the age rating and trader status of BI-00f are complete; `build/check-ios-package.sh` (BI-00g) passes; the macOS workflow signs and uploads to TestFlight with the App Store Connect API key; internal then external TestFlight round with the same manual checklist as Android | BI-03..11, BI-00f, BI-00g |
+| BI-12 | Store readiness and TestFlight | `PrivacyInfo.xcprivacy` in `Platforms/iOS` (every MAUI iOS app needs one; baseline reasons file timestamp C617.1, system boot time 35F9.1, disk space E174.1, plus user defaults C56D.1 if `Preferences` or `NSUserDefaults` is used; [Microsoft](https://learn.microsoft.com/dotnet/maui/ios/privacy-manifest), lists verified for MAUI 8 and later) with the App Store privacy answers matching the real flows; export compliance decided in BI-00f and `ITSAppUsesNonExemptEncryption` set accordingly; review notes explaining the non-medical-device positioning and giving a way to test without an account; the build uses Xcode 26 or later with the iOS 26 SDK and targets iOS 13 or later (Apple, 2026); the age rating and trader status of BI-00f are complete; `build/check-ios-package.sh` (BI-00g) passes; the build is signed and uploaded to TestFlight by the Mac procedure of 4.7 (the optional workflow of 4.8 may repeat it); internal then external TestFlight round with the same manual checklist as Android | BI-03..11, BI-00f, BI-00g |
 | BI-13 | Documentation | Five-language user guides gain the iOS differences (reminder timing, background limits, permissions, no battery card); release checklist and `docs/RELEASE.md` gain the Apple section; README and third-party notices updated | BI-12 |
 
 Effort: about 25-37 days [INFERRED], excluding the lead-time items and
@@ -364,7 +377,7 @@ every slice. In addition:
 ## 7. Recommended execution order
 
 1. After the Android public launch gate (decided 2026-10-16): start
-   BX-00, BI-00a..g and BT-00. Every decision is settled
+   BX-00, BI-00a..g and BT-00 (BI-00h, the optional workflow, any time later). Every decision is settled
    (DT1-DT3, DI1-DI8). Starting later moves the first iOS spike by the time enrollment and
    device delivery take [INFERRED: days to weeks].
 2. Run BI-01 as soon as the Mac and devices exist. A failed S3, S5 or S9 on
@@ -431,6 +444,8 @@ Sources added by this verification:
 - [.NET MAUI support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)
 - [Apple upcoming requirements](https://developer.apple.com/news/upcoming-requirements/)
 - [Apple DSA trader information](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-compliance-information)
+- [Microsoft: create and run a MAUI app (VS Code on macOS)](https://github.com/dotnet/docs-maui/blob/main/docs/get-started/first-app.md)
+- [Microsoft: Visual Studio for Mac retirement](https://learn.microsoft.com/zh-cn/visualstudio/mac/what-happened-to-vs-for-mac)
 - [Microsoft: publish an iOS app with the CLI](https://github.com/dotnet/docs-maui/blob/main/docs/ios/deployment/publish-cli.md)
 - [Microsoft MAUI supported platforms and installation](https://github.com/dotnet/docs-maui/blob/main/docs/get-started/installation.md)
 - [Apple developer forum on the 64 pending notifications](https://developer.apple.com/forums/thread/811171)
