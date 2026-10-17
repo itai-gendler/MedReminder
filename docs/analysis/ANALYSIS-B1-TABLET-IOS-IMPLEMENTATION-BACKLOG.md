@@ -94,14 +94,14 @@ Read from `vger70/medreminder-mobile` on 2026-10-16:
 | DT1 | Reverse the non-goal "tablet-specific layouts" (`ANALYSIS-B1-MOBILE-SYNC.md` §15) | **Decided 2026-10-16**: reversed for Android tablets and iPad; one adaptive layer, no separate tablet app. | BT-01 |
 | DT2 | Wide-screen navigation | **Decided 2026-10-16**: Shell flyout locked open from the medium width class (side rail effect); no custom NavigationRail handler. | BT-03 |
 | DT3 | Adaptive layer lives in shared `Pages/`, not in `Platforms/Android/` | **Decided 2026-10-16**, so iPad reuses it. | BT-01..04, BP-01 |
-| DI1 | Apple Developer Program account type | **Decided 2026-10-16**: individual. The App Store shows the personal name and the account cannot invite collaborators; mirrors DA5 (personal Play account). Conversion to an organization later needs Apple support and a D-U-N-S number [UNCERTAIN: third-party sources, check developer.apple.com]. Consequence to accept: for distribution in the EU, Apple asks for a DSA trader status; a trader's address, phone number and email are published on the EU product pages ([Apple help](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-compliance-information)); a free app without commercial activity may declare itself a non-trader, which publishes nothing, but the declaration is the developer's own legal assessment [UNCERTAIN: take legal advice]. | BI-00a, BI-00f |
+| DI1 | Apple Developer Program account type | **Decided 2026-10-16**: individual. The App Store shows the personal name and the account cannot invite collaborators; mirrors DA5 (personal Play account). Conversion to an organization later needs Apple support and a D-U-N-S number [UNCERTAIN: third-party sources, check developer.apple.com]. Trader status (EU DSA), **decided 2026-10-17**: the app is free (A6), with no purchase, subscription, advertising or donation link (DA9), so the intended declaration is non-trader, which publishes no contact details. Apple publishes a trader's address, phone number and email on the EU product pages ([Apple help](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-compliance-information)). The declaration is the developer's own assessment; revisit it if the app ever gains revenue or advertising [UNCERTAIN: the criteria are Apple's and the DSA's, not checked by a lawyer]. | BI-00a, BI-00f |
 | DI2 | iPad ships with the first iOS release | **Decided 2026-10-16**: universal binary from BI-02. | BP-01 |
 | DI3 | iOS minimum version | **Decided 2026-10-16**: the floor of the .NET iOS workload (`SupportedOSPlatformVersion`), verified at BI-01 on the oldest device available; no fixed iOS 15 (`ANALYSIS-B1-MOBILE-SYNC.md` D13 stays unmeasured). Hard lower bounds found: App Store Connect requires iOS 13 or later as the deployment target since 2026-09-09 ([Apple](https://developer.apple.com/news/upcoming-requirements/)); AES-GCM needs iOS 13+ (P12). Microsoft documents iOS 12.2 as the MAUI minimum, so the effective floor is 13 or the workload value if higher. No floor is claimed before TestFlight. | BI-01 |
 | DI4 | Bundle identifier | **Decided 2026-10-16**: `com.vger70.medreminder` (independent of the Play application ID). | BI-00 |
 | DI5 | Apple-native iCloud transport | Stays excluded (D12). Cloud backup and sync use Google Drive and OneDrive on iOS too. **Decided 2026-10-08.** | - |
 | DI6 | Donation links on iOS | **Decided** (DA9, D14): none. | - |
-| DI7 | App Store primary category (Medical or Health & Fitness) | Open. Medical may attract closer review of health claims [UNCERTAIN]; the app is not a medical device. Decide with the review notes of BI-12. | BI-00f, BI-12 |
-| DI8 | Framework baseline for the Apple work | Open. MAUI 10 end of support is 2027-05-11 ([support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)); .NET 11 is announced for .NET Conf 2026 (10-13 November). Recommended: upgrade the Android app and the shared core to .NET 11 / MAUI 11 as slice BX-00 before BI-02, so iOS is not started on an expiring baseline. | BX-00, BI-02 |
+| DI7 | App Store primary category | **Decided 2026-10-17**: Health & Fitness. The review notes of BI-12 still state that the app is not a medical device. | BI-00f, BI-12 |
+| DI8 | Framework baseline for the Apple work | **Proposed, to confirm.** Facts: MAUI 10 end of support is 2027-05-11 ([support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)); .NET 11 is announced for .NET Conf 2026 (10-13 November); the .NET iOS SDK pins one Xcode version and Apple raises the minimum SDK each spring (Xcode 26 since 2026-04-28), so an iOS build on an old workload may be forced to move in spring 2027 [INFERRED]. Proposed rule: do not touch the baseline during the current Android test round; make the upgrade (BX-00) the first slice after the Android public launch and a hard gate before BI-02; if the public launch slips past 2027-03, move BX-00 before it. | BX-00, BI-02 |
 | DA3, A6, A7 | Language and catalogue defaults, free apps, private repository | Unchanged; apply to every track. | - |
 
 ## 4. Prerequisites (start after the Android public launch, no code)
@@ -114,7 +114,7 @@ everything else needs BI-00a or BI-00b.
 
 | ID | Item | Detail | Done when |
 |---|---|---|---|
-| BX-00 | Move the apps to the current MAUI baseline (DI8) | MAUI 10 is supported until 2027-05-11 and a major version is supported at least 6 months after its successor ships. Upgrade `net10.0-android` to the .NET 11 target and MAUI 11, and the shared core with it (`core-v*` tag first, then the submodule). Pin the SDK with `global.json` so the Mac, the Windows machines and CI build with the same SDK. Rerun the Android test suite and the pre-release checklist (`docs/RELEASE-CHECKLIST.md`) on the new baseline | Android builds, tests and checklist pass on the new baseline; `global.json` committed |
+| BX-00 | Move the apps to the current MAUI baseline (DI8) | First slice after the Android public launch, before any iOS work; not during the test round, so test results stay valid. MAUI 10 is supported until 2027-05-11 and a major version is supported at least 6 months after its successor ships. Upgrade `net10.0-android` to the .NET 11 target and MAUI 11, and the shared core with it (`core-v*` tag first, then the submodule). Pin the SDK with `global.json` so the Mac, the Windows machines and CI build with the same SDK. Rerun the Android test suite and the pre-release checklist (`docs/RELEASE-CHECKLIST.md`) on the new baseline | Android builds, tests and checklist pass on the new baseline; `global.json` committed |
 
 ### 4.2 Apple account and store records (BI-00a, BI-00f)
 
@@ -124,10 +124,10 @@ everything else needs BI-00a or BI-00b.
 | BI-00a | Developer Program enrollment (DI1) | Individual enrollment: legal name, government photo ID, annual fee (USD 99 according to third-party guides [UNCERTAIN]; confirm on the Apple enrollment page). Approval can take days | Account active; team ID recorded |
 | BI-00f | App Store Connect agreements | Accept the agreements Apple presents; a free app should need no banking or tax setup [UNCERTAIN] | App Store Connect lets you create an app record |
 | BI-00f | App record | Name, primary language, bundle ID `com.vger70.medreminder` (DI4, registered first under Identifiers), SKU | Record exists |
-| BI-00f | Trader status (DSA) | Declare the status for the EU storefronts (DI1 consequence); email and phone are verified with two-factor codes | Declaration complete |
+| BI-00f | Trader status (DSA) | Declare non-trader (DI1, decided 2026-10-17); email and phone verification codes may still be requested | Declaration complete |
 | BI-00f | Age rating | Answer the updated age-rating questionnaire (required by Apple since 2026-01-31) | Rating shown |
 | BI-00f | Privacy | Privacy policy URL (the published `PRIVACY.md` and its translations); App Privacy answers drafted from the real data flows (nothing leaves the device unless the user enables a provider) | Answers match `PRIVACY.md`; reviewed at BI-12 |
-| BI-00f | Listing texts and assets | Descriptions and keywords in the five languages; support URL; 1024 px app icon; screenshots for the largest iPhone class (6.9 inch) and the 13-inch iPad, which App Store Connect scales to smaller sizes according to third-party guides [UNCERTAIN: confirm in App Store Connect]; category (DI7) | Draft listing complete |
+| BI-00f | Listing texts and assets | Descriptions and keywords in the five languages; support URL; 1024 px app icon; screenshots for the largest iPhone class (6.9 inch) and the 13-inch iPad, which App Store Connect scales to smaller sizes according to third-party guides [UNCERTAIN: confirm in App Store Connect]; primary category Health & Fitness (DI7) | Draft listing complete |
 | BI-00f | Export compliance | The app encrypts user data (AES-GCM in the `.mrz` archive and sync). Apple's key is `ITSAppUsesNonExemptEncryption`; it asks about non-exempt encryption, and omitting it triggers a questionnaire at every upload. Do not set it to NO without checking the exemption categories; any national filing (France is often named) is not verified [UNCERTAIN: take advice] | Answer recorded in the release checklist |
 
 ### 4.3 Build host (BI-00b)
@@ -270,8 +270,8 @@ every slice. In addition:
 ## 7. Recommended execution order
 
 1. After the Android public launch gate (decided 2026-10-16): start
-   BX-00, BI-00a..g and BT-00. DT1-DT3 and DI1-DI4 are settled; decide
-   DI7 and DI8 first. Starting later moves the first iOS spike by the time enrollment and
+   BX-00, BI-00a..g and BT-00. DT1-DT3 and DI1-DI4 are settled; confirm
+   DI8 first. Starting later moves the first iOS spike by the time enrollment and
    device delivery take [INFERRED: days to weeks].
 2. Run BI-01 as soon as the Mac and devices exist. A failed S3, S5 or S9 on
    iOS changes the iOS estimate and is reported before BI-02.
