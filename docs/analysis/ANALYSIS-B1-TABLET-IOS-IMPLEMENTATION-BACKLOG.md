@@ -270,7 +270,7 @@ every slice. In addition:
 ## 7. Recommended execution order
 
 1. After the Android public launch gate (decided 2026-10-16): start
-   BX-00, BI-00a..g and BT-00. every decision is settled
+   BX-00, BI-00a..g and BT-00. Every decision is settled
    (DT1-DT3, DI1-DI8). Starting later moves the first iOS spike by the time enrollment and
    device delivery take [INFERRED: days to weeks].
 2. Run BI-01 as soon as the Mac and devices exist. A failed S3, S5 or S9 on
