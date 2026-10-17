@@ -101,7 +101,7 @@ Read from `vger70/medreminder-mobile` on 2026-10-16:
 | DI5 | Apple-native iCloud transport | Stays excluded (D12). Cloud backup and sync use Google Drive and OneDrive on iOS too. **Decided 2026-10-08.** | - |
 | DI6 | Donation links on iOS | **Decided** (DA9, D14): none. | - |
 | DI7 | App Store primary category | **Decided 2026-10-17**: Health & Fitness. The review notes of BI-12 still state that the app is not a medical device. | BI-00f, BI-12 |
-| DI8 | Framework baseline for the Apple work | **Proposed, to confirm.** Facts: MAUI 10 end of support is 2027-05-11 ([support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)); .NET 11 is at release candidate 2 (published 2026-10-13, with a go-live license) and its general availability is planned for November 2026, no exact day found ([Visual Studio Magazine](https://visualstudiomagazine.com/articles/2026/10/14/net-11-rc2-adds-post-quantum-crypto-maui-csharp-ui-and-nuget-controls.aspx)); MAUI 11 readiness is not confirmed separately; the .NET iOS SDK pins one Xcode version and Apple raises the minimum SDK each spring (Xcode 26 since 2026-04-28), so an iOS build on an old workload may be forced to move in spring 2027 [INFERRED]. Proposed rule: never adopt a preview or release candidate in this project; do not touch the baseline during the current Android test round; make the upgrade (BX-00) the first slice after the Android public launch, only once .NET 11 and MAUI 11 are generally available and have had their first servicing release, and a hard gate before BI-02; if the public launch slips past 2027-03, move BX-00 before it. | BX-00, BI-02 |
+| DI8 | Framework baseline for the Apple work | **Decided 2026-10-17** on the rule below. Facts: MAUI 10 end of support is 2027-05-11 ([support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui)); .NET 11 is at release candidate 2 (published 2026-10-13, with a go-live license) and its general availability is planned for November 2026, no exact day found ([Visual Studio Magazine](https://visualstudiomagazine.com/articles/2026/10/14/net-11-rc2-adds-post-quantum-crypto-maui-csharp-ui-and-nuget-controls.aspx)); MAUI 11 readiness is not confirmed separately; the .NET iOS SDK pins one Xcode version and Apple raises the minimum SDK each spring (Xcode 26 since 2026-04-28), so an iOS build on an old workload may be forced to move in spring 2027 [INFERRED]. Rule: never adopt a preview or release candidate in this project; do not touch the baseline during the current Android test round; make the upgrade (BX-00) the first slice after the Android public launch, only once .NET 11 and MAUI 11 are generally available and have had their first servicing release, and a hard gate before BI-02; if the public launch slips past 2027-03, move BX-00 before it. | BX-00, BI-02 |
 | DA3, A6, A7 | Language and catalogue defaults, free apps, private repository | Unchanged; apply to every track. | - |
 
 ## 4. Prerequisites (start after the Android public launch, no code)
@@ -270,8 +270,8 @@ every slice. In addition:
 ## 7. Recommended execution order
 
 1. After the Android public launch gate (decided 2026-10-16): start
-   BX-00, BI-00a..g and BT-00. DT1-DT3 and DI1-DI4 are settled; confirm
-   DI8 first. Starting later moves the first iOS spike by the time enrollment and
+   BX-00, BI-00a..g and BT-00. every decision is settled
+   (DT1-DT3, DI1-DI8). Starting later moves the first iOS spike by the time enrollment and
    device delivery take [INFERRED: days to weeks].
 2. Run BI-01 as soon as the Mac and devices exist. A failed S3, S5 or S9 on
    iOS changes the iOS estimate and is reported before BI-02.
