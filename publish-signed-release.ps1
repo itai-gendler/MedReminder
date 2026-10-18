@@ -24,6 +24,14 @@ param(
     # (docs/PACKAGING.md §26).
     [string]$StorePagesUrl = "https://vger70.github.io/MedReminder",
 
+    # Do not upload the Microsoft Store MSI to Cloudflare R2.
+    [switch]$SkipR2,
+
+    # Only upload the Store MSI of an existing local build
+    # (dist\<version>\) to Cloudflare R2, to test the credentials and the
+    # public URL. Nothing else runs: no Git, no CI wait, no signing.
+    [switch]$TestR2,
+
     [Alias("h")]
     [switch]$Help
 )
@@ -33,35 +41,44 @@ function Show-Usage {
     Write-Host "Signed Release Script" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "USAGE:"
-    Write-Host "  .\publish-signed-release.ps1 <version> [-CertificateThumbprint <sha1>] [-TimestampUrl <url>] [-SkipGitRelease] [-SkipStorePages]"
+    Write-Host "  .\publish-signed-release.ps1 <version> [-CertificateThumbprint <sha1>] [-TimestampUrl <url>] [-SkipGitRelease] [-SkipR2] [-SkipStorePages]"
+    Write-Host "  .\publish-signed-release.ps1 <version> -TestR2"
     Write-Host "  .\publish-signed-release.ps1 -Help"
     Write-Host ""
     Write-Host "EXAMPLES:"
     Write-Host "  .\publish-signed-release.ps1 2.12.1"
     Write-Host "  .\publish-signed-release.ps1 2.12.1 -CertificateThumbprint 0123456789ABCDEF0123456789ABCDEF01234567"
     Write-Host "  .\publish-signed-release.ps1 2.12.1 -SkipGitRelease"
+    Write-Host "  .\publish-signed-release.ps1 2.12.1 -TestR2"
     Write-Host ""
     Write-Host "DESCRIPTION:"
     Write-Host "  Publishes a release and replaces its CI-built assets with Certum-signed ones:"
-    Write-Host "    0. check prerequisites (gh login, signing certificate, clean tree, tag not used)"
+    Write-Host "    0. check prerequisites (gh login, signing certificate, Google Drive and"
+    Write-Host "       Cloudflare R2 variables, clean tree, tag not used)"
     Write-Host "    1. git checkout main, git pull, .\release.ps1 <version>"
     Write-Host "       (commit, push, tag v<version>; the tag triggers the CI release)"
     Write-Host "    2. wait for the CI workflow, then git checkout v<version>"
     Write-Host "    3. .\release.ps1 <version> -LocalBuild (signed and timestamped),"
     Write-Host "       then signtool verify on both MSIs"
     Write-Host "    4. gh release upload --clobber: signed ZIPs, MSIs and SHA256SUMS.txt"
-    Write-Host "    5. publish the Store MSI on the 'store' branch served by GitHub Pages,"
+    Write-Host "    5. upload the Store MSI to Cloudflare R2 (aws s3api), served at"
+    Write-Host "       https://<MEDREMINDER_CLOUDFLARE_DOWNLOAD>/<version>/MedReminder-win-x64-net10.msi"
+    Write-Host "    6. publish the Store MSI on the 'store' branch served by GitHub Pages,"
     Write-Host "       at <StorePagesUrl>/<version>/MedReminder-win-x64-net10.msi"
-    Write-Host "    6. git checkout main (always, also on failure)"
+    Write-Host "    7. git checkout main (always, also on failure)"
     Write-Host ""
     Write-Host "  -SkipGitRelease resumes from step 2 on an existing tag and release,"
-    Write-Host "  e.g. after a signing failure. -SkipStorePages skips step 5, e.g. when"
-    Write-Host "  the version is already on the store branch."
+    Write-Host "  e.g. after a signing failure. -SkipR2 skips step 5 and -SkipStorePages"
+    Write-Host "  skips step 6, e.g. when the version is already published there."
+    Write-Host "  -TestR2 runs step 5 alone on an existing dist\<version>\ build."
     Write-Host ""
     Write-Host "REQUIREMENTS:"
     Write-Host "  - GitHub CLI (gh) logged in: gh auth login"
     Write-Host "  - SimplySign Desktop running and connected"
     Write-Host "  - Windows SDK (signtool.exe), .NET 10 SDK"
+    Write-Host "  - MEDREMINDER_GOOGLE_CLIENT_ID, MEDREMINDER_GOOGLE_CLIENT_SECRET"
+    Write-Host "  - unless -SkipR2: AWS CLI (aws) and MEDREMINDER_CLOUDFLARE_TOKEN,"
+    Write-Host "    _SECRET, _ENDPOINT, _BUCKET, _DOWNLOAD"
     Write-Host ""
 }
 
@@ -89,6 +106,19 @@ $Assets       = @(
     "MedReminder-win-x64.msi",
     "MedReminder-win-x64-net10.msi",
     "SHA256SUMS.txt"
+)
+# release.ps1 -LocalBuild compiles without Google Drive when these are
+# unset, and step 4 would replace the CI assets, which have it.
+$GoogleEnvVars = @(
+    "MEDREMINDER_GOOGLE_CLIENT_ID",
+    "MEDREMINDER_GOOGLE_CLIENT_SECRET"
+)
+$R2EnvVars    = @(
+    "MEDREMINDER_CLOUDFLARE_TOKEN",
+    "MEDREMINDER_CLOUDFLARE_SECRET",
+    "MEDREMINDER_CLOUDFLARE_ENDPOINT",
+    "MEDREMINDER_CLOUDFLARE_BUCKET",
+    "MEDREMINDER_CLOUDFLARE_DOWNLOAD"
 )
 
 function Write-Step {
@@ -121,6 +151,32 @@ function Find-SignTool {
     throw "signtool.exe not found. Install the Windows SDK."
 }
 
+function Assert-EnvVars {
+    param(
+        [string[]]$Names,
+        [string]$Purpose
+    )
+
+    $missing = @($Names | Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) })
+    if ($missing.Count -gt 0) {
+        throw "Environment variable(s) not set: $($missing -join ', ') ($Purpose)."
+    }
+}
+
+function Assert-R2Prerequisites {
+    Assert-EnvVars $R2EnvVars "needed for the Cloudflare R2 upload; -SkipR2 skips it"
+    # The dashboard shows the S3 API URL with the bucket appended; the
+    # bucket goes in MEDREMINDER_CLOUDFLARE_BUCKET instead.
+    $endpoint = $null
+    if (-not [Uri]::TryCreate($env:MEDREMINDER_CLOUDFLARE_ENDPOINT, [UriKind]::Absolute, [ref]$endpoint) -or
+        $endpoint.Scheme -ne "https" -or $endpoint.AbsolutePath -ne "/") {
+        throw "MEDREMINDER_CLOUDFLARE_ENDPOINT must be https://<account id>.r2.cloudflarestorage.com, without the bucket name."
+    }
+    if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+        throw "AWS CLI (aws) not found; it uploads the Store MSI to Cloudflare R2. Install it, or pass -SkipR2."
+    }
+}
+
 function Assert-Prerequisites {
     Write-Step "Checking prerequisites"
 
@@ -140,6 +196,9 @@ function Assert-Prerequisites {
     }
 
     $script:SignTool = Find-SignTool
+
+    Assert-EnvVars $GoogleEnvVars "the signed build would have no Google Drive"
+    if (-not $SkipR2) { Assert-R2Prerequisites }
 
     $dirty = git status --porcelain
     if ($LASTEXITCODE -ne 0) { throw "git status failed." }
@@ -163,7 +222,7 @@ function Assert-Prerequisites {
         throw "Tag $TagName does not exist; -SkipGitRelease needs an existing tag."
     }
 
-    Write-Host "OK: gh logged in, certificate found, signtool at $($script:SignTool)" -ForegroundColor Green
+    Write-Host "OK: gh logged in, certificate found, signtool at $($script:SignTool), environment variables set" -ForegroundColor Green
 }
 
 function Wait-ReleaseWorkflow {
@@ -195,6 +254,117 @@ function Wait-ReleaseWorkflow {
 
     Invoke-Native { gh release view $TagName --json tagName *> $null } "gh release view $TagName"
     Write-Host "OK: release $TagName created by CI" -ForegroundColor Green
+}
+
+function Wait-UrlStatus {
+    # Polls $Url for up to 5 minutes until it answers 200 or a redirect,
+    # and returns the last status ($null when unreachable). The Store
+    # rejects a URL that redirects, so a 3xx is reported, not followed.
+    param([string]$Url)
+
+    $deadline = (Get-Date).AddMinutes(5)
+    $status = $null
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $response = Invoke-WebRequest -Uri $Url -Method Head -MaximumRedirection 0 -UseBasicParsing -ErrorAction Stop
+            $status = [int]$response.StatusCode
+        }
+        catch {
+            $status = $null
+            if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
+        }
+        if ($status -eq 200 -or ($status -ge 300 -and $status -lt 400)) { break }
+        Start-Sleep -Seconds 15
+    }
+    return $status
+}
+
+function Publish-R2 {
+    # Cloudflare R2 serves the Store MSI from the bucket's public custom
+    # domain (MEDREMINDER_CLOUDFLARE_DOWNLOAD), which answers without
+    # redirection. The upload uses the S3-compatible API through the AWS
+    # CLI; the R2 credentials reach it through AWS_* variables set for
+    # this process only and restored afterwards. Old versions stay in the
+    # bucket; they are removed by hand.
+    $msi = Join-Path $DistDir $StoreMsiName
+    if (-not (Test-Path $msi)) { throw "Missing asset: $msi" }
+
+    $bucket = $env:MEDREMINDER_CLOUDFLARE_BUCKET
+    $key    = "$Version/$StoreMsiName"
+    $common = @(
+        "--endpoint-url", $env:MEDREMINDER_CLOUDFLARE_ENDPOINT,
+        "--region", "auto",
+        "--output", "json",
+        "--no-cli-pager"
+    )
+
+    # Recent AWS CLI versions add checksum headers by default; send them
+    # only where the S3 API requires them.
+    $awsEnv = @{
+        AWS_ACCESS_KEY_ID                = $env:MEDREMINDER_CLOUDFLARE_TOKEN
+        AWS_SECRET_ACCESS_KEY            = $env:MEDREMINDER_CLOUDFLARE_SECRET
+        AWS_SESSION_TOKEN                = $null
+        AWS_REQUEST_CHECKSUM_CALCULATION = "WHEN_REQUIRED"
+        AWS_RESPONSE_CHECKSUM_VALIDATION = "WHEN_REQUIRED"
+    }
+    $saved = @{}
+    foreach ($name in $awsEnv.Keys) {
+        $saved[$name] = [Environment]::GetEnvironmentVariable($name)
+        [Environment]::SetEnvironmentVariable($name, $awsEnv[$name])
+    }
+
+    try {
+        # list-objects-v2 rather than head-object: a HEAD error has no body,
+        # so the CLI could only report "Bad Request" without R2's reason.
+        $output = aws s3api list-objects-v2 --bucket $bucket --prefix $key --max-keys 1 @common 2>&1
+        $listExit = $LASTEXITCODE
+        $stdout = ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
+        $stderr = ($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] }) -join "`n"
+        if ($listExit -ne 0) {
+            throw "aws s3api list-objects-v2 on bucket $bucket failed (exit code $listExit): $stderr"
+        }
+
+        $existing = $null
+        if (-not [string]::IsNullOrWhiteSpace($stdout)) {
+            $existing = @(($stdout | ConvertFrom-Json).Contents) | Where-Object { $_.Key -eq $key }
+        }
+
+        if ($existing) {
+            # A single-part upload's ETag is the MD5 of the file.
+            $etag = $existing.ETag.Trim('"')
+            $md5  = (Get-FileHash $msi -Algorithm MD5).Hash
+            if ($etag -ne $md5) {
+                throw "$key is already in R2 bucket $bucket with a different MSI. The Store requires the file behind a submitted URL not to change: release a new version, or pass -SkipR2."
+            }
+            Write-Host "$Version is already in R2 bucket $bucket with the same MSI." -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "Uploading $key to R2 bucket $bucket"
+            Invoke-Native {
+                aws s3api put-object --bucket $bucket --key $key --body $msi --content-type "application/x-msi" @common | Out-Null
+            } "aws s3api put-object $key"
+        }
+    }
+    finally {
+        foreach ($name in $saved.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $saved[$name])
+        }
+    }
+
+    $download = $env:MEDREMINDER_CLOUDFLARE_DOWNLOAD.Trim().TrimEnd('/')
+    if ($download -notmatch '^https?://') { $download = "https://$download" }
+    $url = "$download/$Version/$StoreMsiName"
+    $status = Wait-UrlStatus $url
+
+    if ($status -eq 200) {
+        Write-Host "OK: $url answers 200. Use it as the package URL in Partner Center." -ForegroundColor Green
+    }
+    elseif ($status -ge 300 -and $status -lt 400) {
+        Write-Host "WARNING: $url redirects ($status); the Store will reject it. Check MEDREMINDER_CLOUDFLARE_DOWNLOAD." -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "WARNING: $url not reachable (last status: $status). Check the bucket's public custom domain (MEDREMINDER_CLOUDFLARE_DOWNLOAD)." -ForegroundColor Yellow
+    }
 }
 
 function Publish-StorePages {
@@ -263,23 +433,9 @@ function Publish-StorePages {
         Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    # GitHub Pages deploys the branch in a minute or two. The Store rejects
-    # a URL that redirects, so a 3xx is reported, not followed.
+    # GitHub Pages deploys the branch in a minute or two.
     $url = "$StorePagesUrl/$Version/$StoreMsiName"
-    $deadline = (Get-Date).AddMinutes(5)
-    $status = $null
-    while ((Get-Date) -lt $deadline) {
-        try {
-            $response = Invoke-WebRequest -Uri $url -Method Head -MaximumRedirection 0 -UseBasicParsing -ErrorAction Stop
-            $status = [int]$response.StatusCode
-        }
-        catch {
-            $status = $null
-            if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
-        }
-        if ($status -eq 200 -or ($status -ge 300 -and $status -lt 400)) { break }
-        Start-Sleep -Seconds 15
-    }
+    $status = Wait-UrlStatus $url
 
     if ($status -eq 200) {
         Write-Host "OK: $url answers 200. Use it as the package URL in Partner Center." -ForegroundColor Green
@@ -292,6 +448,25 @@ function Publish-StorePages {
     }
 }
 
+if ($TestR2) {
+    try {
+        if ($SkipR2) { throw "-TestR2 and -SkipR2 cannot be combined." }
+        Write-Step "Cloudflare R2 upload test of $Version"
+        $msi = Join-Path $DistDir $StoreMsiName
+        if (-not (Test-Path $msi)) {
+            throw "$msi not found. Build $Version locally first (.\release.ps1 $Version -LocalBuild)."
+        }
+        Assert-R2Prerequisites
+        Publish-R2
+        exit 0
+    }
+    catch {
+        Write-Host ""
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        exit 1
+    }
+}
+
 $tagPushed  = $false
 $leftBranch = $false
 $exitCode   = 0
@@ -300,7 +475,7 @@ try {
     Assert-Prerequisites
 
     if (-not $SkipGitRelease) {
-        Write-Step "[1/5] Git release $TagName"
+        Write-Step "[1/6] Git release $TagName"
         $leftBranch = $true
         Invoke-Native { git checkout main } "git checkout main"
         Invoke-Native { git pull } "git pull"
@@ -308,11 +483,11 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "release.ps1 $Version failed (exit code $LASTEXITCODE)." }
         $tagPushed = $true
 
-        Write-Step "[2/5] Waiting for CI"
+        Write-Step "[2/6] Waiting for CI"
         Wait-ReleaseWorkflow
     }
     else {
-        Write-Step "[1-2/5] Git release and CI wait skipped (-SkipGitRelease)"
+        Write-Step "[1-2/6] Git release and CI wait skipped (-SkipGitRelease)"
         Invoke-Native { gh release view $TagName --json tagName *> $null } "gh release view $TagName"
     }
 
@@ -321,7 +496,7 @@ try {
     $leftBranch = $true
     Invoke-Native { git checkout --quiet $TagName } "git checkout $TagName"
 
-    Write-Step "[3/5] Signed local build"
+    Write-Step "[3/6] Signed local build"
     & $ReleaseScript $Version -LocalBuild `
         -CertificateThumbprint $script:CertificateThumbprint `
         -TimestampUrl $TimestampUrl
@@ -332,7 +507,7 @@ try {
         Invoke-Native { & $script:SignTool verify /pa /v $msi } "signtool verify $msi"
     }
 
-    Write-Step "[4/5] Uploading signed assets to $TagName"
+    Write-Step "[4/6] Uploading signed assets to $TagName"
     $files = $Assets | ForEach-Object {
         $path = Join-Path $DistDir $_
         if (-not (Test-Path $path)) { throw "Missing asset: $path" }
@@ -344,8 +519,13 @@ try {
     Write-Host "Signed release $TagName published." -ForegroundColor Green
     gh release view $TagName --json url --jq .url
 
+    if (-not $SkipR2) {
+        Write-Step "[5/6] Uploading the Store MSI to Cloudflare R2"
+        Publish-R2
+    }
+
     if (-not $SkipStorePages) {
-        Write-Step "[5/5] Publishing the Store MSI on $StoreBranch (GitHub Pages)"
+        Write-Step "[6/6] Publishing the Store MSI on $StoreBranch (GitHub Pages)"
         Publish-StorePages
     }
 }
