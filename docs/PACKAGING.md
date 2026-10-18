@@ -761,8 +761,12 @@ locally signed ones from `dist\<version>\`.
 .\publish-signed-release.ps1 2.12.1
 ```
 
-1. checks that `gh` is logged in, the certificate is in the store, the
-   working tree is clean and the tag is unused;
+1. checks that `gh` is logged in, the certificate is in the store,
+   `MEDREMINDER_GOOGLE_CLIENT_ID` and `MEDREMINDER_GOOGLE_CLIENT_SECRET`
+   are set (without them the signed build has no Google Drive and
+   replaces CI assets that have it), the Cloudflare R2 prerequisites of
+   step 6 are met unless `-SkipR2`, the working tree is clean and the
+   tag is unused;
 2. `git checkout main`, `git pull`, `.\release.ps1 <version>` (commit,
    push, tag);
 3. waits for the CI run on the tag commit (`gh run watch`), then checks
@@ -771,9 +775,11 @@ locally signed ones from `dist\<version>\`.
    MSIs;
 5. `gh release upload --clobber` of the signed ZIPs, MSIs and
    `SHA256SUMS.txt`, keeping the release and its notes;
-6. publishes the signed Store MSI on the `store` branch served by GitHub
+6. uploads the signed Store MSI to Cloudflare R2 (section 26), unless
+   `-SkipR2`;
+7. publishes the signed Store MSI on the `store` branch served by GitHub
    Pages (section 26), unless `-SkipStorePages`;
-7. returns to `main`, also on failure.
+8. returns to `main`, also on failure.
 
 If signing or upload fails after the tag is pushed, fix the cause and
 resume with `-SkipGitRelease`, which starts from the tag checkout. Run
@@ -787,7 +793,7 @@ in Partner Center. That URL must answer without redirection, so it
 cannot be a GitHub release asset: `releases/download/...` answers 302
 to a signed URL that expires after a few minutes, and Partner Center
 rejects it ("The package URL redirects to another URL"). The Store MSI
-is served by GitHub Pages instead. MSIX is not used (section 1): it would virtualize
+is served by Cloudflare R2 and by GitHub Pages instead. MSIX is not used (section 1): it would virtualize
 writes to `%LOCALAPPDATA%\MedReminder\` and `HKCU\...\Run`, and the
 Store would replace the GitHub update check.
 
@@ -795,7 +801,7 @@ Store would replace the GitHub update check.
 
 | Requirement (Partner Center, MSI/EXE apps) | MedReminder |
 | --- | --- |
-| Versioned HTTPS URL without redirection, binary unchanged after submission | `https://vger70.github.io/MedReminder/X.Y.Z/MedReminder-win-x64-net10.msi` (GitHub Pages, below) |
+| Versioned HTTPS URL without redirection, binary unchanged after submission | `https://download.medreminder26.org/X.Y.Z/MedReminder-win-x64-net10.msi` (Cloudflare R2) or `https://vger70.github.io/MedReminder/X.Y.Z/MedReminder-win-x64-net10.msi` (GitHub Pages), below |
 | Standalone, offline installer | Self-contained publish: no separate .NET runtime |
 | Silent install (a UAC prompt is allowed) | Windows Installer `/qn`; per-user install, no UAC |
 | `.msi` or `.exe` only | `.msi` |
@@ -809,11 +815,53 @@ the Store rejects unsigned PE files.
 
 The CI asset `MedReminder-win-x64-net10.msi` on the GitHub release is
 unsigned until `publish-signed-release.ps1` replaces it; only the signed
-MSI goes to GitHub Pages.
+MSI goes to Cloudflare R2 and GitHub Pages.
+
+### Cloudflare R2 hosting
+
+`publish-signed-release.ps1` (step 6, section 25) uploads the signed
+Store MSI to an R2 bucket with `aws s3api put-object`, under the key
+`X.Y.Z/MedReminder-win-x64-net10.msi`. The bucket is served by a public
+custom domain, which answers 200 without redirection.
+
+Requirements, checked before tagging unless `-SkipR2`:
+
+- AWS CLI v2 (`aws`) on `PATH`;
+- the environment variables:
+
+  | Variable | Value |
+  | --- | --- |
+  | `MEDREMINDER_CLOUDFLARE_TOKEN` | R2 API token Access Key ID |
+  | `MEDREMINDER_CLOUDFLARE_SECRET` | R2 API token Secret Access Key |
+  | `MEDREMINDER_CLOUDFLARE_ENDPOINT` | S3 endpoint, `https://<account id>.r2.cloudflarestorage.com` |
+  | `MEDREMINDER_CLOUDFLARE_BUCKET` | Bucket name |
+  | `MEDREMINDER_CLOUDFLARE_DOWNLOAD` | Public custom domain, e.g. `download.medreminder26.org` |
+
+The credentials are passed to `aws` through `AWS_ACCESS_KEY_ID` and
+`AWS_SECRET_ACCESS_KEY` for the duration of the upload only; no AWS
+profile is read or written.
+
+- A version already in the bucket is never overwritten: the same MSI
+  (ETag equal to the file's MD5) is skipped, a different one stops the
+  script, as on the `store` branch below.
+- Old versions are not removed; delete them by hand in the Cloudflare
+  dashboard once no submission refers to them.
+- After the upload the script waits up to 5 minutes for
+  `https://<MEDREMINDER_CLOUDFLARE_DOWNLOAD>/X.Y.Z/MedReminder-win-x64-net10.msi`
+  to answer 200, and only warns otherwise.
+
+`-TestR2` checks the setup without releasing: it uploads
+`dist\X.Y.Z\MedReminder-win-x64-net10.msi` of an existing local build and
+checks the public URL, and stops with an error when the file is missing.
+No Git, CI or signing step runs. The uploaded object stays in the bucket.
+
+```powershell
+.\publish-signed-release.ps1 2.18.0 -TestR2
+```
 
 ### GitHub Pages hosting
 
-`publish-signed-release.ps1` (step 6, section 25) publishes the signed
+`publish-signed-release.ps1` (step 7, section 25) publishes the signed
 Store MSI on the `store` branch:
 
 ```text
@@ -875,7 +923,7 @@ Every release:
      privacy policy URL (MedReminder stores email settings and
      syncs to OneDrive / Google Drive).
    - **Age ratings**: the IARC questionnaire.
-   - **Packages**: the GitHub Pages URL of the version, architecture x64,
+   - **Packages**: the R2 or GitHub Pages URL of the version, architecture x64,
      languages en, it, fr, es, de. For an MSI the Store installs with
      `/qn`; no other installer parameter is needed.
    - **Store listings**, one per language: description, at least one
@@ -892,7 +940,7 @@ Every release:
 ### Updates
 
 The Store does not update MSI/EXE apps by itself. Every release needs
-a new submission with the new version's GitHub Pages URL. The in-app update check
+a new submission with the new version's R2 or GitHub Pages URL. The in-app update check
 (GitHub Releases) keeps working for Store installations; it may report
 a version before the Store has certified it.
 
