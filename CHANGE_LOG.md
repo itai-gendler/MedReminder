@@ -30,6 +30,25 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #286 — Fix feeds_branch.sh publish failing on a feed absent from main
+
+**Status:** open
+
+Link: [vger70/MedReminder#286](https://github.com/vger70/MedReminder/pull/286)
+Branch: `claude/zealous-lamport-w3h4c0`
+
+### Fixed
+
+- `scripts/feeds/feeds_branch.sh publish` now removes the owned paths
+  from its temporary index with `git rm --cached --force`. Without
+  `--force`, git refused when a published file differed from both the
+  regenerated file and main's HEAD, which always happens for
+  `data/it/equivalents`, a feed main does not carry. This made
+  `download_aifa_equivalents.yaml` fail.
+- Regression test in `scripts/feeds/tests/test_feeds_branch.py`.
+
+---
+
 ## PR #285 — Upload the Store MSI to Cloudflare R2 in publish-signed-release.ps1
 
 **Status:** open
