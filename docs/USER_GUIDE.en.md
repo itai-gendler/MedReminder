@@ -741,20 +741,20 @@ fills an empty **Issued on** with today. MedReminder reads the
 clipboard only when you click it.
 
 **Scan**, next to **Prescription code**, reads the code from the
-barcodes of the prescription slip, with a barcode scanner or the
-webcam, and fills an empty **Issued on** with today. With Italy as
-reference country it reads the NRE, printed as one barcode or as two
-that you scan one after the other in any order, and the NRBE of a
-prescription outside the national health service (12 characters); any
-other barcode on the slip, such as the tax code, is refused. With
-Germany it reads the 2D code (DataMatrix or QR) of the e-prescription
-and keeps only the prescription ID (Rezept-ID, 22 characters); the
-access code in the 2D code is never saved, and a code that groups
-several prescriptions is refused. With France it reads the QR code of
-the electronic prescription when it holds only the prescription number;
-otherwise type the number printed under the code. With any other
-reference country (Spain and the United States among them) the button is
-not shown.
+barcodes of the prescription slip, with a barcode scanner or the webcam,
+and fills an empty **Issued on** with today. With Italy as reference
+country it reads the NRE, printed as one barcode or as two that you scan
+one after the other in any order, and the NRBE of a prescription outside
+the national health service (12 characters); any other barcode on the
+slip, such as the tax code, is refused. With Germany it reads the 2D
+code (DataMatrix or QR) of the e-prescription and keeps only the
+prescription ID (Rezept-ID, 22 characters); the access code in the 2D
+code is never saved, and a code that groups several prescriptions is
+refused. With France it reads the QR code of the electronic prescription
+and keeps only the prescription identifier; the patient's name and date
+of birth and the prescriber's numbers in the QR code are never saved.
+With any other reference country (Spain and the United States among
+them) the button is not shown.
 
 ### Administrative deadlines
 
