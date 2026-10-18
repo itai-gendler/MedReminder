@@ -70,8 +70,12 @@ publish_once() {
     if [ -n "$old" ]; then
         # Start from the published branch and replace only the paths this
         # workflow owns, so a feed published since this job's load is kept.
+        # --force: the temporary index holds the published branch, so an
+        # owned file can differ from both the new file and main's HEAD
+        # (always for a feed main does not carry); without it git rm
+        # refuses. Only index entries are removed, never files.
         GIT_INDEX_FILE="$index" git read-tree "$old"
-        GIT_INDEX_FILE="$index" git rm -r -q --cached --ignore-unmatch -- "$@"
+        GIT_INDEX_FILE="$index" git rm -r -q --cached --force --ignore-unmatch -- "$@"
         GIT_INDEX_FILE="$index" git add --all --force -- "$@"
     else
         # First publish: the branch starts from every feed of the checkout.

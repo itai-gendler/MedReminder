@@ -196,6 +196,20 @@ def test_publish_removes_files_deleted_in_an_owned_path(checkout):
     assert "data/it/old.zip" not in feeds_files(remote)
 
 
+def test_publish_updates_a_feed_that_main_does_not_carry(checkout):
+    work, remote = checkout
+    (work / "data" / "it" / "equivalents").mkdir()
+    (work / "data" / "it" / "equivalents" / "latest.json").write_text('{"version": "202609"}\n')
+    run_script(work, "publish", "Feeds 1", "data/it/equivalents")
+
+    # The published file differs from both main (absent) and the new
+    # working-tree file: removing it from the index must not refuse.
+    (work / "data" / "it" / "equivalents" / "latest.json").write_text('{"version": "202610"}\n')
+    run_script(work, "publish", "Feeds 2", "data/it/equivalents")
+
+    assert git(remote, "show", "feeds:data/it/equivalents/latest.json") == '{"version": "202610"}'
+
+
 def test_publish_requires_a_pathspec(checkout):
     work, _ = checkout
     result = subprocess.run(["bash", str(SCRIPT), "publish", "Feeds"], cwd=work, capture_output=True, text=True)
