@@ -165,6 +165,13 @@ function Assert-EnvVars {
 
 function Assert-R2Prerequisites {
     Assert-EnvVars $R2EnvVars "needed for the Cloudflare R2 upload; -SkipR2 skips it"
+    # The dashboard shows the S3 API URL with the bucket appended; the
+    # bucket goes in MEDREMINDER_CLOUDFLARE_BUCKET instead.
+    $endpoint = $null
+    if (-not [Uri]::TryCreate($env:MEDREMINDER_CLOUDFLARE_ENDPOINT, [UriKind]::Absolute, [ref]$endpoint) -or
+        $endpoint.Scheme -ne "https" -or $endpoint.AbsolutePath -ne "/") {
+        throw "MEDREMINDER_CLOUDFLARE_ENDPOINT must be https://<account id>.r2.cloudflarestorage.com, without the bucket name."
+    }
     if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
         throw "AWS CLI (aws) not found; it uploads the Store MSI to Cloudflare R2. Install it, or pass -SkipR2."
     }
@@ -307,29 +314,35 @@ function Publish-R2 {
     }
 
     try {
-        # head-object fails with 404 when the key does not exist yet.
-        $output = aws s3api head-object --bucket $bucket --key $key @common 2>&1
-        $headExit = $LASTEXITCODE
+        # list-objects-v2 rather than head-object: a HEAD error has no body,
+        # so the CLI could only report "Bad Request" without R2's reason.
+        $output = aws s3api list-objects-v2 --bucket $bucket --prefix $key --max-keys 1 @common 2>&1
+        $listExit = $LASTEXITCODE
         $stdout = ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
         $stderr = ($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] }) -join "`n"
+        if ($listExit -ne 0) {
+            throw "aws s3api list-objects-v2 on bucket $bucket failed (exit code $listExit): $stderr"
+        }
 
-        if ($headExit -eq 0) {
+        $existing = $null
+        if (-not [string]::IsNullOrWhiteSpace($stdout)) {
+            $existing = @(($stdout | ConvertFrom-Json).Contents) | Where-Object { $_.Key -eq $key }
+        }
+
+        if ($existing) {
             # A single-part upload's ETag is the MD5 of the file.
-            $etag = ($stdout | ConvertFrom-Json).ETag.Trim('"')
+            $etag = $existing.ETag.Trim('"')
             $md5  = (Get-FileHash $msi -Algorithm MD5).Hash
             if ($etag -ne $md5) {
                 throw "$key is already in R2 bucket $bucket with a different MSI. The Store requires the file behind a submitted URL not to change: release a new version, or pass -SkipR2."
             }
             Write-Host "$Version is already in R2 bucket $bucket with the same MSI." -ForegroundColor Yellow
         }
-        elseif ($stderr -match '\b404\b|Not Found') {
+        else {
             Write-Host "Uploading $key to R2 bucket $bucket"
             Invoke-Native {
                 aws s3api put-object --bucket $bucket --key $key --body $msi --content-type "application/x-msi" @common | Out-Null
             } "aws s3api put-object $key"
-        }
-        else {
-            throw "aws s3api head-object $key failed (exit code $headExit): $stderr"
         }
     }
     finally {
