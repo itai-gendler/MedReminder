@@ -120,6 +120,7 @@ $R2EnvVars    = @(
     "MEDREMINDER_CLOUDFLARE_BUCKET",
     "MEDREMINDER_CLOUDFLARE_DOWNLOAD"
 )
+$SkipStorePages = $true
 
 function Write-Step {
     param([string]$Text)
