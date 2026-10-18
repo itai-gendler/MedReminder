@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using MedReminder.Domain.Catalogue;
 
@@ -26,12 +27,17 @@ namespace MedReminder.Domain.Prescriptions;
 //    code of the single prescription. A Rezept-ID typed by hand is
 //    accepted.
 //  - French: the electronic prescription (ordonnance numerique) carries
-//    a QR code with its unique prescription number printed below it.
-//    The QR payload layout is not public (GIE SESAM-Vitale
-//    specification) and may also hold the patient's identity, so only a
-//    payload that is one bare identifier (letters, digits and common
-//    separators, up to PrescriptionRules.MaxCodeLength) is taken;
-//    anything else is rejected and the user types the printed number.
+//    a QR code holding a JSON object (ANS webinar "Ordonnance
+//    numerique", 2025-09-12, slide 21; Journal officiel text of
+//    2025-10-15): {"S": {"V": <schema version>}, "D": {"ID": <unique
+//    prescription identifier>, "P": <patient name, first name, birth
+//    date>, "M": <prescriber RPPS / AM numbers>}}. Only D.ID is kept,
+//    and only when S.V is present; the patient and prescriber data are
+//    never copied out of the payload. The full serialisation for every
+//    schema version is not public (GIE SESAM-Vitale package), so any
+//    other JSON is rejected. A payload that is one bare identifier (a
+//    QR holding only the identifier, or the number typed by hand) is
+//    also accepted.
 //
 // A Code 39 start / stop asterisk and an AIM symbology identifier sent
 // by a scanner are removed. Not thread-safe: the caller serialises
@@ -214,6 +220,8 @@ public abstract partial class PrescriptionBarcodeReader
     {
         private static readonly IReadOnlyCollection<BarcodeSymbology> QrOnly = [BarcodeSymbology.QrCode];
 
+        private static readonly JsonDocumentOptions JsonOptions = new() { MaxDepth = 8 };
+
         public override IReadOnlyCollection<BarcodeSymbology> Symbologies => QrOnly;
         public override bool IsTwoDimensional => true;
         public override int MinimumPayloadLength => 4;
@@ -222,12 +230,51 @@ public abstract partial class PrescriptionBarcodeReader
         {
             if (payload is null) return PrescriptionBarcodeRead.Rejected;
             var text = Normalize(payload);
-            if (text.Length == 0 || text.Length > PrescriptionRules.MaxCodeLength) return PrescriptionBarcodeRead.Rejected;
+            if (text.StartsWith('{')) return ReadJson(text);
+            return IsIdentifier(text, allowSeparators: true)
+                ? PrescriptionBarcodeRead.Complete(text)
+                : PrescriptionBarcodeRead.Rejected;
+        }
+
+        // D.ID of {"S": {"V": ...}, "D": {"ID": "..."}}; nothing else of
+        // the payload leaves this method.
+        private static PrescriptionBarcodeRead ReadJson(string text)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(text, JsonOptions);
+                var root = document.RootElement;
+                if (root.ValueKind != JsonValueKind.Object
+                    || !root.TryGetProperty("S", out var schema) || schema.ValueKind != JsonValueKind.Object
+                    || !schema.TryGetProperty("V", out var version) || version.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+                    || !root.TryGetProperty("D", out var data) || data.ValueKind != JsonValueKind.Object
+                    || !data.TryGetProperty("ID", out var id) || id.ValueKind != JsonValueKind.String)
+                {
+                    return PrescriptionBarcodeRead.Rejected;
+                }
+                var code = id.GetString()!.Trim();
+                return IsIdentifier(code, allowSeparators: false)
+                    ? PrescriptionBarcodeRead.Complete(code)
+                    : PrescriptionBarcodeRead.Rejected;
+            }
+            catch (JsonException)
+            {
+                return PrescriptionBarcodeRead.Rejected;
+            }
+        }
+
+        // Letters and digits up to PrescriptionRules.MaxCodeLength; a
+        // typed number may also carry common separators.
+        private static bool IsIdentifier(string text, bool allowSeparators)
+        {
+            if (text.Length == 0 || text.Length > PrescriptionRules.MaxCodeLength) return false;
             foreach (var c in text)
             {
-                if (!char.IsAsciiLetterOrDigit(c) && c is not ('-' or '/' or '.' or ' ')) return PrescriptionBarcodeRead.Rejected;
+                if (char.IsAsciiLetterOrDigit(c)) continue;
+                if (allowSeparators && c is ('-' or '/' or '.' or ' ')) continue;
+                return false;
             }
-            return PrescriptionBarcodeRead.Complete(text);
+            return true;
         }
     }
 }

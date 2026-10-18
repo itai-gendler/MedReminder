@@ -140,11 +140,51 @@ public class PrescriptionBarcodeReaderTests
         read.Code.Should().Be(expected);
     }
 
+    // ANS webinar "Ordonnance numerique" (2025-09-12), slide 21: sample
+    // data, not a real person.
+    private const string FrenchQr =
+        "{\"S\":{\"V\":2},\"D\":{\"ID\":\"202106180921110040\",\"P\":{\"N\":\"GENE\",\"P\":\"Alain\",\"D\":\"1966-02-23\"},"
+        + "\"M\":{\"RPPS\":\"99900038441\",\"AM\":\"991118019\"}}}";
+
+    [Fact]
+    public void French_qr_json_yields_only_the_prescription_identifier()
+    {
+        var read = PrescriptionBarcodeReader.French().Offer(FrenchQr);
+
+        read.Step.Should().Be(PrescriptionBarcodeStep.Complete);
+        read.Code.Should().Be("202106180921110040");
+    }
+
+    [Fact]
+    public void French_qr_json_is_read_with_whitespace_and_a_scanner_prefix()
+    {
+        const string pretty = "]Q1{\n  \"S\": { \"V\": 2 },\n  \"D\": {\n    \"ID\": \"043RHMHT1P7PBMBBNU\",\n"
+            + "    \"P\": { \"N\": \"GENE\", \"P\": \"Alain\", \"D\": \"1966-02-23\" }\n  }\n}\r\n";
+
+        PrescriptionBarcodeReader.French().Offer(pretty).Code.Should().Be("043RHMHT1P7PBMBBNU");
+    }
+
+    [Theory]
+    // No schema version.
+    [InlineData("{\"D\":{\"ID\":\"202106180921110040\"}}")]
+    // No identifier, or not a string, or not an identifier.
+    [InlineData("{\"S\":{\"V\":2},\"D\":{\"P\":{\"N\":\"GENE\"}}}")]
+    [InlineData("{\"S\":{\"V\":2},\"D\":{\"ID\":202106180921110040}}")]
+    [InlineData("{\"S\":{\"V\":2},\"D\":{\"ID\":\"\"}}")]
+    [InlineData("{\"S\":{\"V\":2},\"D\":{\"ID\":\"<script>\"}}")]
+    // Truncated or not JSON.
+    [InlineData("{\"S\":{\"V\":2},\"D\":{\"ID\":\"2021061809")]
+    [InlineData("{not json}")]
+    public void French_reader_rejects_qr_json_without_a_usable_identifier(string payload)
+    {
+        PrescriptionBarcodeReader.French().Offer(payload).Step.Should().Be(PrescriptionBarcodeStep.Rejected);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("  ")]
     [InlineData("https://example.org/rx?id=1")]
-    // A structured payload, which may carry the patient's identity.
+    // A structured payload that is not the documented JSON.
     [InlineData("ID=ABC123;NOM=DUPONT;NE=01011980")]
     public void French_reader_rejects_empty_or_structured_payloads(string? payload)
     {

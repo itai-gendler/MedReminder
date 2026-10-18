@@ -815,13 +815,13 @@ ordre, et le NRBE d'une ordonnance hors service national de santé (12
 caractères) ; tout autre code-barres, comme celui du code fiscal, est
 refusé. Avec l'Allemagne, il lit le code 2D (DataMatrix ou QR) de
 l'ordonnance électronique et ne garde que l'identifiant de l'ordonnance
-(Rezept-ID, 22 caractères) ; le code d'accès contenu dans le
-code 2D n'est jamais enregistré, et un code qui regroupe plusieurs
-ordonnances est refusé. Avec la France, il lit le QR code de
-l'ordonnance numérique lorsqu'il ne contient que le numéro d'ordonnance
-; sinon, saisissez le numéro imprimé sous le code. Avec tout autre pays
-de référence (dont l'Espagne et les États-Unis), le bouton n'est pas
-affiché.
+(Rezept-ID, 22 caractères) ; le code d'accès contenu dans le code 2D
+n'est jamais enregistré, et un code qui regroupe plusieurs ordonnances
+est refusé. Avec la France, il lit le QR code de l'ordonnance numérique
+et ne garde que l'identifiant de l'ordonnance ; les nom et date de
+naissance du patient et les numéros du prescripteur contenus dans le QR
+code ne sont jamais enregistrés. Avec tout autre pays de référence (dont
+l'Espagne et les États-Unis), le bouton n'est pas affiché.
 
 ### Échéances administratives
 

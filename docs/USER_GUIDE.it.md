@@ -777,12 +777,13 @@ della ricetta bianca elettronica (12 caratteri); ogni altro codice a
 barre del promemoria, come quello del codice fiscale, viene rifiutato.
 Con la Germania legge il codice 2D (DataMatrix o QR) della ricetta
 elettronica e conserva solo l'identificativo della ricetta (Rezept-ID,
-22 caratteri); il codice di accesso contenuto nel codice 2D non
-viene mai salvato, e un codice che raggruppa più ricette viene
-rifiutato. Con la Francia legge il codice QR della ricetta elettronica
-quando contiene solo il numero di ricetta; altrimenti digita il numero
-stampato sotto il codice. Con ogni altro paese di riferimento (tra cui
-Spagna e Stati Uniti) il pulsante non viene mostrato.
+22 caratteri); il codice di accesso contenuto nel codice 2D non viene
+mai salvato, e un codice che raggruppa più ricette viene rifiutato. Con
+la Francia legge il codice QR della ricetta elettronica e conserva solo
+l'identificativo della ricetta; nome e data di nascita del paziente e i
+numeri del medico contenuti nel codice QR non vengono mai salvati. Con
+ogni altro paese di riferimento (tra cui Spagna e Stati Uniti) il
+pulsante non viene mostrato.
 
 ### Scadenze amministrative
 

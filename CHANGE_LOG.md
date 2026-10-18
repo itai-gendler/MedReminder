@@ -30,9 +30,28 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #283 — Scope prescription code scanning to the reference country
+## PR #284 — Read the prescription identifier from the French QR JSON payload
 
 **Status:** open
+
+Link: [vger70/MedReminder#284](https://github.com/vger70/MedReminder/pull/284)
+Branch: `claude/french-prescription-qr-json`
+
+### Changed
+- France: **Scan** reads the JSON payload of the ordonnance numérique QR
+  code (`{"S": {"V": ...}, "D": {"ID": ...}}`, ANS webinar 2025-09-12,
+  Journal officiel 2025-10-15) and keeps only `D.ID`; the patient's
+  name and birth date and the prescriber's numbers are never copied.
+  Other JSON is rejected; a bare identifier, scanned or typed, is still
+  accepted. Before, every real French QR code was refused.
+
+### Docs
+- User guides (en, it, fr, es, de): France sentence of the scan
+  paragraph.
+
+## PR #283 — Scope prescription code scanning to the reference country
+
+**Status:** merged (2026-10-18)
 
 Link: [vger70/MedReminder#283](https://github.com/vger70/MedReminder/pull/283)
 Branch: `claude/prescription-scan-by-country`

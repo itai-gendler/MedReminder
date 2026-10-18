@@ -802,18 +802,19 @@ die Zwischenablage nur, wenn du klickst.
 
 **Scannen** neben **Rezeptcode** liest den Code aus den Barcodes des
 Rezepts, mit einem Barcodescanner oder der Webcam, und füllt ein leeres
-**Ausgestellt am** mit dem heutigen Datum. Mit Italien als
-Referenzland liest es die NRE, gedruckt als ein Barcode oder als zwei,
-die du nacheinander in beliebiger Reihenfolge scannst, und die NRBE
-eines Rezepts außerhalb des nationalen Gesundheitsdienstes (12
-Zeichen); jeder andere Barcode, etwa der der Steuernummer, wird
-abgelehnt. Mit Deutschland liest es den 2D-Code (DataMatrix oder QR) des
-E-Rezepts und übernimmt nur die Rezept-ID (22 Zeichen); der
-Zugangscode im 2D-Code wird nie gespeichert, und ein Sammelcode für
-mehrere Rezepte wird abgelehnt. Mit Frankreich liest es den QR-Code des
-elektronischen Rezepts, wenn er nur die Rezeptnummer enthält; sonst gib
-die unter dem Code gedruckte Nummer ein. Mit jedem anderen Referenzland
-(darunter Spanien und die USA) wird die Schaltfläche nicht angezeigt.
+**Ausgestellt am** mit dem heutigen Datum. Mit Italien als Referenzland
+liest es die NRE, gedruckt als ein Barcode oder als zwei, die du
+nacheinander in beliebiger Reihenfolge scannst, und die NRBE eines
+Rezepts außerhalb des nationalen Gesundheitsdienstes (12 Zeichen); jeder
+andere Barcode, etwa der der Steuernummer, wird abgelehnt. Mit
+Deutschland liest es den 2D-Code (DataMatrix oder QR) des E-Rezepts und
+übernimmt nur die Rezept-ID (22 Zeichen); der Zugangscode im 2D-Code
+wird nie gespeichert, und ein Sammelcode für mehrere Rezepte wird
+abgelehnt. Mit Frankreich liest es den QR-Code des elektronischen
+Rezepts und übernimmt nur die Rezeptkennung; Name und Geburtsdatum des
+Patienten und die Nummern des verordnenden Arztes im QR-Code werden nie
+gespeichert. Mit jedem anderen Referenzland (darunter Spanien und die
+USA) wird die Schaltfläche nicht angezeigt.
 
 ### Fristen
 
