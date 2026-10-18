@@ -30,9 +30,38 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #284 — Read the prescription identifier from the French QR JSON payload
+## PR #285 — Upload the Store MSI to Cloudflare R2 in publish-signed-release.ps1
 
 **Status:** open
+
+Link: [vger70/MedReminder#285](https://github.com/vger70/MedReminder/pull/285)
+Branch: `claude/publish-r2-store-msi`
+
+### Build
+
+- `publish-signed-release.ps1` gains step 5/6: the signed Store MSI is
+  uploaded to Cloudflare R2 with `aws s3api put-object` and served at
+  `https://<MEDREMINDER_CLOUDFLARE_DOWNLOAD>/<version>/MedReminder-win-x64-net10.msi`,
+  a URL without redirection usable in Partner Center. A version already
+  in the bucket is never overwritten; old versions are kept. A non-200
+  answer is only a warning. The GitHub Pages publish becomes step 6/6.
+- `-SkipR2` skips the upload; `-TestR2` runs only the upload on an
+  existing `dist\<version>\` build to test the R2 setup.
+- The prerequisites now require `MEDREMINDER_GOOGLE_CLIENT_ID` and
+  `MEDREMINDER_GOOGLE_CLIENT_SECRET`, so the signed build cannot ship
+  without Google Drive, and, unless `-SkipR2`, the AWS CLI and
+  `MEDREMINDER_CLOUDFLARE_TOKEN`, `_SECRET`, `_ENDPOINT`, `_BUCKET`,
+  `_DOWNLOAD`.
+
+### Docs
+
+- `docs/PACKAGING.md` §25 and §26: R2 hosting, variables, `-TestR2`.
+
+---
+
+## PR #284 — Read the prescription identifier from the French QR JSON payload
+
+**Status:** merged (2026-10-18)
 
 Link: [vger70/MedReminder#284](https://github.com/vger70/MedReminder/pull/284)
 Branch: `claude/french-prescription-qr-json`
