@@ -30,6 +30,35 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #283 — Scope prescription code scanning to the reference country
+
+**Status:** open
+
+Link: [vger70/MedReminder#283](https://github.com/vger70/MedReminder/pull/283)
+Branch: `claude/prescription-scan-by-country`
+
+### Added
+- Germany: **Scan** reads the E-Rezept token (DataMatrix or QR, gematik
+  `api-erp` format) and keeps only the Rezept-ID, after its ISO 7064
+  MOD 97-10 check digits; the access code is never stored and a code
+  grouping several prescriptions is rejected.
+- France: **Scan** reads the QR code of the electronic prescription when
+  it holds one bare identifier; structured payloads, which may carry the
+  patient's identity, are rejected.
+- `BarcodeSymbology.QrCode` and the 2D-code scan texts
+  (`Ui.PrescriptionScan.*.TwoDimensional`) in all dictionaries.
+
+### Changed
+- Italy: unchanged. Any other reference country (Spain, United States,
+  EU and others): the **Scan** button is not shown.
+
+### Removed
+- `PrescriptionBarcodeReader.Generic`, which took any single barcode as
+  the code.
+
+### Docs
+- User guides (en, it, fr, es, de): scan paragraph per country.
+
 ## PR #282 — Detail the Apple and tablet prerequisites and settle the tablet and iOS decisions
 
 **Status:** open

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MedReminder.Domain.Catalogue;
 using MedReminder.Domain.Prescriptions;
 using Xunit;
 
@@ -99,12 +100,41 @@ public class PrescriptionBarcodeReaderTests
         reader.Offer("4970794479").Code.Should().Be("1200A4970794479");
     }
 
+    private const string AccessCode = "777bea0e13cc9c42ceec14aec3ddee2263325dc2c6c699db115f58fe423607ea";
+
+    [Theory]
+    [InlineData("{\"urls\": [\"Task/160.346.135.722.516.16/$accept?ac=" + AccessCode + "\"]}", "160.346.135.722.516.16")]
+    [InlineData("{\"urls\":[\"Task/160.000.033.491.280.78/$accept?ac=" + AccessCode + "\"]}\r\n", "160.000.033.491.280.78")]
+    [InlineData("160.880.966.157.248.22", "160.880.966.157.248.22")]
+    public void German_token_yields_the_rezept_id_without_the_access_code(string payload, string expected)
+    {
+        var read = PrescriptionBarcodeReader.German().Offer(payload);
+
+        read.Step.Should().Be(PrescriptionBarcodeStep.Complete);
+        read.Code.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    // Check digits do not match.
+    [InlineData("160.346.135.722.516.17")]
+    [InlineData("{\"urls\": [\"Task/160.346.135.722.516.17/$accept?ac=" + AccessCode + "\"]}")]
+    // A code grouping two prescriptions.
+    [InlineData("{\"urls\": [\"Task/160.346.135.722.516.16/$accept?ac=" + AccessCode + "\", \"Task/160.880.966.157.248.22/$accept?ac=" + AccessCode + "\"]}")]
+    [InlineData("<script>alert(1)</script>")]
+    [InlineData("1200A4970794479")]
+    public void German_reader_rejects_anything_but_one_valid_token(string? payload)
+    {
+        PrescriptionBarcodeReader.German().Offer(payload).Step.Should().Be(PrescriptionBarcodeStep.Rejected);
+    }
+
     [Theory]
     [InlineData("RX-2026/000123", "RX-2026/000123")]
-    [InlineData(" *ABC123* ", "ABC123")]
-    public void Generic_single_barcode_is_taken_as_the_code(string payload, string expected)
+    [InlineData(" ABC123DEF456 ", "ABC123DEF456")]
+    public void French_bare_identifier_is_taken_as_the_code(string payload, string expected)
     {
-        var read = PrescriptionBarcodeReader.Generic().Offer(payload);
+        var read = PrescriptionBarcodeReader.French().Offer(payload);
 
         read.Step.Should().Be(PrescriptionBarcodeStep.Complete);
         read.Code.Should().Be(expected);
@@ -114,15 +144,41 @@ public class PrescriptionBarcodeReaderTests
     [InlineData(null)]
     [InlineData("  ")]
     [InlineData("https://example.org/rx?id=1")]
-    public void Generic_reader_rejects_empty_or_unexpected_characters(string? payload)
+    // A structured payload, which may carry the patient's identity.
+    [InlineData("ID=ABC123;NOM=DUPONT;NE=01011980")]
+    public void French_reader_rejects_empty_or_structured_payloads(string? payload)
     {
-        PrescriptionBarcodeReader.Generic().Offer(payload).Step.Should().Be(PrescriptionBarcodeStep.Rejected);
+        PrescriptionBarcodeReader.French().Offer(payload).Step.Should().Be(PrescriptionBarcodeStep.Rejected);
     }
 
     [Fact]
-    public void Generic_reader_rejects_codes_longer_than_the_stored_code()
+    public void French_reader_rejects_codes_longer_than_the_stored_code()
     {
-        PrescriptionBarcodeReader.Generic().Offer(new string('A', PrescriptionRules.MaxCodeLength + 1))
+        PrescriptionBarcodeReader.French().Offer(new string('A', PrescriptionRules.MaxCodeLength + 1))
             .Step.Should().Be(PrescriptionBarcodeStep.Rejected);
+    }
+
+    [Theory]
+    [InlineData("IT", false, new[] { BarcodeSymbology.Code39, BarcodeSymbology.Code128 })]
+    [InlineData(null, false, new[] { BarcodeSymbology.Code39, BarcodeSymbology.Code128 })]
+    [InlineData("DE", true, new[] { BarcodeSymbology.DataMatrix, BarcodeSymbology.QrCode })]
+    [InlineData("fr", true, new[] { BarcodeSymbology.QrCode })]
+    public void Reader_follows_the_reference_country(string? country, bool twoDimensional, BarcodeSymbology[] symbologies)
+    {
+        var reader = PrescriptionBarcodeReader.ForCountry(country);
+
+        reader.Should().NotBeNull();
+        reader!.IsTwoDimensional.Should().Be(twoDimensional);
+        reader.Symbologies.Should().BeEquivalentTo(symbologies);
+    }
+
+    [Theory]
+    [InlineData("ES")]
+    [InlineData("US")]
+    [InlineData("GB")]
+    [InlineData("EU")]
+    public void Scan_is_not_offered_for_other_countries(string country)
+    {
+        PrescriptionBarcodeReader.ForCountry(country).Should().BeNull();
     }
 }

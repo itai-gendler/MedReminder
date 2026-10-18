@@ -747,8 +747,14 @@ reference country it reads the NRE, printed as one barcode or as two
 that you scan one after the other in any order, and the NRBE of a
 prescription outside the national health service (12 characters); any
 other barcode on the slip, such as the tax code, is refused. With
-another reference country it takes the single barcode read as the
-code: check it before saving.
+Germany it reads the 2D code (DataMatrix or QR) of the e-prescription
+and keeps only the prescription ID (Rezept-ID, 22 characters); the
+access code in the 2D code is never saved, and a code that groups
+several prescriptions is refused. With France it reads the QR code of
+the electronic prescription when it holds only the prescription number;
+otherwise type the number printed under the code. With any other
+reference country (Spain and the United States among them) the button is
+not shown.
 
 ### Administrative deadlines
 

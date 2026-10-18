@@ -86,24 +86,22 @@ internal sealed class MedicineBarcodeTarget(IBarcodeParser parser) : BarcodeScan
 
 // A prescription slip: the code of the reference country's slips
 // (PrescriptionBarcodeReader), from one barcode or from several read
-// one after the other, by scanner, webcam or both.
+// one after the other, by scanner, webcam or both. The texts follow the
+// kind of code: linear barcodes (Italy) or a 2D code (Germany, France).
 internal sealed class PrescriptionCodeTarget(PrescriptionBarcodeReader reader) : BarcodeScanTarget
 {
-    // Code 39 carries the Italian NRE, Code 128 the NRBE.
-    private static readonly IReadOnlyCollection<BarcodeSymbology> SlipSymbologies =
-        [BarcodeSymbology.Code39, BarcodeSymbology.Code128];
-
     private readonly object _lock = new();
+    private readonly string _variant = reader.IsTwoDimensional ? ".TwoDimensional" : string.Empty;
 
     public string? Code { get; private set; }
 
     public override string TitleKey => "Ui.PrescriptionScan.Title";
-    public override string PromptKey => "Ui.PrescriptionScan.Prompt";
-    public override string ScannerHintKey => "Ui.PrescriptionScan.ScannerHint";
-    public override string WebcamHintKey => "Ui.PrescriptionScan.WebcamHint";
-    public override string UnrecognizedKey => "Ui.PrescriptionScan.Unrecognized";
-    public override string? PartReadKey => "Ui.PrescriptionScan.PartRead";
-    public override IReadOnlyCollection<BarcodeSymbology> Symbologies => SlipSymbologies;
+    public override string PromptKey => "Ui.PrescriptionScan.Prompt" + _variant;
+    public override string ScannerHintKey => "Ui.PrescriptionScan.ScannerHint" + _variant;
+    public override string WebcamHintKey => "Ui.PrescriptionScan.WebcamHint" + _variant;
+    public override string UnrecognizedKey => "Ui.PrescriptionScan.Unrecognized" + _variant;
+    public override string? PartReadKey => reader.IsTwoDimensional ? null : "Ui.PrescriptionScan.PartRead";
+    public override IReadOnlyCollection<BarcodeSymbology> Symbologies => reader.Symbologies;
     public override int MinimumIdleKeystrokes => reader.MinimumPayloadLength;
 
     public override BarcodeScanOffer Offer(RawBarcode raw)
