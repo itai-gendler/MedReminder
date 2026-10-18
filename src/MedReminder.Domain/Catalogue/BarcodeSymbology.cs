@@ -16,4 +16,7 @@ public enum BarcodeSymbology : int
     // Prescription slips (the Italian NRBE, for instance); not found on
     // medicine packs.
     Code128 = 4,
+    // Prescription tokens (the German E-Rezept, the French electronic
+    // prescription); not decoded on medicine packs.
+    QrCode = 5,
 }

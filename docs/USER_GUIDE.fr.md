@@ -813,8 +813,15 @@ l'Italie comme pays de référence, il lit le NRE, imprimé sur un seul
 code-barres ou sur deux à scanner l'un après l'autre dans n'importe quel
 ordre, et le NRBE d'une ordonnance hors service national de santé (12
 caractères) ; tout autre code-barres, comme celui du code fiscal, est
-refusé. Avec un autre pays de référence, le seul code-barres lu devient
-le code : vérifiez-le avant d'enregistrer.
+refusé. Avec l'Allemagne, il lit le code 2D (DataMatrix ou QR) de
+l'ordonnance électronique et ne garde que l'identifiant de l'ordonnance
+(Rezept-ID, 22 caractères) ; le code d'accès contenu dans le
+code 2D n'est jamais enregistré, et un code qui regroupe plusieurs
+ordonnances est refusé. Avec la France, il lit le QR code de
+l'ordonnance numérique lorsqu'il ne contient que le numéro d'ordonnance
+; sinon, saisissez le numéro imprimé sous le code. Avec tout autre pays
+de référence (dont l'Espagne et les États-Unis), le bouton n'est pas
+affiché.
 
 ### Échéances administratives
 

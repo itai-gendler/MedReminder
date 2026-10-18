@@ -974,23 +974,23 @@ internal sealed class MainForm : MedReminderFormBase
             return scope.ServiceProvider.GetRequiredService<RegionalServiceLinkLauncher>().Open(region, url);
         });
 
-    private bool OffersNrePaste()
+    private string? ReadReferenceCountry()
     {
         using var scope = _scopeFactory.CreateScope();
-        return RegionalServiceForProfileQuery.IsOffered(scope.ServiceProvider
-            .GetRequiredService<IOptionsMonitor<UserSettings>>().CurrentValue.ReferenceCountry);
+        return scope.ServiceProvider.GetRequiredService<IOptionsMonitor<UserSettings>>().CurrentValue.ReferenceCountry;
     }
 
-    // "Scan" in the prescription editor: reads the code from the barcodes
-    // of the slip, with the Italian shapes (NRE in one or two barcodes,
-    // NRBE) when Italy is the reference country, else any single code.
-    // Returns null when the user cancels.
-    private string? ScanPrescriptionCode(IWin32Window owner, bool italianSlips)
+    // "Scan" in the prescription editor: reads the code from the slip
+    // with the reader of the reference country (Italy: NRE in one or two
+    // barcodes, NRBE; Germany: E-Rezept token; France: QR code of the
+    // electronic prescription). Not offered for other countries. A new
+    // reader per scan, so no part read earlier carries over. Returns
+    // null when the user cancels.
+    private string? ScanPrescriptionCode(IWin32Window owner, string? referenceCountry)
     {
+        if (PrescriptionBarcodeReader.ForCountry(referenceCountry) is not { } reader) return null;
         var barcode = BuildBarcodeScanContext();
-        var target = new PrescriptionCodeTarget(italianSlips
-            ? PrescriptionBarcodeReader.Italian()
-            : PrescriptionBarcodeReader.Generic());
+        var target = new PrescriptionCodeTarget(reader);
         using var dialog = new BarcodeScanDialog(_loc, target, barcode.Camera, barcode.Options, barcode.Logger);
         return dialog.ShowDialog(owner) == DialogResult.OK ? target.Code : null;
     }
@@ -1022,7 +1022,11 @@ internal sealed class MainForm : MedReminderFormBase
                 today = scope.ServiceProvider.GetRequiredService<PrescriptionListQuery>().LocalToday();
             }
             var selected = GetSelectedRow()?.Id;
-            var offerNrePaste = OffersNrePaste();
+            var referenceCountry = ReadReferenceCountry();
+            var offerNrePaste = RegionalServiceForProfileQuery.IsOffered(referenceCountry);
+            Func<IWin32Window, string?>? scanCode = PrescriptionBarcodeReader.ForCountry(referenceCountry) is null
+                ? null
+                : owner => ScanPrescriptionCode(owner, referenceCountry);
 
             var actions = new PrescriptionsDialogActions(
                 Load: async () =>
@@ -1040,7 +1044,7 @@ internal sealed class MainForm : MedReminderFormBase
                         ? [.. medicines, (existing.MedicineId, _allRows.FirstOrDefault(r => r.Id == existing.MedicineId)?.Name ?? string.Empty)]
                         : medicines;
                     return new PrescriptionEditDialog(options, selected, existing, item?.Dispensations ?? [], today, _loc,
-                        offerNrePaste, owner => ScanPrescriptionCode(owner, italianSlips: offerNrePaste));
+                        offerNrePaste, scanCode);
                 },
                 Save: async command =>
                 {

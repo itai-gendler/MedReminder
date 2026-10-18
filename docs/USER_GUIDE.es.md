@@ -783,8 +783,14 @@ Italia como país de referencia lee el NRE, impreso en un solo código de
 barras o en dos que escaneas uno tras otro en cualquier orden, y el
 NRBE de una receta fuera del servicio nacional de salud (12
 caracteres); cualquier otro código de barras, como el del código
-fiscal, se rechaza. Con otro país de referencia toma como código el
-único código de barras leído: revísalo antes de guardar.
+fiscal, se rechaza. Con Alemania lee el código 2D (DataMatrix o QR) de
+la receta electrónica y conserva solo el identificador de la receta
+(Rezept-ID, 22 caracteres); el código de acceso del código 2D
+nunca se guarda, y un código que agrupa varias recetas se rechaza. Con
+Francia lee el código QR de la receta electrónica cuando contiene solo
+el número de receta; si no, escribe el número impreso bajo el código.
+Con cualquier otro país de referencia (entre ellos España y Estados
+Unidos) el botón no se muestra.
 
 ### Vencimientos administrativos
 

@@ -237,6 +237,7 @@ internal sealed class FrameBarcodeDecoder
         BarcodeFormat.CODE_39 => BarcodeSymbology.Code39,
         BarcodeFormat.EAN_13 => BarcodeSymbology.Ean13,
         BarcodeFormat.CODE_128 => BarcodeSymbology.Code128,
+        BarcodeFormat.QR_CODE => BarcodeSymbology.QrCode,
         _ => null,
     };
 
@@ -246,6 +247,7 @@ internal sealed class FrameBarcodeDecoder
         BarcodeSymbology.Code39 => BarcodeFormat.CODE_39,
         BarcodeSymbology.Ean13 => BarcodeFormat.EAN_13,
         BarcodeSymbology.Code128 => BarcodeFormat.CODE_128,
+        BarcodeSymbology.QrCode => BarcodeFormat.QR_CODE,
         _ => null,
     };
 }

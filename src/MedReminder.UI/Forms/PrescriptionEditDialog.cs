@@ -22,7 +22,8 @@ namespace MedReminder.UI.Forms;
 // only when clicked, writes the normalised prescription number when the
 // text is one (NreCode), and fills an empty issue date with today.
 //
-// "Scan", offered when the caller passes scanCode: reads the code from
+// "Scan", offered when the caller passes scanCode (Italy, Germany or
+// France as reference country): reads the code from
 // the barcodes of the prescription slip (BarcodeScanDialog with a
 // PrescriptionCodeTarget of the reference country), then fills the code
 // and an empty issue date like "Paste NRE".

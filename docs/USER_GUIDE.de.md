@@ -807,8 +807,13 @@ Referenzland liest es die NRE, gedruckt als ein Barcode oder als zwei,
 die du nacheinander in beliebiger Reihenfolge scannst, und die NRBE
 eines Rezepts außerhalb des nationalen Gesundheitsdienstes (12
 Zeichen); jeder andere Barcode, etwa der der Steuernummer, wird
-abgelehnt. Mit einem anderen Referenzland wird der einzige gelesene
-Barcode als Code übernommen: prüfe ihn vor dem Speichern.
+abgelehnt. Mit Deutschland liest es den 2D-Code (DataMatrix oder QR) des
+E-Rezepts und übernimmt nur die Rezept-ID (22 Zeichen); der
+Zugangscode im 2D-Code wird nie gespeichert, und ein Sammelcode für
+mehrere Rezepte wird abgelehnt. Mit Frankreich liest es den QR-Code des
+elektronischen Rezepts, wenn er nur die Rezeptnummer enthält; sonst gib
+die unter dem Code gedruckte Nummer ein. Mit jedem anderen Referenzland
+(darunter Spanien und die USA) wird die Schaltfläche nicht angezeigt.
 
 ### Fristen
 
