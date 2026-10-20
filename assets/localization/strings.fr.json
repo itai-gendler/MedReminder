@@ -1481,6 +1481,7 @@
   "Ui.PrescriptionEditDialog.PasteNre": "Coller le NRE",
   "Ui.PrescriptionEditDialog.ScanCode": "Scanner",
   "Ui.PrescriptionScan.Title": "Scanner le code de l'ordonnance",
+  "Ui.PrescriptionScan.Title.TwoDimensional": "Scanner le code de l'ordonnance",
   "Ui.PrescriptionScan.Prompt": "Scannez le code-barres du code de l'ordonnance.",
   "Ui.PrescriptionScan.ScannerHint": "Pointez le lecteur de codes-barres vers l'ordonnance. Si le code est imprimé sur deux codes-barres, scannez les deux, dans n'importe quel ordre. Vous pouvez aussi saisir le code imprimé sous un code-barres et appuyer sur Entrée.",
   "Ui.PrescriptionScan.WebcamHint": "Tenez l'ordonnance à 10–20 cm de la caméra, avec un seul code-barres à la fois dans le cadre et net.",

@@ -1481,6 +1481,7 @@
   "Ui.PrescriptionEditDialog.PasteNre": "Paste NRE",
   "Ui.PrescriptionEditDialog.ScanCode": "Scan",
   "Ui.PrescriptionScan.Title": "Scan prescription code",
+  "Ui.PrescriptionScan.Title.TwoDimensional": "Scan prescription code",
   "Ui.PrescriptionScan.Prompt": "Scan the barcode of the prescription code on the prescription slip.",
   "Ui.PrescriptionScan.ScannerHint": "Point the barcode scanner at the slip. When the code is printed as two barcodes, scan both, in any order. You can also type the code printed under a barcode and press Enter.",
   "Ui.PrescriptionScan.WebcamHint": "Hold the slip 10–20 cm from the camera, with one barcode at a time inside the frame and in focus.",

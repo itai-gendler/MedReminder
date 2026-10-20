@@ -1481,6 +1481,7 @@
   "Ui.PrescriptionEditDialog.PasteNre": "NRE einfügen",
   "Ui.PrescriptionEditDialog.ScanCode": "Scannen",
   "Ui.PrescriptionScan.Title": "Rezeptcode scannen",
+  "Ui.PrescriptionScan.Title.TwoDimensional": "Rezeptcode scannen",
   "Ui.PrescriptionScan.Prompt": "Scannen Sie den Barcode des Rezeptcodes.",
   "Ui.PrescriptionScan.ScannerHint": "Richten Sie den Barcodescanner auf das Rezept. Ist der Code auf zwei Barcodes gedruckt, scannen Sie beide, in beliebiger Reihenfolge. Sie können auch den unter einem Barcode gedruckten Code eingeben und die Eingabetaste drücken.",
   "Ui.PrescriptionScan.WebcamHint": "Halten Sie das Rezept 10–20 cm vor die Kamera, mit jeweils einem Barcode im Rahmen und scharf.",
