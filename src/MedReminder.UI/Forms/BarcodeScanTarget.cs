@@ -95,7 +95,7 @@ internal sealed class PrescriptionCodeTarget(PrescriptionBarcodeReader reader) :
 
     public string? Code { get; private set; }
 
-    public override string TitleKey => "Ui.PrescriptionScan.Title";
+    public override string TitleKey => "Ui.PrescriptionScan.Title" + _variant;
     public override string PromptKey => "Ui.PrescriptionScan.Prompt" + _variant;
     public override string ScannerHintKey => "Ui.PrescriptionScan.ScannerHint" + _variant;
     public override string WebcamHintKey => "Ui.PrescriptionScan.WebcamHint" + _variant;
