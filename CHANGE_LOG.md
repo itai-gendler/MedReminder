@@ -30,6 +30,23 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #287 — Name the Italian prescription slip code NRE/NRBE in the scan dialog
+
+**Status:** open
+
+Link: [vger70/MedReminder#287](https://github.com/vger70/MedReminder/pull/287)
+Branch: `claude/hopeful-einstein-mzjcwl`
+
+### Changed
+
+- Italian scan dialog for linear barcodes (Italy) names the code
+  NRE/NRBE, as printed on the promemoria, instead of "codice ricetta".
+- New `Ui.PrescriptionScan.Title.TwoDimensional` key keeps the generic
+  title for the 2D flow (Germany, France); `PrescriptionCodeTarget`
+  selects the title by variant.
+
+---
+
 ## PR #286 — Fix feeds_branch.sh publish failing on a feed absent from main
 
 **Status:** open
