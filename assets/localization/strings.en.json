@@ -467,6 +467,7 @@
   "Ui.PrescriptionEditDialog.Requested": "Requested on:",
   "Ui.PrescriptionEditDialog.Issued": "Issued on:",
   "Ui.PrescriptionEditDialog.Code": "Prescription code:",
+  "Ui.PrescriptionEditDialog.Code.Italy": "Prescription code:",
   "Ui.PrescriptionEditDialog.Packages": "Packages (0 = not known):",
   "Ui.PrescriptionEditDialog.ValidUntil": "Valid until:",
   "Ui.PrescriptionEditDialog.Collected": "Collected on:",

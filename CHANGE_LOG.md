@@ -30,9 +30,26 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
-## PR #287 — Name the Italian prescription slip code NRE/NRBE in the scan dialog
+## PR #288 — Label the prescription code field NRE/NRBE with Italy as reference country
 
 **Status:** open
+
+Link: [vger70/MedReminder#288](https://github.com/vger70/MedReminder/pull/288)
+Branch: `claude/hopeful-einstein-mzjcwl`
+
+### Changed
+
+- Prescription editor: with Italy as reference country the code field
+  uses the new `Ui.PrescriptionEditDialog.Code.Italy` key ("NRE/NRBE:"
+  in Italian), matching the scan dialog. Other countries keep the
+  generic label.
+- `docs/USER_GUIDE.it.md` names the field accordingly.
+
+---
+
+## PR #287 — Name the Italian prescription slip code NRE/NRBE in the scan dialog
+
+**Status:** merged (2026-10-20)
 
 Link: [vger70/MedReminder#287](https://github.com/vger70/MedReminder/pull/287)
 Branch: `claude/hopeful-einstein-mzjcwl`
