@@ -219,7 +219,9 @@ internal sealed class PrescriptionEditDialog : MedReminderFormBase
         DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.Medicine"), _medicine);
         DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.Requested"), _requested);
         DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.Issued"), _issued);
-        DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.Code"), codeField);
+        // Italy (offerNrePaste) names the code on the slip NRE (NRBE for
+        // the white prescription).
+        DialogLayout.AddRow(table, _loc.Get(offerNrePaste ? "Ui.PrescriptionEditDialog.Code.Italy" : "Ui.PrescriptionEditDialog.Code"), codeField);
         DialogLayout.AddRow(table, string.Empty, _codeError);
         DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.Packages"), _packages);
         DialogLayout.AddRow(table, _loc.Get("Ui.PrescriptionEditDialog.ValidUntil"), _validUntil);

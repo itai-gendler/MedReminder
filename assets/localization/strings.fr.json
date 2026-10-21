@@ -467,6 +467,7 @@
   "Ui.PrescriptionEditDialog.Requested": "Demandée le :",
   "Ui.PrescriptionEditDialog.Issued": "Émise le :",
   "Ui.PrescriptionEditDialog.Code": "Code de l'ordonnance :",
+  "Ui.PrescriptionEditDialog.Code.Italy": "Code de l'ordonnance :",
   "Ui.PrescriptionEditDialog.Packages": "Boîtes (0 = inconnu) :",
   "Ui.PrescriptionEditDialog.ValidUntil": "Valable jusqu'au :",
   "Ui.PrescriptionEditDialog.Collected": "Retirée le :",

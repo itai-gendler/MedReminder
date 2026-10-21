@@ -467,6 +467,7 @@
   "Ui.PrescriptionEditDialog.Requested": "Richiesta il:",
   "Ui.PrescriptionEditDialog.Issued": "Emessa il:",
   "Ui.PrescriptionEditDialog.Code": "Codice ricetta:",
+  "Ui.PrescriptionEditDialog.Code.Italy": "NRE/NRBE:",
   "Ui.PrescriptionEditDialog.Packages": "Confezioni (0 = non noto):",
   "Ui.PrescriptionEditDialog.ValidUntil": "Valida fino al:",
   "Ui.PrescriptionEditDialog.Collected": "Ritirata il:",

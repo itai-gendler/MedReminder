@@ -685,8 +685,9 @@ ritirare. Per ciascuna puoi annotare, quando le conosci:
 - **Richiesta il**: quando l'hai chiesta al medico. **Segna come
   richiesta** nella finestra di richiesta la registra per te con la
   data di oggi;
-- **Emessa il**, **Codice ricetta** e **Confezioni**: dalla ricetta
-  emessa dal medico;
+- **Emessa il**, **Codice ricetta** (**NRE/NRBE** con l'Italia come
+  paese di riferimento) e **Confezioni**: dalla ricetta emessa dal
+  medico;
 - **Valida fino al**: l'ultimo giorno in cui la farmacia la accetta.
   Viene compilata per 30 giorni dalla data di emissione, la validità
   abituale della ricetta elettronica italiana; controllala sulla tua
@@ -762,13 +763,14 @@ delega attivata sul servizio regionale. Quando per la tua regione non è
 elencato un servizio, apri tu il portale del Fascicolo Sanitario
 Elettronico della tua regione.
 
-**Incolla NRE**, accanto a **Codice ricetta** nella finestra della
+**Incolla NRE**, accanto a **NRE/NRBE** nella finestra della
 ricetta, scrive il numero di ricetta elettronica (NRE, 15 lettere o
 cifre) copiato dal servizio regionale, senza spazi, e compila **Emessa
 il** con la data di oggi se è vuota. MedReminder legge gli appunti
 solo quando fai clic.
 
-**Scansiona**, accanto a **Codice ricetta**, legge il codice dai codici
+**Scansiona**, accanto a **NRE/NRBE** (**Codice ricetta** con la
+Germania o la Francia), legge il codice dai codici
 a barre del promemoria, con il lettore di codici a barre o la webcam, e
 compila **Emessa il** con la data di oggi se è vuota. Con l'Italia come
 paese di riferimento legge l'NRE, stampato su un solo codice a barre o
