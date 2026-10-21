@@ -90,6 +90,25 @@ public class DeleteMedicineTests
     }
 
     [Fact]
+    public async Task A_forced_deletion_removes_a_medicine_with_history_and_its_facts()
+    {
+        var id = await SeedAsync(initialQuantity: 30m);
+        await _scope.RegisterIntake.ExecuteAsync(
+            new RegisterIntakeCommand(id, new DateOnly(2026, 9, 12), IntakeStatus.Taken, 1m), default);
+
+        // Check still reports the history so the UI can warn first.
+        (await _scope.DeleteMedicine.CheckAsync(id, default)).Should().Be(DeleteMedicineOutcome.HasRecordedFacts);
+
+        var outcome = await _scope.DeleteMedicine.ExecuteAsync(
+            new DeleteMedicineCommand(id, Force: true), default);
+
+        outcome.Should().Be(DeleteMedicineOutcome.Deleted);
+        (await _scope.Medicines.GetAsync(id, default)).Should().BeNull();
+        _scope.Stock.All.Should().NotContain(m => m.MedicineId == id);
+        _scope.Intakes.All.Should().NotContain(i => i.MedicineId == id);
+    }
+
+    [Fact]
     public async Task An_unknown_medicine_is_reported_as_not_found()
     {
         (await DeleteAsync(Guid.NewGuid())).Should().Be(DeleteMedicineOutcome.NotFound);
