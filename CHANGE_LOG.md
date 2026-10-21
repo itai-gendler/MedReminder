@@ -30,6 +30,28 @@ with the classification adapted to per-PR granularity: **Added**,
 
 ---
 
+## PR #289 — Allow force-deleting a medicine together with its history
+
+**Status:** open
+
+Link: [vger70/MedReminder#289](https://github.com/vger70/MedReminder/pull/289)
+Branch: `claude/delete-medicine-with-history`
+
+**Changed**
+
+- `DeleteMedicineCommand` gains an optional `Force` flag (default `false`).
+  With `Force` the medicine is deleted together with its recorded facts
+  (stock entries, intakes, counts, suspensions); without it the previous
+  behaviour is kept — a medicine with history is refused with
+  `HasRecordedFacts` so the caller deactivates instead. `CheckAsync` still
+  reports `HasRecordedFacts` so a UI can warn before forcing.
+  (`src/MedReminder.Application/UseCases/DeleteMedicine.cs`)
+
+This backs the phone's reinforced two-step delete, which tells the user
+the history is lost for good before proceeding.
+
+---
+
 ## PR #288 — Label the prescription code field NRE/NRBE with Italy as reference country
 
 **Status:** open
